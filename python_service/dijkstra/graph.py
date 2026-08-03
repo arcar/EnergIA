@@ -45,7 +45,7 @@ def build_graph(data: dict):
 
 if __name__ == "__main__":
 
-    data = load_data("../data/parc-nucleaire-prescriptif-france-6a6f67dd97a5c914105374.json")
+    data = load_data("../../data/parc-nucleaire-prescriptif-france.json")
 
     graph = build_graph(data)
 

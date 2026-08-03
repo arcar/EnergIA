@@ -4,9 +4,9 @@ app.use(express.json())
 const port = 3000;
 app.use(express.json());
 
-const centraleRoutes = require("./routes/centraleRoutes");
+const plantRoutes = require("./routes/plantRoutes");
 
-app.use("/centrales", centraleRoutes);
+app.use("/plants", plantRoutes);
 
 app.listen(port, () => {
   console.log(`Application à l'écoute sur le port ${port}!`);

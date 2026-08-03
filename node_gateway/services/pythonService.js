@@ -1,17 +1,27 @@
 const axios = require("axios");
 
 
-async function getCentrales(){
+async function getPlants() {
 
-    const response = await axios.get(
-        "http://localhost:5000/centrales"
-    );
+    try {
 
-    return response.data;
+        const response = await axios.get(
+            "http://127.0.0.1:8000/plants"
+        );
+
+        return response.data;
+
+    } catch (error) {
+
+        throw new Error(
+            "Impossible de contacter l'API Python"
+        );
+
+    }
 
 }
 
 
 module.exports = {
-    getCentrales
+    getPlants
 };

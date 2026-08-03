@@ -2,11 +2,11 @@ const express = require("express");
 const app = express();
 app.use(express.json())
 const port = 3000;
+app.use(express.json());
 
-app.get("/health", (req, res) => {
+const plantRoutes = require("./routes/plantRoutes");
 
-  return res.status(200).json({"message":"Hello World!"});
-});
+app.use("/plants", plantRoutes);
 
 app.listen(port, () => {
   console.log(`Application à l'écoute sur le port ${port}!`);

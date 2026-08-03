@@ -36,9 +36,7 @@ def build_path(previous, edges, start, goal):
     }
 
 
-def dijkstra(graph, start, goal):
-    
-    #Recherche du plus court chemin avec Dijkstra.
+def dijkstra(graph, start, goal, weight="distance"):
     
     if start not in graph or goal not in graph:
         return None
@@ -71,10 +69,19 @@ def dijkstra(graph, start, goal):
                 continue
 
             node = neighbor["node"]
+            if weight == "distance":
+                    cost = neighbor["distance"]
+            
+            elif weight == "loss":
+                    cost = neighbor["loss"]
+            
+            else:
+                    cost = neighbor["distance"]
+            
 
             distance = neighbor["distance"]
 
-            new_distance = current_distance + distance
+            new_distance = current_distance + cost
 
             if new_distance < distances[node]:
 
@@ -89,8 +96,7 @@ def dijkstra(graph, start, goal):
 
     result = build_path(previous, graph, start, goal)
     result["distance_km"] = round(distances[goal], 2)
-    result["total_distance"] = round(distances[goal], 2)
-
+    
     return result
 
 if __name__ == "__main__":

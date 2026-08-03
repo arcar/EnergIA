@@ -7,12 +7,14 @@ def test_real_network_path():
     data = load_data("../../data/parc-nucleaire-prescriptif-france.json")
 
     graph = build_graph(data)
-    result = dijkstra(graph, "belleville", "bugey")
+    result = dijkstra(graph, "flamanville", "tricastin")
+
+    print(result)
 
     assert result is not None
 
-    assert result["path"][0] == "belleville"
+    assert result["path"][0] == "flamanville"
 
-    assert result["path"][-1] == "bugey"
+    assert result["path"][-1] == "tricastin"
 
     assert result["distance_km"] > 0

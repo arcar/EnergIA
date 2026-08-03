@@ -10,10 +10,11 @@ class NetworkService:
 
         self.graph = build_graph(data)
 
-    def shortest_path(self, start, goal):
+    def shortest_path(self, start, goal, weight="distance"):
 
         return dijkstra(
             self.graph,
             start,
-            goal
+            goal,
+            weight
         )

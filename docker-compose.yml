@@ -3,6 +3,8 @@ services:
     build: ./node_gateway
     ports:
       - "3000:3000"
+    env_file:
+      - ./node_gateway/.env
     volumes:
       - ./node_gateway:/app
       - /app/node_modules

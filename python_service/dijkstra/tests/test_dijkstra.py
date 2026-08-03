@@ -33,7 +33,7 @@ def test_simple_path():
         "C"
     ]
 
-    assert result["total_distance"] == 30
+    assert result["distance_km"] == 30
 
 
 def test_no_path():
@@ -104,7 +104,7 @@ def test_shortest_path():
         "D"
     ]
 
-    assert result["total_distance"] == 20
+    assert result["distance_km"] == 20
 
 def test_path_information():
 

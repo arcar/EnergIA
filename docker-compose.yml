@@ -1,17 +1,10 @@
 services:
   node_gateway:
-    build: ./node_gateway
     ports:
       - "3000:3000"
     env_file:
       - ./node_gateway/.env
-    volumes:
-      - ./node_gateway:/app
-      - /app/node_modules
 
   python_service:
-    build: ./python_service
     ports:
       - "8000:8000"
-    volumes:
-      - ./python_service:/app

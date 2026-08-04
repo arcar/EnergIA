@@ -79,8 +79,6 @@ def dijkstra(graph, start, goal, weight="distance"):
                     cost = neighbor["distance"]
             
 
-            distance = neighbor["distance"]
-
             new_distance = current_distance + cost
 
             if new_distance < distances[node]:

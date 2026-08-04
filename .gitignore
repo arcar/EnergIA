@@ -2,3 +2,5 @@ node_gateway/node_modules
 
 .env
 **/.env
+
+**/__pycache__/

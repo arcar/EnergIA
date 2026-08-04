@@ -1,0 +1,11 @@
+services:
+  node_gateway:
+    build: ./node_gateway
+    volumes:
+      - ./node_gateway:/app
+      - /app/node_modules
+
+  python_service:
+    build: ./python_service
+    volumes:
+      - ./python_service:/app

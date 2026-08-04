@@ -25,6 +25,31 @@ async function getPlants() {
 
 }
 
+async function shortest_path(start, goal, weight = "distance") {
+
+    try {
+
+        const response = await axios.post(
+            `${process.env.PYTHON_SERVICE_URL}/shortest_path`,
+            {
+                start,
+                goal,
+                weight
+            }
+        );
+
+        return response.data;
+
+    } catch (error) {
+
+        console.log(error.message);
+
+        throw new Error(
+            "Impossible de contacter l'API Python"
+        );
+    }
+}
+
 async function simulate(data) {
 
     try {
@@ -46,6 +71,5 @@ async function simulate(data) {
 
 
 module.exports = {
-    getPlants,
-    simulate
+    getPlants, shortest_path,simulate
 };

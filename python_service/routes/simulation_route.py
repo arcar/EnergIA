@@ -5,15 +5,13 @@ from models.simulation import SimulationRequest
 router = APIRouter()
 
 
+from services.simulation_service import simuler_augmentation
+
+
 @router.post("/simulation")
 def simulation(request: SimulationRequest):
 
-    return {
-        "success": True,
-        "centrales": [
-            {
-                "nom": "Paluel",
-                "puissance": 300
-            }
-        ]
-    }
+    return simuler_augmentation(
+        request.region,
+        request.augmentation
+    )

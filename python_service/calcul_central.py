@@ -12,7 +12,7 @@ def extract_data():
 
 def calcul_puissance_disponible(centrale):
     return centrale["simulation"]["soft_upper_bound_mw"] - centrale["simulation"]["initial_output_mw"]
-
+    
 def taux_saturation(centrale):
     return centrale["simulation"]["initial_load_ratio"]
 
@@ -29,5 +29,5 @@ def metriques_centrales(donnees):
             "taux_saturation": taux_saturation(centrale),
             "disponible": verifier_disponibilite(centrale)
         })
-
+    
     return resultats

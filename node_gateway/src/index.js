@@ -9,7 +9,7 @@ require("dotenv").config();
 const plantRoutes = require("./routes/plantRoutes");
 const simulationRoutes = require("./routes/simulationRoutes")
 
-app.use("/plants", plantRoutes);
+app.use("/plants", plantRoutes); 
 app.use("/simulation", simulationRoutes)
 
 app.listen(port, () => {

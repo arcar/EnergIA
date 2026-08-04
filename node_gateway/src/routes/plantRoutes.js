@@ -5,7 +5,7 @@ const controllersConnus = require("../controllers/plantController");
 
 
 
-router.get("/plants", controllersConnus.getPlants);
+router.get("/", controllersConnus.getPlants);
 router.post("/shortest_path", controllersConnus.shortest_path);
 
 

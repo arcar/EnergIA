@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from pathlib import Path
 from routes import simulation_route
 import json
-
+from pydantic import BaseModel
 from dijkstra.dijkstra_service import DijkstraService
 
 
@@ -26,6 +26,10 @@ dijkstra_service = DijkstraService(DATA_FILE)
 with open(DATA_FILE, "r", encoding="utf-8") as f:
     data = json.load(f)
 
+class PathRequest(BaseModel):
+    start: str
+    goal: str
+    weight: str = "distance"
 
 
 @app.get("/plants")
@@ -36,3 +40,23 @@ def get_plants():
         "plants": [plant["name"] for plant in data["plants"]]
     }
 
+@app.post("/shortest_path")
+def shortest_path(request: PathRequest):
+
+    result = dijkstra_service.shortest_path(
+        start=request.start,
+        goal=request.goal,
+        weight=request.weight
+    )
+
+    if result is None:
+        return {
+            "status": "no_path",
+            "start": request.start,
+            "goal": request.goal
+        }
+
+    return {
+        "status": "success",
+        "result": result
+    }

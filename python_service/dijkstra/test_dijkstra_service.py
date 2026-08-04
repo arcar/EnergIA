@@ -1,4 +1,4 @@
-from dijkstra_service import DijkstraService
+from .dijkstra_service import DijkstraService
 
 
 def test_service_creation():

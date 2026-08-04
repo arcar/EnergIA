@@ -1,5 +1,5 @@
-from dijkstra_service import DijkstraService
-from dispatch_service import DispatchService
+from .dijkstra_service import DijkstraService
+from .dispatch_service import DispatchService
 
 
 def test_dispatch():

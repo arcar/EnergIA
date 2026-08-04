@@ -25,7 +25,27 @@ async function getPlants() {
 
 }
 
+async function simulate(data) {
+
+    try {
+
+        const response = await axios.post(
+            `${process.env.PYTHON_SERVICE_URL}/simulation`,
+            data
+        );
+
+        return response.data;
+
+    } catch (error) {
+
+        throw new Error(
+            "Impossible de contacter l'API Python"
+        );
+    }
+}
+
 
 module.exports = {
-    getPlants
+    getPlants,
+    simulate
 };

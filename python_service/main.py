@@ -1,8 +1,11 @@
 from fastapi import FastAPI
 from pathlib import Path
+from routes import simulation_route
 import json
 
 app = FastAPI()
+
+app.include_router(simulation_route.router)
 
 # Chemin vers le fichier JSON
 
@@ -19,3 +22,4 @@ def get_plants():
         "count": len(data["plants"]),
         "plants": [plant["name"] for plant in data["plants"]]
     }
+

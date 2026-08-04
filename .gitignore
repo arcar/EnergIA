@@ -5,3 +5,4 @@ node_gateway/node_modules
 
 **/__pycache__/
 *.py[cod]
+python_service/dijkstra/__pycache__/dijkstra_service.cpython-314.pyc

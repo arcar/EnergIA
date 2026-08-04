@@ -4,9 +4,12 @@ app.use(express.json())
 const port = 3000;
 require("dotenv").config();
 
+
+
 const plantRoutes = require("./routes/plantRoutes");
 
-app.use("/plants", plantRoutes);
+
+app.use(plantRoutes);
 
 app.listen(port, () => {
   console.log(`Application à l'écoute sur le port ${port}!`);

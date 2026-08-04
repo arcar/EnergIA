@@ -1,5 +1,5 @@
-from graph import load_data, build_graph
-from dijkstra import dijkstra
+from .graph import load_data, build_graph
+from .dijkstra import dijkstra
 
 
 class DijkstraService:

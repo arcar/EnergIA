@@ -8,6 +8,7 @@ router = APIRouter()
 from services.simulation_service import simuler_augmentation
 
 
+
 @router.post("/simulation")
 def simulation(request: SimulationRequest):
 

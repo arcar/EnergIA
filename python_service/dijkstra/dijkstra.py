@@ -67,6 +67,11 @@ def dijkstra(graph, start, goal, weight="distance"):
             # Ignore les liaisons sans capacité
             if neighbor["capacity"] <= 0:
                 continue
+            
+            if weight not in ("distance", "loss"):
+                raise ValueError(
+                    "weight doit être 'distance' ou 'loss'"
+                )
 
             node = neighbor["node"]
             if weight == "distance":

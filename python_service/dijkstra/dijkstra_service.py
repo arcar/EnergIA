@@ -22,3 +22,26 @@ class DijkstraService:
 
     def neighbors(self, node):
         return self.graph.get(node, [])
+
+    def path_capacity(self, path):
+
+        max_capacity = float("inf")
+
+        for i in range(len(path) - 1):
+
+            source = path[i]
+            destination = path[i + 1]
+
+            for edge in self.graph[source]:
+
+                if edge["node"] == destination:
+
+                    max_capacity = min(
+                        max_capacity,
+                        edge["capacity"]
+                    )
+
+                    break
+
+        return max_capacity
+

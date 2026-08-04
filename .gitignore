@@ -4,6 +4,11 @@ node_modules/
 .env
 **/.env
 
+<<<<<<< HEAD
 __pycache__/
 **/__pycache__/
 *.pyc
+=======
+**/__pycache__/
+*.py[cod]
+>>>>>>> c99f826b73ab919270cacc6b1d38507765ae5069

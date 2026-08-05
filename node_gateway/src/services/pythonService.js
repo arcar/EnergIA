@@ -69,7 +69,19 @@ async function simulate(data) {
     }
 }
 
+async function getRegions() {
+    const { data } = await axios.get(`${process.env.PYTHON_SERVICE_URL}/regions`);
+    return data;
+}
+
+async function getRoutes(regionId) {
+    const { data } = await axios.get(
+        `${process.env.PYTHON_SERVICE_URL}/regions/routes/${regionId}`
+    );
+
+    return data;
+}
 
 module.exports = {
-    getPlants, shortest_path,simulate
+    getPlants, shortest_path, simulate, getRegions, getRoutes
 };

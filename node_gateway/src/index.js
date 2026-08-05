@@ -11,6 +11,7 @@ const simulationRoutes = require("./routes/simulationRoutes")
 
 app.use("/plants", plantRoutes); 
 app.use("/simulation", simulationRoutes)
+// app.use("/api/regions", plantRoutes);
 
 app.listen(port, () => {
   console.log(`Application à l'écoute sur le port ${port}!`);

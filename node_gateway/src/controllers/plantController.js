@@ -45,9 +45,54 @@ async function shortest_path(req, res) {
     }
 
 }
+async function getRegions (req, res) {
+    try {
 
+        const regions = await pythonService.getRegions();
+
+        res.status(200).json(regions);
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.status(500).json({
+            message: "Impossible de récupérer les régions."
+        });
+
+    }
+};
+
+
+async function getRoutes(req, res) {
+
+    try {
+
+        const { regionId } = req.params;
+
+        const routes = await pythonService.getRoutes(regionId);
+
+        res.status(200).json(routes);
+
+    } catch (error) {
+
+        if (error.response) {
+            return res
+                .status(error.response.status)
+                .json(error.response.data);
+        }
+
+        console.error(error);
+
+        res.status(500).json({
+            message: "Erreur lors du calcul des routes."
+        });
+
+    }
+
+};
 
 
 module.exports = {
-    getPlants, shortest_path
+    getPlants, shortest_path, getRoutes, getRegions
 };

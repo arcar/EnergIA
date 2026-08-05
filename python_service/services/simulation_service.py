@@ -1,9 +1,7 @@
-<<<<<<< HEAD
+
 from calcul_score_central import extract_data
 from metrique_centrale import get_metrique_centrale
-=======
-from calcul_score_central import extract_data, metriques_centrales
->>>>>>> 9e7a176ec57a080dc0858a69ba4e82a52b90866a
+
 
 def simuler_augmentation(region, augmentation):
 

@@ -1,9 +1,11 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from pathlib import Path
 from routes import simulation_route
 import json
-from pydantic import BaseModel
-from dijkstra.dijkstra_service import DijkstraService
+# from pydantic import BaseModel
+# from python_service.dijkstra.old.dijkstra_service import DijkstraService
+from python_service.dijkstra.json_repository import JsonRepository
+from python_service.dijkstra.region_service import RegionService
 
 
 
@@ -15,10 +17,15 @@ app.include_router(simulation_route.router)
 
 DATA_FILE = Path(__file__).parent / "data" / "parc-nucleaire-prescriptif-france.json"
 
+#Pour dijkstra
+repository = JsonRepository(
+    "data/parc-nucleaire-prescriptif-france.json"
+)
+region_service = RegionService(repository)
 
 # Initialisation Dijkstra
 
-dijkstra_service = DijkstraService(DATA_FILE)
+# dijkstra_service = DijkstraService(DATA_FILE)
 
 
 # Chargement JSON pour /plants
@@ -26,10 +33,10 @@ dijkstra_service = DijkstraService(DATA_FILE)
 with open(DATA_FILE, "r", encoding="utf-8") as f:
     data = json.load(f)
 
-class PathRequest(BaseModel):
-    start: str
-    goal: str
-    weight: str = "distance"
+# class PathRequest(BaseModel):
+#     start: str
+#     goal: str
+#     weight: str = "distance"
 
 
 @app.get("/plants")
@@ -40,23 +47,60 @@ def get_plants():
         "plants": [plant["name"] for plant in data["plants"]]
     }
 
-@app.post("/shortest_path")
-def shortest_path(request: PathRequest):
+# @app.post("/shortest_path")
+# def shortest_path(request: PathRequest):
 
-    result = dijkstra_service.shortest_path(
-        start=request.start,
-        goal=request.goal,
-        weight=request.weight
+#     result = dijkstra_service.shortest_path(
+#         start=request.start,
+#         goal=request.goal,
+#         weight=request.weight
+#     )
+
+#     if result is None:
+#         return {
+#             "status": "no_path",
+#             "start": request.start,
+#             "goal": request.goal
+#         }
+
+#     return {
+#         "status": "success",
+#         "result": result
+#     }
+@app.get("/regions")
+def get_regions():
+   return repository.get_regions()
+
+
+@app.get("/regions/{region_id}")
+def get_region(region_id: str):
+
+    regions = repository.get_regions()
+
+    region = next(
+        (r for r in regions if r["id"] == region_id),
+        None
     )
 
-    if result is None:
-        return {
-            "status": "no_path",
-            "start": request.start,
-            "goal": request.goal
-        }
+    if region is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Région inconnue"
+        )
 
-    return {
-        "status": "success",
-        "result": result
-    }
+    return region
+
+
+@app.get("/regions/{region_id}/routes")
+def compute_routes(region_id: str):
+
+    try:
+
+        return region_service.compute_routes(region_id)
+
+    except ValueError as e:
+
+        raise HTTPException(
+            status_code=404,
+            detail=str(e)
+        )

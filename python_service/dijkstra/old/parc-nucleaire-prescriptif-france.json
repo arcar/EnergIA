@@ -1077,9 +1077,7 @@
       "average_consumption_mw_2024": 7029,
       "illustrative_peak_consumption_mw": 9699,
       "connected_to_continental_grid": true,
-      "local_plant_ids": [
-        "PDL_ile_de_france"
-      ],
+      "local_plant_ids": [],
       "external_entry_plant_ids": [
         "nogent",
         "dampierre",
@@ -1134,9 +1132,7 @@
       "average_consumption_mw_2024": 2101,
       "illustrative_peak_consumption_mw": 2900,
       "connected_to_continental_grid": true,
-      "local_plant_ids": [
-        "PDL_bourgogne_franche_comte"
-      ],
+      "local_plant_ids": [],
       "external_entry_plant_ids": [
         "belleville",
         "bugey",
@@ -1246,9 +1242,7 @@
       "average_consumption_mw_2024": 2714,
       "illustrative_peak_consumption_mw": 3746,
       "connected_to_continental_grid": true,
-      "local_plant_ids": [
-        "PDL_pays_de_la_loire"
-      ],
+      "local_plant_ids": [],
       "external_entry_plant_ids": [
         "chinon",
         "civaux",
@@ -1273,9 +1267,7 @@
       "average_consumption_mw_2024": 2349,
       "illustrative_peak_consumption_mw": 3242,
       "connected_to_continental_grid": true,
-      "local_plant_ids": [
-        "PDL_bretagne"
-      ],
+      "local_plant_ids": [],
       "external_entry_plant_ids": [
         "flamanville",
         "chinon",
@@ -1385,9 +1377,7 @@
       "average_consumption_mw_2024": 4003,
       "illustrative_peak_consumption_mw": 5524,
       "connected_to_continental_grid": true,
-      "local_plant_ids": [
-        "PDL_provence_alpes_cote_d_azur"
-      ],
+      "local_plant_ids": [],
       "external_entry_plant_ids": [
         "tricastin",
         "cruas",
@@ -1412,9 +1402,7 @@
       "average_consumption_mw_2024": 234,
       "illustrative_peak_consumption_mw": 323,
       "connected_to_continental_grid": false,
-      "local_plant_ids": [
-        "PDL_corse"
-      ],
+      "local_plant_ids": [],
       "external_entry_plant_ids": [],
       "data_notes": {
         "population": "official_insee_population_2023_in_force_2026",
@@ -1819,186 +1807,6 @@
       "available": true,
       "topology_is_synthetic": true,
       "capacity_and_loss_are_simulated": true
-    },
-    {
-      "id": "PDL_ile_de_france__nogent",
-      "from": "PDL_ile_de_france",
-      "to": "nogent",
-      "bidirectional": true,
-      "geodesic_distance_km": 115.3,
-      "estimated_loss_percent": 0.46,
-      "max_transfer_mw": 1800,
-      "available": true,
-      "topology_is_synthetic": true,
-      "capacity_and_loss_are_simulated": true
-    },
-    {
-      "id": "PDL_ile_de_france__dampierre",
-      "from": "PDL_ile_de_france",
-      "to": "dampierre",
-      "bidirectional": true,
-      "geodesic_distance_km": 108.4,
-      "estimated_loss_percent": 0.43,
-      "max_transfer_mw": 1800,
-      "available": true,
-      "topology_is_synthetic": true,
-      "capacity_and_loss_are_simulated": true
-    },
-    {
-      "id": "PDL_ile_de_france__saint_laurent",
-      "from": "PDL_ile_de_france",
-      "to": "saint_laurent",
-      "bidirectional": true,
-      "geodesic_distance_km": 150.2,
-      "estimated_loss_percent": 0.6,
-      "max_transfer_mw": 1800,
-      "available": true,
-      "topology_is_synthetic": true,
-      "capacity_and_loss_are_simulated": true
-    },
-    {
-      "id": "PDL_bourgogne_franche_comte__belleville",
-      "from": "PDL_bourgogne_franche_comte",
-      "to": "belleville",
-      "bidirectional": true,
-      "geodesic_distance_km": 216.5,
-      "estimated_loss_percent": 0.87,
-      "max_transfer_mw": 1800,
-      "available": true,
-      "topology_is_synthetic": true,
-      "capacity_and_loss_are_simulated": true
-    },
-    {
-      "id": "PDL_bourgogne_franche_comte__bugey",
-      "from": "PDL_bourgogne_franche_comte",
-      "to": "bugey",
-      "bidirectional": true,
-      "geodesic_distance_km": 167.0,
-      "estimated_loss_percent": 0.67,
-      "max_transfer_mw": 1800,
-      "available": true,
-      "topology_is_synthetic": true,
-      "capacity_and_loss_are_simulated": true
-    },
-    {
-      "id": "PDL_bourgogne_franche_comte__nogent",
-      "from": "PDL_bourgogne_franche_comte",
-      "to": "nogent",
-      "bidirectional": true,
-      "geodesic_distance_km": 201.2,
-      "estimated_loss_percent": 0.8,
-      "max_transfer_mw": 1800,
-      "available": true,
-      "topology_is_synthetic": true,
-      "capacity_and_loss_are_simulated": true
-    },
-    {
-      "id": "PDL_pays_de_la_loire__chinon",
-      "from": "PDL_pays_de_la_loire",
-      "to": "chinon",
-      "bidirectional": true,
-      "geodesic_distance_km": 112.8,
-      "estimated_loss_percent": 0.45,
-      "max_transfer_mw": 1800,
-      "available": true,
-      "topology_is_synthetic": true,
-      "capacity_and_loss_are_simulated": true
-    },
-    {
-      "id": "PDL_pays_de_la_loire__civaux",
-      "from": "PDL_pays_de_la_loire",
-      "to": "civaux",
-      "bidirectional": true,
-      "geodesic_distance_km": 198.0,
-      "estimated_loss_percent": 0.79,
-      "max_transfer_mw": 1800,
-      "available": true,
-      "topology_is_synthetic": true,
-      "capacity_and_loss_are_simulated": true
-    },
-    {
-      "id": "PDL_pays_de_la_loire__saint_laurent",
-      "from": "PDL_pays_de_la_loire",
-      "to": "saint_laurent",
-      "bidirectional": true,
-      "geodesic_distance_km": 267.4,
-      "estimated_loss_percent": 1.07,
-      "max_transfer_mw": 1800,
-      "available": true,
-      "topology_is_synthetic": true,
-      "capacity_and_loss_are_simulated": true
-    },
-    {
-      "id": "PDL_bretagne__flamanville",
-      "from": "PDL_bretagne",
-      "to": "flamanville",
-      "bidirectional": true,
-      "geodesic_distance_km": 184.5,
-      "estimated_loss_percent": 0.74,
-      "max_transfer_mw": 1800,
-      "available": true,
-      "topology_is_synthetic": true,
-      "capacity_and_loss_are_simulated": true
-    },
-    {
-      "id": "PDL_bretagne__chinon",
-      "from": "PDL_bretagne",
-      "to": "chinon",
-      "bidirectional": true,
-      "geodesic_distance_km": 350.3,
-      "estimated_loss_percent": 1.4,
-      "max_transfer_mw": 1800,
-      "available": true,
-      "topology_is_synthetic": true,
-      "capacity_and_loss_are_simulated": true
-    },
-    {
-      "id": "PDL_bretagne__paluel",
-      "from": "PDL_bretagne",
-      "to": "paluel",
-      "bidirectional": true,
-      "geodesic_distance_km": 428.6,
-      "estimated_loss_percent": 1.71,
-      "max_transfer_mw": 1800,
-      "available": true,
-      "topology_is_synthetic": true,
-      "capacity_and_loss_are_simulated": true
-    },
-    {
-      "id": "PDL_provence_alpes_cote_d_azur__tricastin",
-      "from": "PDL_provence_alpes_cote_d_azur",
-      "to": "tricastin",
-      "bidirectional": true,
-      "geodesic_distance_km": 153.1,
-      "estimated_loss_percent": 0.61,
-      "max_transfer_mw": 1800,
-      "available": true,
-      "topology_is_synthetic": true,
-      "capacity_and_loss_are_simulated": true
-    },
-    {
-      "id": "PDL_provence_alpes_cote_d_azur__cruas",
-      "from": "PDL_provence_alpes_cote_d_azur",
-      "to": "cruas",
-      "bidirectional": true,
-      "geodesic_distance_km": 163.5,
-      "estimated_loss_percent": 0.65,
-      "max_transfer_mw": 1800,
-      "available": true,
-      "topology_is_synthetic": true,
-      "capacity_and_loss_are_simulated": true
-    },
-    {
-      "id": "PDL_provence_alpes_cote_d_azur__saint_alban",
-      "from": "PDL_provence_alpes_cote_d_azur",
-      "to": "saint_alban",
-      "bidirectional": true,
-      "geodesic_distance_km": 216.3,
-      "estimated_loss_percent": 0.87,
-      "max_transfer_mw": 1800,
-      "available": true,
-      "topology_is_synthetic": true,
-      "capacity_and_loss_are_simulated": true
     }
   ],
   "example_scenarios": [
@@ -2041,80 +1849,6 @@
       "region_id": "corse",
       "additional_demand_mw": 300,
       "expected_result": "unsatisfied_demand"
-    }
-  ],
-  "PDL": [
-    {
-      "id": "PDL_ile_de_france",
-      "name": "PDL Île-de-France",
-      "location": {
-        "latitude": 48.709315,
-        "longitude": 2.503402,
-        "commune": "Île-de-France",
-        "department": "",
-        "region_id": "ile_de_france",
-        "region_name": "Île-de-France"
-      }
-    },
-    {
-      "id": "PDL_bourgogne_franche_comte",
-      "name": "PDL Bourgogne-Franche-Comté",
-      "location": {
-        "latitude": 47.234282,
-        "longitude": 4.806857,
-        "commune": "Bourgogne-Franche-Comté",
-        "department": "",
-        "region_id": "bourgogne_franche_comte",
-        "region_name": "Bourgogne-Franche-Comté"
-      }
-    },
-    {
-      "id": "PDL_pays_de_la_loire",
-      "name": "PDL Pays de la Loire",
-      "location": {
-        "latitude": 47.478104,
-        "longitude": -0.816788,
-        "commune": "Pays de la Loire",
-        "department": "",
-        "region_id": "pays_de_la_loire",
-        "region_name": "Pays de la Loire"
-      }
-    },
-    {
-      "id": "PDL_bretagne",
-      "name": "PDL Bretagne",
-      "location": {
-        "latitude": 48.177551,
-        "longitude": -2.841489,
-        "commune": "Bretagne",
-        "department": "",
-        "region_id": "bretagne",
-        "region_name": "Bretagne"
-      }
-    },
-    {
-      "id": "PDL_provence_alpes_cote_d_azur",
-      "name": "PDL Provence-Alpes-Côte d'Azur",
-      "location": {
-        "latitude": 43.95877,
-        "longitude": 6.061003,
-        "commune": "Provence-Alpes-Côte d'Azur",
-        "department": "",
-        "region_id": "provence_alpes_cote_d_azur",
-        "region_name": "Provence-Alpes-Côte d'Azur"
-      }
-    },
-    {
-      "id": "PDL_corse",
-      "name": "PDL Corse",
-      "location": {
-        "latitude": 42.151504,
-        "longitude": 9.106155,
-        "commune": "Corse",
-        "department": "",
-        "region_id": "corse",
-        "region_name": "Corse"
-      }
     }
   ]
 }

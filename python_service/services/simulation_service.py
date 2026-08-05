@@ -35,7 +35,7 @@ def simuler_augmentation(region, augmentation):
     # 4. Répartir la demande
     # (membre 3)
 
-    return {
+        return {
         "success": True,
         "region": region,
         "augmentation": augmentation,

@@ -1,4 +1,4 @@
-from calcul_central import extract_data, metriques_centrales
+from calcul_score_central import extract_data, metriques_centrales
 
 def simuler_augmentation(region, augmentation):
 

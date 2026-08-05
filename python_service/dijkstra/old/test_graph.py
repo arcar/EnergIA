@@ -1,4 +1,4 @@
-from graph import load_data, build_graph
+from python_service.dijkstra.old.graph import load_data, build_graph
 
 def test_graph_creation():
 

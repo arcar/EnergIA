@@ -1,4 +1,4 @@
-from dijkstra import dijkstra
+from python_service.dijkstra.old.dijkstra import dijkstra
 
 
 def test_simple_path():

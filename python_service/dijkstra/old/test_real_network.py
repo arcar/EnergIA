@@ -1,5 +1,5 @@
-from graph import load_data, build_graph
-from dijkstra import dijkstra
+from python_service.dijkstra.old.graph import load_data, build_graph
+from python_service.dijkstra.old.dijkstra import dijkstra
 
 
 def test_real_network_path():

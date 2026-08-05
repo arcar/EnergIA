@@ -1,4 +1,4 @@
-from metrique_centrale import metriques_centrales
+from metrique_centrale import get_metrique_centrale
 from calcul_score_central import extract_data, calcul_scores
 
 def simuler_augmentation(region, augmentation):
@@ -7,7 +7,7 @@ def simuler_augmentation(region, augmentation):
     donnees = extract_data()
 
     # 2. Calculer les capacités
-    metriques = metriques_centrales(donnees)
+    metriques = get_metrique_centrale(donnees)
     centrales_regionale = []
 
     for region_metriques in metriques:

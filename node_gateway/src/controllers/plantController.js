@@ -68,7 +68,7 @@ async function getRoutes(req, res) {
 
     try {
 
-        const { regionId } = req.params;
+        const { regionId } = req.query;
 
         const routes = await pythonService.getRoutes(regionId);
 

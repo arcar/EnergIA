@@ -33,7 +33,7 @@ def technical_penalty(centrale):
 
 
 
-def donnees_scores( source_plant, destination, distance_km, total_loss_percent, centrale, demande_residuelle):
+def donnees_scores( source_plant, destination, distance_km, total_loss_percent, centrale, demande_residuelle, max_transfer_mw):
     resultats = []
     
 
@@ -44,17 +44,18 @@ def donnees_scores( source_plant, destination, distance_km, total_loss_percent, 
         "loss_percent": total_loss_percent,
         "final_load_ratio": final_load_ratio(centrale, demande_residuelle),
         "technical_penalty": technical_penalty(centrale),
+        "max_transfer": max_transfer_mw
     })
     return resultats
 
-def calcul_scores(source_plant, destination, distance_km, total_loss_percent, demande_residuelle):
+def calcul_scores(source_plant, destination, distance_km, total_loss_percent, max_transfer_mw, demande_residuelle):
     donnees = extract_data()
     centrale = find_centrale(donnees["plants"], destination)
     distance_weight = 1.0
     loss_weight = 45.0
     saturation_weight = 900.0
     technical_penalty_weight = 200.0 
-    resultats = donnees_scores(source_plant, destination, distance_km, total_loss_percent, centrale, demande_residuelle)
+    resultats = donnees_scores(source_plant, destination, distance_km, total_loss_percent, centrale, demande_residuelle , max_transfer_mw)
     
     
     resultats["score_candidat"] = (

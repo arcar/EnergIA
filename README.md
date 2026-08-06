@@ -1,5 +1,133 @@
-Mise en place du Trello :
-https://trello.com/b/4ksq1aAB/energia
+# EnergIA
+## Présentation du projet
+Objectif du projet : développer la première version d'EnergIA, une plateforme d’aide à la décision destinée au pilotage d’un parc nucléaire
 
-Lien github :
-https://github.com/arcar/EnergIA
+Notre ESN a pour projet de développer, pour un commanditaire, un moteur prescriptif d'aide à la décision pour le pilotage d'un parc nucléaire. Ce moteur doit recommander la répartition optimale d'un besoin de production entre les centrales selon leur capacité, leur saturation et la topologie du réseau. 
+L'objectif est de proposer une première version d'EnergIA en se basant sur un graphe simplifié du réseau électrique français et de l'algorithme Dijkstra.
+
+
+# Prérequis
+Pour ce projet, les outils suivants doivent être installés :
+
+* Docker Desktop
+* Node.js
+* FastAPI
+* Git
+* Dijkstra
+
+
+# Installation
+## Cloner le dépôt
+Le projet est disponible via le lien suivant : https://github.com/arcar/EnergIA
+
+```bash
+git clone https://github.com/arcar/EnergIA.git
+```
+
+
+
+# Configuration
+
+# Lancement de l’application
+Depuis la racine du projet :
+
+```bash
+docker compose up -d
+```
+
+Cela va permettre de démarrer les conteneurs présents dans le docker compose
+
+
+# Exécution des tests
+
+# Routes disponibles
+Toutes les routes sont disponibles depuis la Gateway : http://localhost:3000
+
+## Centrales
+
+### Obtenir toutes les centrales
+
+```
+GET /plants
+```
+
+---
+
+### Obtenir toutes les regions
+
+```
+GET /plants/routes
+```
+
+---
+
+### Obtenir toutes les regions
+
+```
+GET /plants/region
+```
+
+Params :
+```
+regionId
+```
+
+
+---
+
+
+### Simuler une augmentation de la consommation pour une région donnée
+
+```
+POST /simulation
+```
+
+Body :
+
+```json
+{
+    "region":"Normandie",
+    "augmentation":"500"
+}
+```
+
+---
+
+
+# Format des requêtes
+Les requêtes sont formulées en JSON.
+
+
+# Format des réponses
+Les réponses sont également formulées en JSON.
+
+
+# Fonctionnement du moteur prescriptif
+Le moteur prescriptif va, dans un premier temps, vérifier si la puissance disponible au sein de la région couvre la demande d'augmentation en électricité. 
+Si celle-ci est suffisante, la puissance demandée est répartie selon les capacités de chaque centrales jusqu'à atteindre un taux de saturation de 100%.
+
+Si la puissance disponible au sein de la région n'est pas suffisante, le moteur recherche des centrales dans les régions voisines. 
+Pour cela, le moteur calcule le plus court chemin entre la région demandeuse et les autres centrales à l'aide de l'algorithme de Dijkstra. Puis, il attribue un score à chaque centrale en fonction de la distance qui la sépare de la région, des pertes énergétique, de la puissance disponible et du niveau de saturation. Les centrales sont ensuite classée par ordre de priorité.
+La puissance demandée est alors répartie selon les capacités de chaque centrales jusqu'à atteindre un taux de saturation de 95%.
+
+
+# Formule ou règles utilisée(s) pour classer les centrales
+## Règle 1
+Les centrales locales sont examinées en priorité
+
+## Règle 2
+Si la puissance disponible localement n'est pas suffisante le calcul suivant est appliqué pour classer les centrales : 
+
+```
+distance_km * distance_weight + loss_percent * loss_weight + pow(final_load_ratio, 4) * saturation_weight + technical_penalty * technical_penalty_weight + regional_priority_bonus_if_local
+```
+
+Des coefficients de pondérations sont ainsi appliqués afin de prioriser les centrales : 
+*   "distance_weight": 1.0,
+*   "loss_weight": 45.0,
+*   "saturation_weight": 900.0,
+*   "technical_penalty_weight": 200.0,
+
+
+
+# Limites connues du prototype

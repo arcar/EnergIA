@@ -8,18 +8,11 @@ def extract_data():
     with open(fichier_data, "r", encoding="utf-8") as json_file:
         return json.load(json_file)
 
-def find_centrale(plants, region):
+def find_centrale(plants, destination):
     for centrale in plants:
-        if (centrale["region_name"] == region):
+        if (centrale["id"] == destination):
             return centrale
     return None
-
-
-def distance_km(edges):
-    return edges["geodesic_distance_km"]
-
-def loss_percent(edges):
-    return edges["estimated_loss_percent"]
 
 
 def final_load_ratio(centrale, augmentation):
@@ -38,52 +31,37 @@ def technical_penalty(centrale):
             penalty += 100
     return penalty
 
-def regional_priority_bonus_if_local(centrale, region):
-    if (centrale["location"]["region_name"] == region):
-        return -250
-    else:
-        return 0
+
+
+def donnees_scores( source_plant, destination, distance_km, total_loss_percent, centrale, demande_residuelle):
+    resultats = []
     
 
-
-def donnees_scores(donnees, region, augmentation):
-    resultats = []
-
-    for edges in donnees["plant_edges"]:
-        centrale = find_centrale(donnees["plants"], region)
-
-        if centrale is None:
-            continue
-
-        resultats.append({
-            "from": edges["from"],
-            "to": edges["to"],
-            "distance_km": distance_km(edges),
-            "loss_percent": loss_percent(edges),
-            "final_load_ratio": final_load_ratio(centrale, augmentation),
-            "technical_penalty": technical_penalty(centrale),
-            "regional_priority_bonus": regional_priority_bonus_if_local(centrale, region)
-        })
+    resultats.append({
+        "source_central": source_plant,
+        "destination_centrale": destination,
+        "distance_km": distance_km,
+        "loss_percent": total_loss_percent,
+        "final_load_ratio": final_load_ratio(centrale, demande_residuelle),
+        "technical_penalty": technical_penalty(centrale),
+    })
     return resultats
 
-def calcul_scores(region, augmentation):
+def calcul_scores(source_plant, destination, distance_km, total_loss_percent, demande_residuelle):
     donnees = extract_data()
-
+    centrale = find_centrale(donnees["plants"], destination)
     distance_weight = 1.0
     loss_weight = 45.0
     saturation_weight = 900.0
     technical_penalty_weight = 200.0 
-    scores = []
+    resultats = donnees_scores(source_plant, destination, distance_km, total_loss_percent, centrale, demande_residuelle)
+    
+    
+    resultats["score_candidat"] = (
+            resultats["distance_km"] * distance_weight + resultats["loss_percent"] *loss_weight + pow(resultats["final_load_ratio"], 4) * saturation_weight + resultats["technical_penalty"] * technical_penalty_weight
+    )
 
-    for scenario in donnees["example_scenarios"]:
 
-        resultats = donnees_scores(donnees, region, augmentation)
-        for resultat in resultats:
-            resultat["score_candidat"] = (
-                resultat["distance_km"] * distance_weight + resultat["loss_percent"] *loss_weight + pow(resultat["final_load_ratio"], 4) * saturation_weight + resultat["technical_penalty"] * technical_penalty_weight + resultat["regional_priority_bonus"]
-            )
-            scores.append(resultat)
-        scores.sort(key=lambda x: x["score_candidat"])
-    return scores
+    return resultats
 
     

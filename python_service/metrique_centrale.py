@@ -1,13 +1,13 @@
-from calcul_score_central import extract_data
+from calcul_score_central import extract_data, calcul_scores
 from dijkstra.region_service import RegionService
 from dijkstra.json_repository import JsonRepository
 
 repository = JsonRepository("data/parc-nucleaire-prescriptif-france.json")
 region_service = RegionService(repository)
 
-result = region_service.compute_routes("occitanie")
 
-print(result)
+
+
 
 def get_puissance_disponible(centrale):
     return (centrale["simulation"]["soft_upper_bound_mw"] - centrale["simulation"]["initial_output_mw"])
@@ -76,6 +76,28 @@ def repartition(augmentation, region):
                 })
     
             return repartition_locale
-    # else:
-    #     #appeler la fonction dijsktra et calcul de score puis faire le calcul de repartition
-    #     return repartition_regional
+    else:
+        repository = JsonRepository("python_service/data/parc-nucleaire-prescriptif-france.json")
+        region_service = RegionService(repository)
+
+        result = region_service.compute_routes("occitanie")
+        source_plant = result["source_plant"]
+        resultats = []
+        for destination, route_info in result["routes"].items():
+            distance_km = route_info["distance_km"]
+            total_loss_percent = route_info["total_loss_percent"]
+            max_transfer_mw = route_info["max_transfer_mw"]
+
+            resultat = calcul_scores(source_plant, destination, distance_km, total_loss_percent, max_transfer_mw, demande_residuelle)
+
+            resultats.append(resultat)
+
+        resultats.sort(key=lambda x: x["score_candidat"])
+        
+
+        resultats[0]["production_affectee"] = resultats[0]["max_transfer_mw"] - (resultats[0]["max_transfer_mw"] - demande_residuelle )
+        repartition_region = resultats[0]
+
+
+        return repartition_region
+

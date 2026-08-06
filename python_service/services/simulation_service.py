@@ -17,6 +17,7 @@ def simuler_augmentation(region, augmentation):
             f"Données chargées : {len(donnees['plants'])} centrales disponibles"
         )
 
+
         # 2. Calculer les capacités
 
         #metriques c'est les calculs de toutes les régions et centrales_regionale c'es les calculs filtrer par régions
@@ -61,3 +62,4 @@ def simuler_augmentation(region, augmentation):
             "augmentation": augmentation,
             "centrales": resultat_repartition
         }
+

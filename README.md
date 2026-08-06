@@ -139,3 +139,30 @@ Nous avons identifié plusieurs limites :
 * Le moteur est uniquement prescriptif. Il ne réalise aucune prévision de consommation à partir de données historiques ou météorologiques.
 * Le moteur recherche le chemin le plus court pour relier une centrale à toutes les centrales présentes sur la metropole.
 * Les coefficients de pondération (distance_weight, loss_weight, saturation_weight, etc.) ont été définis pour le prototype afin de prioriser les centrales. Ils n'ont pas été déterminés à partir de données réelles ni validés sur un réseau électrique
+
+## Gestion des validations, logs et erreurs de simulation
+
+Une amélioration de l'API de simulation a été réalisée afin de rendre les échanges plus fiables et plus compréhensibles.
+
+### Validations ajoutées
+- Vérification que la région demandée existe avant de lancer une simulation.
+- Vérification que l'augmentation de consommation est valide (valeur strictement supérieure à 0 MW).
+- Gestion des demandes impossibles lorsque la puissance disponible des centrales locales est insuffisante (en attendant l'intégration de Dijkstra pour rechercher des centrales voisines).
+
+### Gestion des erreurs
+- Mise en place de réponses d'erreurs structurées avec un statut, un message explicite et le détail de l'erreur.
+- Retour de messages compréhensibles pour faciliter le diagnostic côté utilisateur ou frontend.
+- Gestion des erreurs de communication entre la gateway Express et le service FastAPI.
+
+### Ajout des logs
+Des journaux ont été ajoutés dans le service de simulation afin de suivre les différentes étapes du traitement :
+- Début d'une simulation avec la région et l'augmentation demandée.
+- Chargement des données des centrales.
+- Calcul des métriques des centrales.
+- Nombre de centrales disponibles dans la région demandée.
+- Calcul de la demande résiduelle.
+- Fin de la répartition de puissance.
+
+# demander les logs en cas de non affichage après compose up
+
+docker compose logs -f NOM_DOSSIER

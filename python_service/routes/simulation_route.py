@@ -38,6 +38,11 @@ def simulation(request: SimulationRequest):
 
 
     if region_existante is None:
+        
+        logger.warning(
+            f"Tentative de simulation avec une région inconnue : {request.region}"
+        )
+
         raise HTTPException(
             status_code=404,
             detail={

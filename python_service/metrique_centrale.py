@@ -76,7 +76,7 @@ def repartition(augmentation, region):
         repository = JsonRepository("python_service/data/parc-nucleaire-prescriptif-france.json")
         region_service = RegionService(repository)
 
-        result = region_service.compute_routes("occitanie")
+        result = region_service.compute_routes(region)
         source_plant = result["source_plant"]
         resultats = []
         for destination, route_info in result["routes"].items():

@@ -7,7 +7,7 @@ def simuler_augmentation(region, augmentation):
     donnees = extract_data()
 
     # 2. Calculer les capacités
-    metriques = get_metrique_centrale(donnees)
+    metriques = get_metrique_centrale()
     centrales_regionale = []
 
     for region_metriques in metriques:
@@ -34,6 +34,9 @@ def simuler_augmentation(region, augmentation):
 
     # 4. Répartir la demande
     # (membre 3)
+
+
+
 
         return {
         "success": True,

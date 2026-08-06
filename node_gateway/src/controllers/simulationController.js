@@ -18,19 +18,18 @@ async function simulation(req, res) {
             data: resultat
         });
 
-    } catch(error) {
+    } catch(error){
 
-        console.error("Erreur simulation :", error.message);
+        console.log("Erreur simulation :", error);
 
-        res.status(500).json({
-            success: false,
-            message: "Impossible d'effectuer la simulation",
-            error: error.message,
-            status: 500
+        res.status(error.status || 500).json({
+            success:false,
+            message:"Impossible d'effectuer la simulation",
+            error:error.message || error,
+            status:error.status || 500
         });
 
     }
-
 }
 
 

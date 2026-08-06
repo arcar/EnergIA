@@ -4,8 +4,8 @@ from routes import simulation_route
 import json
 # from pydantic import BaseModel
 # from python_service.dijkstra.old.dijkstra_service import DijkstraService
-from python_service.dijkstra.json_repository import JsonRepository
-from python_service.dijkstra.region_service import RegionService
+from dijkstra.json_repository import JsonRepository
+from dijkstra.region_service import RegionService
 
 
 
@@ -72,7 +72,7 @@ def get_regions():
    return repository.get_regions()
 
 
-@app.get("/regions/{region_id}")
+@app.get("/routes/{region_id}")
 def get_region(region_id: str):
 
     regions = repository.get_regions()
@@ -91,7 +91,7 @@ def get_region(region_id: str):
     return region
 
 
-@app.get("/regions/{region_id}/routes")
+@app.get("/regions/routes/{region_id}")
 def compute_routes(region_id: str):
 
     try:

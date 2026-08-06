@@ -1,5 +1,5 @@
-from graph_builder import GraphBuilder
-from dijkstra_service import DijkstraService
+from dijkstra.graph_builder import GraphBuilder
+from dijkstra.dijkstra_service import DijkstraService
 
 
 class RegionService:

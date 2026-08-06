@@ -12,6 +12,9 @@ def get_taux_saturation(centrale):
 def get_nom_region(centrale):
     return centrale["location"]["region_name"]
 
+def get_central_id(centrale):
+    return centrale["id"]
+
 def get_metrique_centrale():
     donnees = extract_data()
     metriques = []
@@ -22,7 +25,8 @@ def get_metrique_centrale():
             "puissance_disponible" : get_puissance_disponible(centrale),
             "taux_saturation": get_taux_saturation(centrale),
             "disponible": get_centrale_disponible(centrale),
-            "region": get_nom_region(centrale)
+            "region": get_nom_region(centrale),
+            "central_id": get_central_id(centrale)
         })
 
     metriques.sort(key=lambda x: x["region"])

@@ -16,11 +16,11 @@ def simuler_augmentation(region, augmentation):
     demande_residuelle = calcul_demande_residuelle(augmentation, region)
 
     # 4. Répartir la demande
-    repartition = repartition(augmentation, region)
+    repartition_centrale = repartition(augmentation, region)
 
     return {
     "success": True,
     "region": region,
     "augmentation": augmentation,
-    "centrales": repartition
+    "centrales": repartition_centrale
     }

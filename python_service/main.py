@@ -4,8 +4,13 @@ from routes import simulation_route
 import json
 from dijkstra.json_repository import JsonRepository
 from dijkstra.region_service import RegionService
+import logging
 
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s"
+)
 
 app = FastAPI()
 

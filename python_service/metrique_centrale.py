@@ -2,7 +2,7 @@ from calcul_score_central import extract_data
 from dijkstra.region_service import RegionService
 from dijkstra.json_repository import JsonRepository
 
-repository = JsonRepository("python_service/data/parc-nucleaire-prescriptif-france.json")
+repository = JsonRepository("data/parc-nucleaire-prescriptif-france.json")
 region_service = RegionService(repository)
 
 result = region_service.compute_routes("occitanie")

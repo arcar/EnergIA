@@ -1412,9 +1412,7 @@
       "average_consumption_mw_2024": 234,
       "illustrative_peak_consumption_mw": 323,
       "connected_to_continental_grid": false,
-      "local_plant_ids": [
-        "PDL_corse"
-      ],
+      "local_plant_ids": [],
       "external_entry_plant_ids": [],
       "data_notes": {
         "population": "official_insee_population_2023_in_force_2026",

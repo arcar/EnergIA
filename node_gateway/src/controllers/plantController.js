@@ -30,32 +30,6 @@ async function getPlants(req,res){
     }
 }
 
-async function shortest_path(req, res) {
-
-    try {
-
-        const { start, goal, weight } = req.body;
-
-
-        const cheminCourt = await pythonService.shortest_path(
-            start,
-            goal,
-            weight
-        );
-
-
-        res.json(cheminCourt);
-
-
-    } catch (error) {
-
-        res.status(503).json({
-            message: error.message
-        });
-
-    }
-
-}
 async function getRegions (req, res) {
     try {
 
@@ -105,5 +79,5 @@ async function getRoutes(req, res) {
 
 
 module.exports = {
-    getPlants, shortest_path, getRoutes, getRegions
+    getPlants, getRoutes, getRegions
 };

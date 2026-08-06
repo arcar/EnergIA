@@ -2,8 +2,6 @@ from fastapi import FastAPI, HTTPException
 from pathlib import Path
 from routes import simulation_route
 import json
-# from pydantic import BaseModel
-# from python_service.dijkstra.old.dijkstra_service import DijkstraService
 from dijkstra.json_repository import JsonRepository
 from dijkstra.region_service import RegionService
 
@@ -23,21 +21,10 @@ repository = JsonRepository(
 )
 region_service = RegionService(repository)
 
-# Initialisation Dijkstra
-
-# dijkstra_service = DijkstraService(DATA_FILE)
-
-
 # Chargement JSON pour /plants
 
 with open(DATA_FILE, "r", encoding="utf-8") as f:
     data = json.load(f)
-
-# class PathRequest(BaseModel):
-#     start: str
-#     goal: str
-#     weight: str = "distance"
-
 
 @app.get("/plants")
 def get_plants():
@@ -47,26 +34,7 @@ def get_plants():
         "plants": [plant["name"] for plant in data["plants"]]
     }
 
-# @app.post("/shortest_path")
-# def shortest_path(request: PathRequest):
 
-#     result = dijkstra_service.shortest_path(
-#         start=request.start,
-#         goal=request.goal,
-#         weight=request.weight
-#     )
-
-#     if result is None:
-#         return {
-#             "status": "no_path",
-#             "start": request.start,
-#             "goal": request.goal
-#         }
-
-#     return {
-#         "status": "success",
-#         "result": result
-#     }
 @app.get("/regions")
 def get_regions():
    return repository.get_regions()

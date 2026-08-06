@@ -32,4 +32,41 @@ def get_metrique_centrale():
     metriques.sort(key=lambda x: x["region"])
     return metriques
 
-print(get_metrique_centrale())
+def get_centrale_regionale(region):
+    metriques = get_metrique_centrale()
+    centrales_regionale = []
+    
+    for region_metriques in metriques:
+         if (region_metriques["region"] == region):
+            centrales_regionale.append(region_metriques)
+
+    return centrales_regionale
+
+def calcul_demande_residuelle(augmentation, region):
+    centrales_regionale = get_centrale_regionale(region)
+
+    puissance_disponible_regional = sum(centrale["puissance_disponible"] for centrale in centrales_regionale)
+    demande_residuelle = augmentation - puissance_disponible_regional
+
+    return demande_residuelle
+
+def repartition(augmentation, region):
+    demande_residuelle = calcul_demande_residuelle(augmentation, region)
+    centrales_regionale = get_centrale_regionale(region)
+
+    puissance_disponible_regional = sum(centrale["puissance_disponible"] for centrale in centrales_regionale)
+
+    if (demande_residuelle <= 0):
+            production_affectee = [centrale["puissance_disponible"] / puissance_disponible_regional * augmentation for centrale in centrales_regionale]
+            repartition_locale = []
+    
+            for i, centrale in enumerate(centrales_regionale):
+                repartition_locale.append({
+                    "central_id": centrale["central_id"],
+                    "production_affectee": production_affectee[i]
+                })
+    
+            return repartition_locale
+    else:
+        #appeler la fonction dijsktra et calcul de score puis faire le calcul de repartition
+        return repartition_regional

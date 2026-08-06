@@ -1,4 +1,13 @@
 from calcul_score_central import extract_data
+from dijkstra.region_service import RegionService
+from dijkstra.json_repository import JsonRepository
+
+repository = JsonRepository("python_service/data/parc-nucleaire-prescriptif-france.json")
+region_service = RegionService(repository)
+
+result = region_service.compute_routes("occitanie")
+
+print(result)
 
 def get_puissance_disponible(centrale):
     return (centrale["simulation"]["soft_upper_bound_mw"] - centrale["simulation"]["initial_output_mw"])
@@ -67,6 +76,6 @@ def repartition(augmentation, region):
                 })
     
             return repartition_locale
-    else:
-        #appeler la fonction dijsktra et calcul de score puis faire le calcul de repartition
-        return repartition_regional
+    # else:
+    #     #appeler la fonction dijsktra et calcul de score puis faire le calcul de repartition
+    #     return repartition_regional

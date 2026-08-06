@@ -129,5 +129,13 @@ Des coefficients de pondérations sont ainsi appliqués afin de prioriser les ce
 *   "technical_penalty_weight": 200.0,
 
 
-
 # Limites connues du prototype
+Nous avons identifié plusieurs limites :
+
+* Le réseau électrique est simplifié : le graphe utilisé est un modèle pédagogique. Il ne représente pas fidèlement le réseau de transport d'électricité français ni les contraintes physiques réelles.
+* Les données sont statiques : les informations des centrales (production actuelle, disponibilité, capacités) proviennent d'un fichier JSON et ne sont pas mises à jour en temps réel.
+* Le modèle de pertes est simplifié : les pertes énergétiques sont estimées à partir des données du fichier et ne prennent pas en compte les phénomènes électriques réels (tension, intensité, congestion du réseau, etc.).
+* Le moteur traite une seule augmentation de consommation à la fois. Il ne gère pas plusieurs demandes simultanées ni l'évolution continue de la consommation.
+* Le moteur est uniquement prescriptif. Il ne réalise aucune prévision de consommation à partir de données historiques ou météorologiques.
+* Le moteur recherche le chemin le plus court pour relier une centrale à toutes les centrales présentes sur la metropole.
+* Les coefficients de pondération (distance_weight, loss_weight, saturation_weight, etc.) ont été définis pour le prototype afin de prioriser les centrales. Ils n'ont pas été déterminés à partir de données réelles ni validés sur un réseau électrique

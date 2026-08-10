@@ -77,25 +77,52 @@ def repartition(augmentation, region):
     
             return repartition_locale
     else:
-        repository = JsonRepository("python_service/data/parc-nucleaire-prescriptif-france.json")
+        repository = JsonRepository("data/parc-nucleaire-prescriptif-france.json")
         region_service = RegionService(repository)
 
-        result = region_service.compute_routes("occitanie")
+        result = region_service.compute_routes(region)
         source_plant = result["source_plant"]
         resultats = []
+
         for destination, route_info in result["routes"].items():
+
             distance_km = route_info["distance_km"]
             total_loss_percent = route_info["total_loss_percent"]
             max_transfer_mw = route_info["max_transfer_mw"]
 
-            resultat = calcul_scores(source_plant, destination, distance_km, total_loss_percent, max_transfer_mw, demande_residuelle)
+            resultat = calcul_scores(
+                source_plant,
+                destination,
+                distance_km,
+                total_loss_percent,
+                max_transfer_mw,
+                demande_residuelle
+            )
 
-            resultats.append(resultat)
+            if resultat and resultat.get("max_transfer_mw") is not None:
+                resultats.append(resultat)
 
-        resultats.sort(key=lambda x: x["score_candidat"])
+        resultats.sort(key=lambda x: x.get("score_candidat", float("inf")))
+
+        resultats = [
+            r for r in resultats
+            if r.get("max_transfer_mw") is not None 
+            and r["max_transfer_mw"] > 0
+        ]
+        if not resultats:
+            return {
+                "success": False,
+                "message": "Aucune centrale disponible pour couvrir la demande"
+            }
         
-
-        resultats[0]["production_affectee"] = resultats[0]["max_transfer_mw"] - (resultats[0]["max_transfer_mw"] - demande_residuelle )
+        if len(resultats) == 0:
+            return {
+                "error": "Aucune centrale disponible pour répondre à la demande"
+            }
+        resultats[0]["production_affectee"] = min(
+            resultats[0]["max_transfer_mw"],
+            demande_residuelle
+        )
         repartition_region = resultats[0]
 
 

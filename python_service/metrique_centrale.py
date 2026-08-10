@@ -5,7 +5,7 @@ from dijkstra.json_repository import JsonRepository
 
 repository = JsonRepository("data/parc-nucleaire-prescriptif-france.json")
 region_service = RegionService(repository)
-import main
+
 
 
 
@@ -87,7 +87,7 @@ def repartition(augmentation, region):
                 "production_affectee": centrale["puissance_disponible"]
             })
         
-        result = main.region_service.compute_routes(region)
+        result = region_service.compute_routes(region)
         print(region)
         print(result)
         source_plant = result["source_plant"]

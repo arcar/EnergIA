@@ -23,7 +23,11 @@ class RegionService:
             (
                 r
                 for r in data["regions"]
+<<<<<<< HEAD
                 if r["id"].lower() == region_id.lower()
+=======
+                if r["name"] == region_id
+>>>>>>> fd28362e599595fc3738bb0a7d2b92cfa6e5b8ff
             ),
             None
         )

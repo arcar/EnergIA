@@ -1,4 +1,5 @@
 from calcul_score_central import extract_data, calcul_scores
+
 from dijkstra.region_service import RegionService
 from dijkstra.json_repository import JsonRepository
 
@@ -77,10 +78,11 @@ def repartition(augmentation, region):
     
             return repartition_locale
     else:
-        repository = JsonRepository("data/parc-nucleaire-prescriptif-france.json")
-        region_service = RegionService(repository)
+        
 
-        result = region_service.compute_routes(region)
+        result = main.region_service.compute_routes(region)
+        print(region)
+        print(result)
         source_plant = result["source_plant"]
         resultats = []
 

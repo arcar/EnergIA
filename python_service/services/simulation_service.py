@@ -14,17 +14,13 @@ def simuler_augmentation(region, augmentation):
     # 3. Sélectionner les meilleures centrales
     demande_residuelle = calcul_demande_residuelle(augmentation, region)
 
-    logger.info(
-        f"Demande résiduelle : {demande_residuelle} MW"
-    )
+   
 
 
     # 4. Répartir la demande
     resultat_repartition = repartition(augmentation, region)
 
-    logger.info(
-        "Répartition terminée avec succès"
-    )
+    
 
     return {
         "success": True,

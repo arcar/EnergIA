@@ -94,9 +94,16 @@ def repartition(augmentation, region):
         candidats  = []
         for destination, route_info in result["routes"].items():
 
+            if destination == source_plant:
+                continue
+
             distance_km = route_info["distance_km"]
             total_loss_percent = route_info["total_loss_percent"]
             max_transfer_mw = route_info["max_transfer_mw"]
+
+            print("DEBUG ROUTE :", destination)
+            print("DEBUG ROUTE INFO :", route_info)
+            print("DEBUG MAX TRANSFER :", max_transfer_mw)
 
             resultat = calcul_scores(
                 source_plant,

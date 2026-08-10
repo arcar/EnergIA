@@ -1,4 +1,4 @@
-from calcul_score_central import extract_data, calcul_scores
+from calcul_score_central import extract_data, calcul_scores,find_centrale
 
 from dijkstra.region_service import RegionService
 from dijkstra.json_repository import JsonRepository
@@ -21,7 +21,7 @@ def get_taux_saturation(centrale):
     return centrale["simulation"]["soft_upper_bound_ratio"]
 
 def get_nom_region(centrale):
-    return centrale["location"]["region_name"]
+    return centrale["location"]["region_id"]
 
 def get_central_id(centrale):
     return centrale["id"]
@@ -48,7 +48,7 @@ def get_centrale_regionale(region):
     centrales_regionale = []
     
     for region_metriques in metriques:
-         if (region_metriques["region"] == region):
+         if (region_metriques["region"].lower() == region.lower()):
             centrales_regionale.append(region_metriques)
 
     return centrales_regionale
@@ -94,6 +94,12 @@ def repartition(augmentation, region):
         candidats  = []
         for destination, route_info in result["routes"].items():
 
+            centrale = find_centrale(extract_data()["plants"], destination)
+
+            if centrale is not None and centrale["location"]["region_name"] == region:
+                print("DESTINATION DANS LA REGION :", destination)
+                continue
+
             if destination == source_plant:
                 continue
 
@@ -105,6 +111,8 @@ def repartition(augmentation, region):
             print("DEBUG ROUTE INFO :", route_info)
             print("DEBUG MAX TRANSFER :", max_transfer_mw)
 
+            
+
             resultat = calcul_scores(
                 source_plant,
                 destination,
@@ -113,8 +121,8 @@ def repartition(augmentation, region):
                 max_transfer_mw,
                 demande_residuelle
             )
-
-            candidats.append(resultat)
+            if resultat is not None:
+                candidats.append(resultat)
 
         candidats.sort(key=lambda x: x["score_candidat"])
 
@@ -124,7 +132,11 @@ def repartition(augmentation, region):
 
         while demande_restante > 0 and index < len(candidats):
             candidat = candidats[index]
-            production_affectee = min(candidat["max_transfer_mw"], demande_restante)
+            production_affectee = min(
+                candidat["puissance_disponible"],
+                candidat["max_transfer_mw"],
+                demande_restante
+            )
             candidat["production_affectee"] = production_affectee 
             repartition_externe.append(candidat)
             demande_restante -= production_affectee

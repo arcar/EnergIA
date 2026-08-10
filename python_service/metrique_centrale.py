@@ -80,11 +80,18 @@ def repartition(augmentation, region):
             })
         
         result = main.region_service.compute_routes(region)
-        print(region)
-        print(result)
         source_plant = result["source_plant"]
+
+        donnees = extract_data()
+        plant_ids = set(p["id"] for p in donnees["plants"])
+
         candidats  = []
         for destination, route_info in result["routes"].items():
+            if destination not in plant_ids:
+                continue
+            if destination == plant_ids:
+                continue
+            
             distance_km = route_info["distance_km"]
             total_loss_percent = route_info["total_loss_percent"]
             max_transfer_mw = route_info["max_transfer_mw"]

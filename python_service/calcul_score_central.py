@@ -34,19 +34,16 @@ def technical_penalty(centrale):
 
 
 def donnees_scores( source_plant, destination, distance_km, total_loss_percent, centrale, demande_residuelle, max_transfer_mw):
-    resultats = []
-    
 
-    resultats.append({
-        "source_central": source_plant,
-        "destination_centrale": destination,
-        "distance_km": distance_km,
-        "loss_percent": total_loss_percent,
-        "final_load_ratio": final_load_ratio(centrale, demande_residuelle),
-        "technical_penalty": technical_penalty(centrale),
-        "max_transfer": max_transfer_mw
-    })
-    return resultats
+    return {
+            "source_central": source_plant,
+            "destination_centrale": destination,
+            "distance_km": distance_km,
+            "loss_percent": total_loss_percent,
+            "final_load_ratio": final_load_ratio(centrale, demande_residuelle),
+            "technical_penalty": technical_penalty(centrale),
+            "max_transfer": max_transfer_mw
+        }
 
 def calcul_scores(source_plant, destination, distance_km, total_loss_percent, max_transfer_mw, demande_residuelle):
     donnees = extract_data()

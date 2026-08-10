@@ -1,5 +1,6 @@
 from metrique_centrale import get_metrique_centrale, get_centrale_regionale, calcul_demande_residuelle, repartition
 from calcul_score_central import extract_data
+import logging
 
 def simuler_augmentation(region, augmentation):
     # 1. Récupérer les données centrales

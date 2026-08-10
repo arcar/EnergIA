@@ -60,24 +60,30 @@ def repartition(augmentation, region):
     puissance_disponible_regional = sum(centrale["puissance_disponible"] for centrale in centrales_regionale)
 
     if (demande_residuelle <= 0):
-            production_affectee = [centrale["puissance_disponible"] / puissance_disponible_regional * augmentation for centrale in centrales_regionale]
-            repartition_locale = []
-    
-            for i, centrale in enumerate(centrales_regionale):
-                repartition_locale.append({
-                    "central_id": centrale["central_id"],
-                    "production_affectee": production_affectee[i]
-                })
-    
-            return repartition_locale
-    else:
-        
+        production_affectee = [centrale["puissance_disponible"] / puissance_disponible_regional * augmentation for centrale in centrales_regionale]
+        repartition_locale = []
 
+        for i, centrale in enumerate(centrales_regionale):
+            repartition_locale.append({
+                "central_id": centrale["central_id"],
+                "production_affectee": production_affectee[i]
+            })
+
+        return repartition_locale
+    else:
+        repartition_locale = []
+    
+        for centrale in centrales_regionale:
+            repartition_locale.append({
+                "central_id": centrale["central_id"],
+                "production_affectee": centrale["puissance_disponible"]
+            })
+        
         result = main.region_service.compute_routes(region)
         print(region)
         print(result)
         source_plant = result["source_plant"]
-        resultats = []
+        candidats  = []
         for destination, route_info in result["routes"].items():
             distance_km = route_info["distance_km"]
             total_loss_percent = route_info["total_loss_percent"]
@@ -85,14 +91,25 @@ def repartition(augmentation, region):
 
             resultat = calcul_scores(source_plant, destination, distance_km, total_loss_percent, max_transfer_mw, demande_residuelle)
 
-            resultats.append(resultat)
+            candidats.append(resultat)
 
-        resultats.sort(key=lambda x: x["score_candidat"])
-        
+        candidats.sort(key=lambda x: x["score_candidat"])
 
-        resultats[0]["production_affectee"] = resultats[0]["max_transfer_mw"] - (resultats[0]["max_transfer_mw"] - demande_residuelle )
-        repartition_region = resultats[0]
+        repartition_externe = []
+        demande_restante = demande_residuelle
+        index = 0
 
+        while demande_restante > 0 and index < len(candidats):
+            candidat = candidats[index]
+            production_affectee = min(candidat["max_transfer_mw"], demande_restante)
+            candidat["production_affectee"] = production_affectee 
+            repartition_externe.append(candidat)
+            demande_restante -= production_affectee
+            index += 1
 
-        return repartition_region
+        return {
+            "repartition_locale" : repartition_locale,
+            "repartition_externe" : repartition_externe,
+            "demande_non_couverte" : demande_restante
+        }
 

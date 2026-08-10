@@ -107,9 +107,7 @@ def repartition(augmentation, region):
             total_loss_percent = route_info["total_loss_percent"]
             max_transfer_mw = route_info["max_transfer_mw"]
 
-            print("DEBUG ROUTE :", destination)
-            print("DEBUG ROUTE INFO :", route_info)
-            print("DEBUG MAX TRANSFER :", max_transfer_mw)
+            
 
             
 

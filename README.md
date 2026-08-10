@@ -179,3 +179,22 @@ Des journaux ont été ajoutés dans le service de simulation afin de suivre les
 ```
 docker compose logs -f NOM_DOSSIER
 ```
+
+### Tests unitaires
+
+Des tests unitaires ont été réalisés avec **pytest** afin de vérifier le bon fonctionnement du module `metrique_centrale.py`.
+
+Les tests couvrent notamment :
+
+* le calcul de la puissance disponible d'une centrale ;
+* la vérification de sa disponibilité ;
+* le calcul du taux de saturation ;
+* l'identification de la région et de l'identifiant d'une centrale ;
+* la récupération des centrales d'une région ;
+* le calcul de la demande résiduelle ;
+* la répartition de la demande lorsque la puissance disponible est suffisante localement ;
+* la répartition externe lorsque les capacités locales sont insuffisantes.
+
+**Résultat : 9 tests exécutés, 9 tests réussis.**
+
+

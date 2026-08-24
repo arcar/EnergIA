@@ -25,31 +25,6 @@ async function getPlants() {
 
 }
 
-async function shortest_path(start, goal, weight = "distance") {
-
-    try {
-
-        const response = await axios.post(
-            `${process.env.PYTHON_SERVICE_URL}/shortest_path`,
-            {
-                start,
-                goal,
-                weight
-            }
-        );
-
-        return response.data;
-
-    } catch (error) {
-
-        console.log(error.message);
-
-        throw new Error(
-            "Impossible de contacter l'API Python"
-        );
-    }
-}
-
 async function simulate(data) {
 
     try {
@@ -63,13 +38,37 @@ async function simulate(data) {
 
     } catch (error) {
 
-        throw new Error(
-            "Impossible de contacter l'API Python"
-        );
+        // Python a répondu avec une erreur
+        if (error.response) {
+
+            throw {
+                status: error.response.status,
+                message: error.response.data
+            };
+
+        }
+
+        // Python inaccessible
+        throw {
+            status: 503,
+            message: "Impossible de contacter l'API Python"
+        };
     }
 }
 
+async function getRegions() {
+    const { data } = await axios.get(`${process.env.PYTHON_SERVICE_URL}/regions`);
+    return data;
+}
+
+async function getRoutes(regionId) {
+    const { data } = await axios.get(
+        `${process.env.PYTHON_SERVICE_URL}/regions/routes/${regionId}`
+    );
+
+    return data;
+}
 
 module.exports = {
-    getPlants, shortest_path,simulate
+    getPlants, simulate, getRegions, getRoutes
 };

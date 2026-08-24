@@ -1,22 +1,61 @@
-from calcul_central import extract_data, metriques_centrales
+from metrique_centrale import get_metrique_centrale, get_centrale_regionale, calcul_demande_residuelle, repartition
+from calcul_score_central import extract_data
+import logging
+logger = logging.getLogger(__name__)
 
 def simuler_augmentation(region, augmentation):
 
-    # 1. Récupérer les données centrales
-    donnees = extract_data()
+    logger.info(
+        f"Nouvelle simulation demandée - Région: {region}, "
+        f"Augmentation: {augmentation} MW"
+    )
 
-    # 2. Calculer les capacités
-    centrales = metriques_centrales(donnees)
+    # 1. Récupérer les métriques de toutes les centrales
+    metriques = get_metrique_centrale()
 
-    # 3. Sélectionner les meilleures centrales
-    # (membre 2)
+    logger.info(
+        f"Nombre total de centrales analysées : {len(metriques)}"
+    )
+
+    # 2. Filtrer les centrales de la région demandée
+    logger.info(f"Vérification de la région : {region}")
+
+    centrales_regionale = get_centrale_regionale(region)
+
+    logger.info(
+        f"Nombre de centrales trouvées dans {region} : "
+        f"{len(centrales_regionale)}"
+    )
+
+    logger.debug(
+        f"Centrales régionales : {centrales_regionale}"
+    )
+
+    # 3. Calculer la demande résiduelle
+    demande_residuelle = calcul_demande_residuelle(
+        augmentation,
+        region
+    )
+
+    logger.info(
+        f"Demande résiduelle pour {region} : "
+        f"{demande_residuelle} MW"
+    )
 
     # 4. Répartir la demande
-    # (membre 3)
+    logger.info("Début de la répartition de la demande")
+
+    resultat_repartition = repartition(
+        augmentation,
+        region
+    )
+
+    logger.info("Répartition terminée")
 
     return {
         "success": True,
         "region": region,
         "augmentation": augmentation,
-        "centrales": centrales
+        "centrales": resultat_repartition
     }
+

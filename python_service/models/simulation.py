@@ -1,6 +1,11 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class SimulationRequest(BaseModel):
+
     region: str
-    augmentation: float
+
+    augmentation: float = Field(
+        gt=0,
+        description="L'augmentation de consommation doit être supérieure à 0 MW"
+    )

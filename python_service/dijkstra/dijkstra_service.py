@@ -1,47 +1,115 @@
-from .graph import load_data, build_graph
-from .dijkstra import dijkstra
+import heapq
+from math import inf
 
 
 class DijkstraService:
 
-    def __init__(self, json_path):
-        data = load_data(json_path)
-        self.graph = build_graph(data)
+    def __init__(self, graph):
+        self.graph = graph
 
-    def shortest_path(self, start, goal, weight="distance"):
-        return dijkstra(self.graph, start, goal, weight)
+    def shortest_paths(self, start):
 
-    def shortest_distance(self, start, goal):
-        result = self.shortest_path(start, goal)
-        if result is None:
-            return None
-        return result["distance_km"]
+        distances = {
+            node: inf
+            for node in self.graph
+        }
 
-    def path_exists(self, start, goal):
-        return self.shortest_path(start, goal) is not None
+        losses = {
+            node: 0
+            for node in self.graph
+        }
 
-    def neighbors(self, node):
-        return self.graph.get(node, [])
+        capacities = {
+            node: None
+            for node in self.graph
+        }
 
-    def path_capacity(self, path):
+        paths = {
+            node: []
+            for node in self.graph
+        }
 
-        max_capacity = float("inf")
+        distances[start] = 0
+        paths[start] = [start]
 
-        for i in range(len(path) - 1):
+        priority_queue = [
+            (0, start)
+        ]
 
-            source = path[i]
-            destination = path[i + 1]
+        while priority_queue:
 
-            for edge in self.graph[source]:
+            current_distance, current_node = heapq.heappop(
+                priority_queue
+            )
 
-                if edge["node"] == destination:
+            if current_distance > distances[current_node]:
+                continue
 
-                    max_capacity = min(
-                        max_capacity,
-                        edge["capacity"]
+            for edge in self.graph[current_node]:
+
+                neighbor = edge["to"]
+
+                new_distance = (
+                    current_distance
+                    + edge["distance"]
+                )
+
+                if new_distance < distances[neighbor]:
+
+                    distances[neighbor] = new_distance
+
+                    losses[neighbor] = (
+                        losses[current_node]
+                        + edge["loss"]
                     )
 
-                    break
+                    if capacities[current_node] is None:
 
-        return max_capacity
+                        capacities[neighbor] = edge["capacity"]
 
+                    else:
+
+                        capacities[neighbor] = min(
+                            capacities[current_node],
+                            edge["capacity"]
+                        )
+
+                    paths[neighbor] = (
+                        paths[current_node]
+                        + [neighbor]
+                    )
+
+                    heapq.heappush(
+                        priority_queue,
+                        (
+                            new_distance,
+                            neighbor
+                        )
+                    )
+
+        result = {}
+
+        for node in self.graph:
+
+            if distances[node] == inf:
+                continue
+
+            result[node] = {
+
+                "path": paths[node],
+
+                "distance_km": round(
+                    distances[node],
+                    2
+                ),
+
+                "total_loss_percent": round(
+                    losses[node],
+                    2
+                ),
+
+                "max_transfer_mw": capacities[node]
+
+            }
+
+        return result

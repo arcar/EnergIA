@@ -1,10 +1,12 @@
 services:
   node_gateway:
+    image : flor3473/energia:node_gateway
     ports:
       - "3000:3000"
     env_file:
       - ./node_gateway/.env
 
   python_service:
+    image : flor3473/energia:python_service
     ports:
       - "8000:8000"

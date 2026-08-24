@@ -30,6 +30,21 @@ class RegionService:
 
         self.dijkstra = DijkstraService(self.graph)
 
+        self.plant_to_region = {}
+
+        for region in data["regions"]:
+
+            region_id = normaliser_region(
+                region["id"]
+            )
+
+            for plant_id in region.get(
+                "local_plant_ids",
+                []
+            ):
+
+                self.plant_to_region[plant_id] = region_id
+
     def compute_routes(self, region_id):
 
         region_id = normaliser_region(region_id)
@@ -49,14 +64,38 @@ class RegionService:
         if region is None:
             raise ValueError("Region inconnue")
 
-        if len(region["local_plant_ids"]) == 0:
+        local_plant_ids = region.get(
+            "local_plant_ids",
+            []
+        )
+
+        if len(local_plant_ids) == 0:
             raise ValueError(
                 "Cette région ne possède aucune centrale locale."
             )
 
-        source = region["local_plant_ids"][0]
+        source = local_plant_ids[0]
 
-        routes = self.dijkstra.shortest_paths(source)
+        all_routes = self.dijkstra.shortest_paths(source)
+
+        routes = {}
+
+        for destination, route in all_routes.items():
+
+            if destination == source:
+                continue
+
+            destination_region = self.plant_to_region.get(
+                destination
+            )
+
+            if destination_region is None:
+                continue
+
+            if destination_region == region_id:
+                continue
+
+            routes[destination] = route
 
         return {
 

@@ -139,6 +139,9 @@ def repartition(augmentation, region):
             repartition_externe.append(candidat)
             demande_restante -= production_affectee
             index += 1
+            candidat["production_restante"] = (
+                candidat["puissance_disponible"] - production_affectee
+            )
 
         return {
             "repartition_locale" : repartition_locale,

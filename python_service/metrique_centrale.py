@@ -87,7 +87,9 @@ def repartition(augmentation, region):
         for centrale in centrales_regionale:
             repartition_locale.append({
                 "central_id": centrale["central_id"],
-                "production_affectee": centrale["puissance_disponible"]
+                "production_affectee": centrale["puissance_disponible"],
+                "production_restante": 0
+                
             })
         
         result = region_service.compute_routes(region)

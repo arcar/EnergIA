@@ -2,11 +2,21 @@ import os
 import json
 
 parent = os.path.dirname(os.path.abspath(__file__))
-fichier_data = os.path.join(parent, "data", "parc-nucleaire-prescriptif-france.json")
+parc_nucleaire_data = os.path.join(parent, "data", "parc-nucleaire-prescriptif-france.json")
+parametres_temporels_nucleaire_data = os.path.join(parent, "data", "energia-parametres-temporels-nucleaire.json")
+reference_consomation_data = os.path.join(parent, "data", "energia-journee-reference-consommation.json")
 
 def extract_data():
-    with open(fichier_data, "r", encoding="utf-8") as json_file:
+    with open(parc_nucleaire_data, "r", encoding="utf-8") as json_file:
         return json.load(json_file)
+
+def extract_production():
+    with open(parametres_temporels_nucleaire_data, "r", encoding="utf-8") as donnees_production_centrales:
+        return json.load(donnees_production_centrales)
+
+def extract_consomation_temporels():
+    with open(reference_consomation_data, "r", encoding="utf-8") as donnees_consomation_regionale:
+            return json.load(donnees_consomation_regionale)
 
 def find_centrale(plants, destination):
     for centrale in plants:

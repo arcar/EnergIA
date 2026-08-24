@@ -1,4 +1,4 @@
-from calcul_score_central import extract_data, calcul_scores,find_centrale
+from calcul_score_central import extract_data, calcul_scores, find_centrale, extract_production, extract_consomation_temporels
 
 from dijkstra.region_service import RegionService
 from dijkstra.json_repository import JsonRepository
@@ -162,3 +162,23 @@ def repartition(augmentation, region):
             "demande_non_couverte" : demande_restante
         }
 
+def consomation_regionale():
+    donnees_regionale = extract_consomation_temporels
+    for region in donnees_regionale["regions"]:
+        for consomation_quart in region["consumption_mw"]:
+            return {
+                "region_id" : region["id"],
+                "consomation_quart": consomation_quart
+            }
+
+def match_central_region():
+    donnees_centrale = extract_production()
+    donnees_parc_nucleaire = extract_data()
+
+    for centrales in donnees_centrale["plants"]:
+        for centrale_parc_nucleaire in donnees_parc_nucleaire["plants"]:
+            if (centrales["plant_id"] == centrale_parc_nucleaire["id"]):
+                return {
+                    "region": centrale_parc_nucleaire["location"]["region_id"],
+                    "centrale": centrales["plant_id"]
+                }

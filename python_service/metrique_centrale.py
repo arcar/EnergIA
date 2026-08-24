@@ -59,14 +59,18 @@ def calcul_demande_residuelle(augmentation, region):
     puissance_disponible_regional = sum(centrale["puissance_disponible"] for centrale in centrales_regionale)
     demande_residuelle = augmentation - puissance_disponible_regional
 
-    return demande_residuelle
+    return demande_residuelle, puissance_disponible_regional
 
 def repartition(augmentation, region):
-    demande_residuelle = calcul_demande_residuelle(augmentation, region)
+    donnees = extract_data()
+    demande_residuelle, puissance_disponible_regional = calcul_demande_residuelle(augmentation, region)
     centrales_regionale = get_centrale_regionale(region)
 
-    puissance_disponible_regional = sum(centrale["puissance_disponible"] for centrale in centrales_regionale)
-
+    for regions in donnees["regions"]:
+        if(region == regions["id"]):
+            if (regions["connected_to_continental_grid"] == False):
+                return {"reponse": "La région n'est pas connecté au réseau national"}
+    
     if (demande_residuelle <= 0):
         production_affectee = [centrale["puissance_disponible"] / puissance_disponible_regional * augmentation for centrale in centrales_regionale]
         repartition_locale = []
@@ -96,6 +100,10 @@ def repartition(augmentation, region):
         print(region)
         print(result)
         source_plant = result["source_plant"]
+
+        donnees = extract_data()
+        plant_ids = set(p["id"] for p in donnees["plants"])
+
         candidats  = []
         for destination, route_info in result["routes"].items():
 

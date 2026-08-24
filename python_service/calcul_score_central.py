@@ -15,10 +15,10 @@ def find_centrale(plants, destination):
     return None
 
 
-def final_load_ratio(centrale, augmentation):
+def final_load_ratio(centrale, puissance_affectee):
     initial_output = centrale["simulation"]["initial_output_mw"]
     soft_upper_bound = centrale["simulation"]["soft_upper_bound_mw"]
-    return ((initial_output + augmentation) / soft_upper_bound)
+    return ((initial_output + puissance_affectee) / soft_upper_bound)
 
 def technical_penalty(centrale):
     penalty = 0
@@ -33,6 +33,7 @@ def technical_penalty(centrale):
 
 
 
+
 def donnees_scores( source_plant, destination, distance_km, total_loss_percent, centrale, demande_residuelle, max_transfer_mw):
 
     return {
@@ -40,14 +41,30 @@ def donnees_scores( source_plant, destination, distance_km, total_loss_percent, 
             "destination_centrale": destination,
             "distance_km": distance_km,
             "loss_percent": total_loss_percent,
-            "final_load_ratio": final_load_ratio(centrale, demande_residuelle),
+            "final_load_ratio": final_load_ratio(
+                centrale,
+                min(
+                    centrale["simulation"]["soft_upper_bound_mw"] - centrale["simulation"]["initial_output_mw"],
+                    max_transfer_mw
+                )
+            ),
             "technical_penalty": technical_penalty(centrale),
-            "max_transfer": max_transfer_mw
+            "max_transfer_mw": max_transfer_mw,
+            "puissance_disponible": (
+                centrale["simulation"]["soft_upper_bound_mw"]
+                - centrale["simulation"]["initial_output_mw"]
+            ),
         }
 
 def calcul_scores(source_plant, destination, distance_km, total_loss_percent, max_transfer_mw, demande_residuelle):
     donnees = extract_data()
     centrale = find_centrale(donnees["plants"], destination)
+
+
+    if centrale is None:
+        print("Centrale introuvable :", destination)
+        return None
+
     distance_weight = 1.0
     loss_weight = 45.0
     saturation_weight = 900.0
@@ -56,10 +73,11 @@ def calcul_scores(source_plant, destination, distance_km, total_loss_percent, ma
     
     
     resultats["score_candidat"] = (
-            resultats["distance_km"] * distance_weight + resultats["loss_percent"] *loss_weight + pow(resultats["final_load_ratio"], 4) * saturation_weight + resultats["technical_penalty"] * technical_penalty_weight
+        resultats["distance_km"] * distance_weight
+        + resultats["loss_percent"] * loss_weight
+        + pow(resultats["final_load_ratio"], 4) * saturation_weight
+        + resultats["technical_penalty"] * technical_penalty_weight
     )
 
-
     return resultats
-
     

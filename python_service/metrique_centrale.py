@@ -1,5 +1,13 @@
-from calcul_score_central import extract_data, calcul_scores
-import main
+from calcul_score_central import extract_data, calcul_scores,find_centrale
+
+from dijkstra.region_service import RegionService
+from dijkstra.json_repository import JsonRepository
+
+repository = JsonRepository("data/parc-nucleaire-prescriptif-france.json")
+region_service = RegionService(repository)
+
+
+
 
 
 
@@ -13,7 +21,7 @@ def get_taux_saturation(centrale):
     return centrale["simulation"]["soft_upper_bound_ratio"]
 
 def get_nom_region(centrale):
-    return centrale["location"]["region_name"]
+    return centrale["location"]["region_id"]
 
 def get_central_id(centrale):
     return centrale["id"]
@@ -40,7 +48,7 @@ def get_centrale_regionale(region):
     centrales_regionale = []
     
     for region_metriques in metriques:
-         if (region_metriques["region"] == region):
+         if (region_metriques["region"].lower() == region.lower()):
             centrales_regionale.append(region_metriques)
 
     return centrales_regionale
@@ -79,7 +87,9 @@ def repartition(augmentation, region):
                 "production_affectee": centrale["puissance_disponible"]
             })
         
-        result = main.region_service.compute_routes(region)
+        result = region_service.compute_routes(region)
+        print(region)
+        print(result)
         source_plant = result["source_plant"]
 
         donnees = extract_data()
@@ -87,18 +97,34 @@ def repartition(augmentation, region):
 
         candidats  = []
         for destination, route_info in result["routes"].items():
-            if destination not in plant_ids:
+
+            centrale = find_centrale(extract_data()["plants"], destination)
+
+            if centrale is not None and centrale["location"]["region_name"] == region:
+                print("DESTINATION DANS LA REGION :", destination)
                 continue
-            if destination == plant_ids:
+
+            if destination == source_plant:
                 continue
-            
+
             distance_km = route_info["distance_km"]
             total_loss_percent = route_info["total_loss_percent"]
             max_transfer_mw = route_info["max_transfer_mw"]
 
-            resultat = calcul_scores(source_plant, destination, distance_km, total_loss_percent, max_transfer_mw, demande_residuelle)
+            
 
-            candidats.append(resultat)
+            
+
+            resultat = calcul_scores(
+                source_plant,
+                destination,
+                distance_km,
+                total_loss_percent,
+                max_transfer_mw,
+                demande_residuelle
+            )
+            if resultat is not None:
+                candidats.append(resultat)
 
         candidats.sort(key=lambda x: x["score_candidat"])
 
@@ -108,11 +134,18 @@ def repartition(augmentation, region):
 
         while demande_restante > 0 and index < len(candidats):
             candidat = candidats[index]
-            production_affectee = min(candidat["max_transfer_mw"], demande_restante)
+            production_affectee = min(
+                candidat["puissance_disponible"],
+                candidat["max_transfer_mw"],
+                demande_restante
+            )
             candidat["production_affectee"] = production_affectee 
             repartition_externe.append(candidat)
             demande_restante -= production_affectee
             index += 1
+            candidat["production_restante"] = (
+                candidat["puissance_disponible"] - production_affectee
+            )
 
         return {
             "repartition_locale" : repartition_locale,

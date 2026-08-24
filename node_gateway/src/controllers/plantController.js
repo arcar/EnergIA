@@ -1,22 +1,33 @@
 const pythonService = require("../services/pythonService.js");
 
 
-async function getPlants(req, res) {
+async function getPlants(req,res){
 
-    try {
+    console.log("Récupération des centrales");
 
-        const centrales = await pythonService.getPlants();
+    try{
 
-        res.json(centrales);
+        const plants = await pythonService.getPlants();
 
-    } catch (error) {
+        console.log("Centrales récupérées");
 
-        res.status(503).json({
-            message: error.message
+        res.json({
+            success:true,
+            data:plants
+        });
+
+
+    }catch(error){
+
+        console.error("Erreur récupération centrales :", error.message);
+
+        res.status(500).json({
+            success:false,
+            message:"Impossible de récupérer les centrales",
+            status:500
         });
 
     }
-
 }
 
 async function getRegions (req, res) {

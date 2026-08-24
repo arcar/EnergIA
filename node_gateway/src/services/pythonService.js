@@ -38,9 +38,21 @@ async function simulate(data) {
 
     } catch (error) {
 
-        throw new Error(
-            "Impossible de contacter l'API Python"
-        );
+        // Python a répondu avec une erreur
+        if (error.response) {
+
+            throw {
+                status: error.response.status,
+                message: error.response.data
+            };
+
+        }
+
+        // Python inaccessible
+        throw {
+            status: 503,
+            message: "Impossible de contacter l'API Python"
+        };
     }
 }
 

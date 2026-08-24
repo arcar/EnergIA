@@ -74,7 +74,10 @@ def repartition(augmentation, region):
         for i, centrale in enumerate(centrales_regionale):
             repartition_locale.append({
                 "central_id": centrale["central_id"],
-                "production_affectee": production_affectee[i]
+                "production_affectee": production_affectee[i],
+                "production_restante": (
+                    centrale["puissance_disponible"] - production_affectee[i]
+                )
             })
 
         return repartition_locale

@@ -11,7 +11,6 @@ with open(parc_non_pilotable_data, "r", encoding="utf-8") as fichier:
 # SOLAIRE
 #------------------------------------------
 
-
 def get_capacite_solaire(region):
     for r in data["regions"]:
         if r["id"] == region:
@@ -71,7 +70,53 @@ def get_solaire_toutes_regions(heure):
 # EOLIEN
 #------------------------------------------
 
+# Calculer la capacité de production élolienne pour une région
+def get_capacite_eolienne(region):
+    for r in data["regions"]:
+        if r["id"] == region:
+            return r["synthetic_installed_capacity_mw"]["wind"]
 
+    return None
+
+# Récupérer la production élolienne pour une région à une heure donnée
+def get_production_eolienne(region, heure):
+    for r in data["regions"]:
+        if r["id"] == region:
+            if heure in data["timestamps"]:
+                index = data["timestamps"].index(heure)
+                return r["production_mw"]["wind"][index]
+
+    return None
+
+# Calculer la puissance eolienne disponible
+def get_puissance_eolienne_disponible(region, heure):
+    capacite = get_capacite_eolienne(region)
+    production = get_production_eolienne(region, heure)
+
+    if capacite is None or production is None:
+        return None
+
+    return capacite - production
+
+
+# Faire le calcul pour toutes les régions
+def get_eolien_toutes_regions(heure):
+    resultats = []
+
+    for region in data["regions"]:
+        region_id = region["id"]
+
+        resultats.append({
+            "region": region_id,
+            "capacite_eolienne": get_capacite_eolienne(region_id),
+            "production_eolienne": get_production_eolienne(region_id, heure),
+            "puissance_eolienne_disponible": get_puissance_eolienne_disponible(
+                region_id,
+                heure
+            )
+        })
+
+    return resultats
 
 
 
@@ -85,15 +130,15 @@ def get_solaire_toutes_regions(heure):
 # demande résiduelle
 #------------------------------------------
 
-# #récupérer la capacité solaire d'une region
-# print(get_capacite_solaire("normandie"))
+# #récupérer la capacité eolienne d'une region
+# print(get_capacite_eolienne("normandie"))
 
-# #récupérer la prod solaire d'une heure donnée
-# print(get_production_solaire("normandie", "12:00"))
+# #récupérer la prod eolienne d'une heure donnée
+# print(get_production_eolienne("normandie", "12:00"))
 # #résultat calcul disponibilité
-# print(get_puissance_solaire_disponible("normandie", "12:00"))
+# print(get_puissance_eolienne_disponible("normandie", "12:00"))
 
-resultats = get_solaire_toutes_regions("12:00")
+# resultats = get_eolien_toutes_regions("12:00")
 
-for resultat in resultats:
-    print(resultat)
+# for resultat in resultats:
+#     print(resultat)

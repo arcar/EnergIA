@@ -7,6 +7,15 @@ parc_non_pilotable_data = os.path.join(parent, "data", "energia-production-non-p
 with open(parc_non_pilotable_data, "r", encoding="utf-8") as fichier:
     data = json.load(fichier)
 
+
+consommation_data = os.path.join( parent,"data", "energia-journee-reference-consommation.json")
+
+with open(consommation_data, "r", encoding="utf-8") as fichier:
+    consommation = json.load(fichier)
+
+
+
+
 #-----------------------------------------
 # SOLAIRE
 #------------------------------------------
@@ -130,15 +139,68 @@ def get_eolien_toutes_regions(heure):
 # demande résiduelle
 #------------------------------------------
 
-# #récupérer la capacité eolienne d'une region
-# print(get_capacite_eolienne("normandie"))
+def get_consommation_region(region, heure):
+    for r in consommation["regions"]:
+        if r["id"] == region:
+            if heure in consommation["timestamps"]:
+                index = consommation["timestamps"].index(heure)
+                return r["consumption_mw"][index]
 
-# #récupérer la prod eolienne d'une heure donnée
-# print(get_production_eolienne("normandie", "12:00"))
-# #résultat calcul disponibilité
-# print(get_puissance_eolienne_disponible("normandie", "12:00"))
+    return None
 
-# resultats = get_eolien_toutes_regions("12:00")
 
-# for resultat in resultats:
-#     print(resultat)
+def get_demande_residuelle(region, heure):
+    consommation = get_consommation_region(region, heure)
+    production_solaire = get_production_solaire(region, heure)
+    production_eolienne = get_production_eolienne(region, heure)
+
+    if (
+        consommation is None
+        or production_solaire is None
+        or production_eolienne is None
+    ):
+        return None
+
+    return consommation - production_solaire - production_eolienne
+
+
+def get_demande_residuelle_toutes_regions():
+    resultats = []
+
+    for region in consommation["regions"]:
+        region_id = region["id"]
+
+        for heure in consommation["timestamps"]:
+            demande_residuelle = get_demande_residuelle(
+                region_id,
+                heure
+            )
+
+            resultats.append({
+                "region": region_id,
+                "heure": heure,
+                "demande_residuelle": demande_residuelle
+            })
+
+    return resultats
+
+
+
+
+#-----------------------------------------
+# test console
+#------------------------------------------
+print("Consommation :", get_consommation_region("normandie", "12:00"))
+
+print("Solaire :", get_production_solaire("normandie", "12:00"))
+
+print("Eolien :", get_production_eolienne("normandie", "12:00"))
+
+print("Demande résiduelle :", get_demande_residuelle("normandie", "12:00"))
+print("=======================================================================")
+
+resultats = get_demande_residuelle_toutes_regions()
+
+print("Nombre de résultats :", len(resultats))
+
+print(resultats[:5])

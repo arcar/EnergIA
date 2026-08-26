@@ -585,35 +585,53 @@ def prod_initiale_a_repartir():
     )
 
     return production_regional_initial_a_repartir
-print(prod_initiale_a_repartir())
-    
+
+print(prod_initiale_a_repartir()) 
 
 
 def repartition_initiale_minuit():
-    production_regional_initial_a_repartir = prod_initiale_a_repartir()
+
+    production_regional_initial_a_repartir = (
+        prod_initiale_a_repartir()
+    )
+
     regions_a_fournir = []
     regions_sugar_daddy = []
 
     for region in production_regional_initial_a_repartir:
-        if region["production_initial_a_repartir"]<0:
+
+        if region["production_initial_a_repartir"] < 0:
             regions_a_fournir.append(region)
-        else: 
+
+        else:
             regions_sugar_daddy.append(region)
 
     for region in regions_a_fournir:
-        result = region_service.compute_routes(region["region"])
-        destination = region["centrales"]["id"]
 
-        for source_plant in regions_sugar_daddy:
+        result = region_service.compute_routes(
+            region["region"]
+        )
 
+        source_plant = result["source_plant"]
 
-        candidats  = []
+        candidats = []
+
         for destination, route_info in result["routes"].items():
 
-            centrale = find_centrale(extract_data()["plants"], destination)
+            centrale = find_centrale(
+                extract_data()["plants"],
+                destination
+            )
 
-            if centrale is not None and centrale["location"]["region_name"] == region:
-                print("DESTINATION DANS LA REGION :", destination)
+            if (
+                centrale is not None
+                and centrale["location"]["region_name"]
+                == region["region"]
+            ):
+                print(
+                    "DESTINATION DANS LA REGION :",
+                    destination
+                )
                 continue
 
             if destination == source_plant:
@@ -623,9 +641,9 @@ def repartition_initiale_minuit():
             total_loss_percent = route_info["total_loss_percent"]
             max_transfer_mw = route_info["max_transfer_mw"]
 
-            
-
-            
+            demande_residuelle = (
+                region["production_initial_a_repartir"] * -1
+            )
 
             resultat = calcul_scores(
                 source_plant,
@@ -635,30 +653,11 @@ def repartition_initiale_minuit():
                 max_transfer_mw,
                 demande_residuelle
             )
+
             if resultat is not None:
                 candidats.append(resultat)
-
-        candidats.sort(key=lambda x: x["score_candidat"])
-
-        repartition_externe = []
-        demande_restante = demande_residuelle
-        index = 0
-
-        while demande_restante > 0 and index < len(candidats):
-            candidat = candidats[index]
-            production_affectee = min(
-                candidat["puissance_disponible"],
-                candidat["max_transfer_mw"],
-                demande_restante
-            )
-            candidat["production_affectee"] = production_affectee 
-            repartition_externe.append(candidat)
-            demande_restante -= production_affectee
-            index += 1
-            candidat["production_restante"] = (
-                candidat["puissance_disponible"] - production_affectee
-            )
-
+                
+print(repartition_initiale_minuit())
 def repartition(augmentation, region):
     donnees = extract_data()
     demande_residuelle, puissance_disponible_regional = calcul_demande_residuelle(augmentation, region)

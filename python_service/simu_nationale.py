@@ -49,29 +49,16 @@ for index, centrale in enumerate(params_temporels["plants"]):
             "production": centrale["maximum_power_mw"] * pct
         })
 
-        if prod_reelle[-1]["production"] < centrale["minimum_operating_power_mw"]:
-
-            augmentation_atteindre_seuil = (
-                centrale["minimum_operating_power_mw"]
-                - prod_reelle[-1]["production"]
-            )
-
-            prod_reelle[-1]["production"] += augmentation_atteindre_seuil
-
-            centrale_deficit = dict(prod_reelle[-1])
+        if prod_reelle[index]["production"] < centrale["minimum_operating_power_mw"]:
+            augmentation_atteindre_seuil = centrale["minimum_operating_power_mw"] - prod_reelle[index]["production"]
+            prod_reelle[index]["production"] += augmentation_atteindre_seuil
+            centrale_deficit = prod_reelle[index]
             centrale_deficit["augmentation_atteindre_seuil"] = augmentation_atteindre_seuil
             centrales_deficit.append(centrale_deficit)
-
-        elif prod_reelle[-1]["production"] > centrale["maximum_power_mw"]:
-
-            dimunition_atteindre_seuil = (
-                prod_reelle[-1]["production"]
-                - centrale["maximum_power_mw"]
-            )
-
-            prod_reelle[-1]["production"] -= dimunition_atteindre_seuil
-
-            centrale_excedent = dict(prod_reelle[-1])
+        elif prod_reelle[index]["production"] > centrale["minimum_operating_power_mw"]:
+            dimunition_atteindre_seuil = centrale["maximum_power_mw"] -  prod_reelle[index]["production"]
+            prod_reelle[index]["production"] -= dimunition_atteindre_seuil
+            centrale_excedent = prod_reelle[index]
             centrale_excedent["dimunition_atteindre_seuil"] = dimunition_atteindre_seuil
             centrales_excedent.append(centrale_excedent)
 

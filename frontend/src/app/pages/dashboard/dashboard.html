@@ -1,0 +1,53 @@
+<div class="dashboard">
+
+  <div class="dashboard-header">
+    <div>
+      <h2>Dashboard</h2>
+      <p>Vue d'ensemble du réseau énergétique</p>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+
+    <app-stat-card
+      title="Consommation"
+      value="52 430"
+      unit="MW"
+      icon="⚡"
+    />
+
+    <app-stat-card
+      title="Production nucléaire"
+      value="51 200"
+      unit="MW"
+      icon="🏭"
+    />
+
+    <app-stat-card
+      title="Réserve disponible"
+      value="8 400"
+      unit="MW"
+      icon="🔋"
+    />
+
+    <app-stat-card
+      title="Centrales disponibles"
+      value="18 / 18"
+      unit=""
+      icon="✓"
+    />
+
+  </div>
+
+  <div class="network-status">
+
+    <div class="status-indicator"></div>
+
+    <div>
+      <span class="status-label">État du réseau</span>
+      <strong>Situation normale</strong>
+    </div>
+
+  </div>
+
+</div>

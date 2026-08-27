@@ -1,0 +1,45 @@
+<aside class="sidebar">
+
+  <div class="logo">
+    <div class="logo-icon">⚡</div>
+
+    <div class="logo-text">
+      <h1>EnergIA</h1>
+      <span>Energy Control</span>
+    </div>
+  </div>
+
+  <nav class="navigation">
+
+    <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+      <span class="icon">🏠</span>
+      <span>Dashboard</span>
+    </a>
+
+    <a routerLink="/simulation" routerLinkActive="active">
+      <span class="icon">⚡</span>
+      <span>Simulation</span>
+    </a>
+
+    <a routerLink="/parc" routerLinkActive="active">
+      <span class="icon">🏭</span>
+      <span>Parc nucléaire</span>
+    </a>
+
+    <a routerLink="/historique" routerLinkActive="active">
+      <span class="icon">📊</span>
+      <span>Historique</span>
+    </a>
+
+  </nav>
+
+  <div class="system-status">
+    <span class="status-dot"></span>
+
+    <div>
+      <strong>Système normal</strong>
+      <small>Service opérationnel</small>
+    </div>
+  </div>
+
+</aside>

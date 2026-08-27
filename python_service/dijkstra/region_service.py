@@ -3,7 +3,6 @@ from dijkstra.dijkstra_service import DijkstraService
 import unicodedata
 
 
-
 def normaliser_region(region):
     region = region.lower().strip()
 
@@ -17,6 +16,7 @@ def normaliser_region(region):
     region = region.replace("-", "_").replace(" ", "_")
 
     return region
+
 
 class RegionService:
 
@@ -44,6 +44,14 @@ class RegionService:
             ):
 
                 self.plant_to_region[plant_id] = region_id
+
+        # ------------------------------------------------------------
+        # IDS DES PDL (JAMAIS UTILISABLES COMME SOURCE SI UNE VRAIE
+        # CENTRALE EST DISPONIBLE DANS LA REGION)
+        # ------------------------------------------------------------
+        self.pdl_ids = {
+            pdl["id"] for pdl in data.get("PDL", [])
+        }
 
     def compute_routes(self, region_id):
 
@@ -74,7 +82,23 @@ class RegionService:
                 "Cette région ne possède aucune centrale locale."
             )
 
-        source = local_plant_ids[0]
+        # ------------------------------------------------------------
+        # ON PRIVILEGIE UNE VRAIE CENTRALE COMME SOURCE.
+        # LE PDL NE SERT DE REPLI QUE S'IL N'Y A PAS D'ALTERNATIVE,
+        # UNIQUEMENT POUR SERVIR DE POINT D'ANCRAGE DANS LE GRAPHE
+        # (IL NE DOIT JAMAIS ETRE CONSIDERE COMME UN PRODUCTEUR).
+        # ------------------------------------------------------------
+        plant_ids_sans_pdl = [
+            plant_id
+            for plant_id in local_plant_ids
+            if plant_id not in self.pdl_ids
+        ]
+
+        source = (
+            plant_ids_sans_pdl[0]
+            if plant_ids_sans_pdl
+            else local_plant_ids[0]
+        )
 
         all_routes = self.dijkstra.shortest_paths(source)
 

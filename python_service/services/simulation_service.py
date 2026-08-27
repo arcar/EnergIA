@@ -32,7 +32,7 @@ def simuler_augmentation(region, augmentation):
     )
 
     # 3. Calculer la demande résiduelle
-    demande_residuelle = calcul_demande_residuelle(
+    demande_residuelle, puissance_disponible_regional = calcul_demande_residuelle(
         augmentation,
         region
     )

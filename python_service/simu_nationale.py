@@ -21,9 +21,9 @@ with open(parametres_temporels_nucleaire_data, "r", encoding="utf-8") as json_fi
 prod_nucleaire_france = 0
 min_prod_france = 0
 
-for max in params_temporels["plants"]:
-    prod_nucleaire_france += max["maximum_power_mw"]
-    min_prod_france += max["minimum_operating_power_mw"]
+for maximum in params_temporels["plants"]:
+    prod_nucleaire_france += maximum["maximum_power_mw"]
+    min_prod_france += maximum["minimum_operating_power_mw"]
 
 
 demande_residuelle = (np.array(data["national_total_consumption_mw"]) - np.array(non_pilotable_data["national_total_production_mw"]["solar_plus_wind"])).tolist()
@@ -39,6 +39,15 @@ productions_sur_maximum = []
 energie_a_revendre = []
 energie_non_fournie = []
 
+# ============================================================
+# ETAT INITIAL DES CENTRALES
+# ============================================================
+
+etat_precedent = {}
+
+for centrale in params_temporels["plants"]:
+    etat_precedent[centrale["plant_id"]] = (centrale["initial_output_mw_at_23_45_previous_day"])
+
 
 # ============================================================
 # TRAITEMENT HEURE PAR HEURE
@@ -53,39 +62,78 @@ for heure, pct in zip(
 
     # ========================================================
     # CALCUL DE LA PRODUCTION DEMANDEE
+    # ET DES LIMITES POUR CE QUART D'HEURE
     # ========================================================
 
     demande_heure = 0
 
     for centrale in params_temporels["plants"]:
 
+        plant_id = centrale["plant_id"]
+
         production_demandee = (
             centrale["maximum_power_mw"] * pct
         )
 
-        minimum = (
+        minimum_technique = (
             centrale["minimum_operating_power_mw"]
         )
 
-        maximum = (
+        maximum_technique = (
             centrale["maximum_power_mw"]
+        )
+
+        production_precedente = (
+            etat_precedent[plant_id]
+        )
+
+        # Limite imposée par la vitesse de descente
+        minimum_temporel = (
+            production_precedente
+            - centrale["max_ramp_down_mw_per_15_min"]
+        )
+
+        # Limite imposée par la vitesse de montée
+        maximum_temporel = (
+            production_precedente
+            + centrale["max_ramp_up_mw_per_15_min"]
+        )
+
+        # Combinaison des limites techniques et temporelles
+        minimum_autorise = max(
+            minimum_technique,
+            minimum_temporel
+        )
+
+        maximum_autorise = min(
+            maximum_technique,
+            maximum_temporel
         )
 
         demande_heure += production_demandee
 
         centrales_heure.append({
-
-            "plant_id": centrale["plant_id"],
-
+            "plant_id": plant_id,
             "production": production_demandee,
+            "production_demandee": production_demandee,
 
-            "production_demandee":
-                production_demandee,
+            "production_precedente": production_precedente,
 
-            "minimum": minimum,
+            # Limites applicables pendant ce quart d'heure
+            "minimum": minimum_autorise,
+            "maximum": maximum_autorise,
 
-            "maximum": maximum
+            # Limites permanentes de la centrale
+            "minimum_technique": minimum_technique,
+            "maximum_technique": maximum_technique,
 
+            "rampe_montee": (
+                centrale["max_ramp_up_mw_per_15_min"]
+            ),
+
+            "rampe_descente": (
+                centrale["max_ramp_down_mw_per_15_min"]
+            )
         })
 
 
@@ -172,26 +220,43 @@ for heure, pct in zip(
         for centrale in centrales_heure:
 
             prod_reelle.append({
+                "plant_id": centrale["plant_id"],
+                "heure": heure,
 
-                "plant_id":
-                    centrale["plant_id"],
+                "production": centrale["production"],
+                "production_demandee": centrale["production_demandee"],
 
-                "heure":
-                    heure,
+                "production_precedente": (
+                    centrale["production_precedente"]
+                ),
 
-                "production":
-                    centrale["production"],
+                "variation_mw": (
+                    centrale["production"]
+                    - centrale["production_precedente"]
+                ),
 
-                "production_demandee":
-                    centrale["production_demandee"],
+                "minimum_autorise": centrale["minimum"],
+                "maximum_autorise": centrale["maximum"],
 
-                "production_minimum":
-                    centrale["minimum"],
+                "production_minimum_technique": (
+                    centrale["minimum_technique"]
+                ),
 
-                "production_maximum":
-                    centrale["maximum"]
+                "production_maximum_technique": (
+                    centrale["maximum_technique"]
+                ),
 
+                "rampe_montee_maximale": (
+                    centrale["rampe_montee"]
+                ),
+
+                "rampe_descente_maximale": (
+                    centrale["rampe_descente"]
+                )
             })
+
+            etat_precedent[centrale["plant_id"]] = (centrale["production"])
+
 
         continue
 
@@ -264,26 +329,42 @@ for heure, pct in zip(
         for centrale in centrales_heure:
 
             prod_reelle.append({
+                "plant_id": centrale["plant_id"],
+                "heure": heure,
 
-                "plant_id":
-                    centrale["plant_id"],
+                "production": centrale["production"],
+                "production_demandee": centrale["production_demandee"],
 
-                "heure":
-                    heure,
+                "production_precedente": (
+                    centrale["production_precedente"]
+                ),
 
-                "production":
-                    centrale["production"],
+                "variation_mw": (
+                    centrale["production"]
+                    - centrale["production_precedente"]
+                ),
 
-                "production_demandee":
-                    centrale["production_demandee"],
+                "minimum_autorise": centrale["minimum"],
+                "maximum_autorise": centrale["maximum"],
 
-                "production_minimum":
-                    centrale["minimum"],
+                "production_minimum_technique": (
+                    centrale["minimum_technique"]
+                ),
 
-                "production_maximum":
-                    centrale["maximum"]
+                "production_maximum_technique": (
+                    centrale["maximum_technique"]
+                ),
 
+                "rampe_montee_maximale": (
+                    centrale["rampe_montee"]
+                ),
+
+                "rampe_descente_maximale": (
+                    centrale["rampe_descente"]
+                )
             })
+
+            etat_precedent[centrale["plant_id"]] = (centrale["production"])
 
         continue
 
@@ -568,28 +649,82 @@ for heure, pct in zip(
     # ========================================================
 
     for centrale in centrales_heure:
-
         prod_reelle.append({
+            "plant_id": centrale["plant_id"],
+            "heure": heure,
 
-            "plant_id":
-                centrale["plant_id"],
+            "production": centrale["production"],
+            "production_demandee": centrale["production_demandee"],
 
-            "heure":
-                heure,
+            "production_precedente": (
+                centrale["production_precedente"]
+            ),
 
-            "production":
-                centrale["production"],
+            "variation_mw": (
+                centrale["production"]
+                - centrale["production_precedente"]
+            ),
 
-            "production_demandee":
-                centrale["production_demandee"],
+            "minimum_autorise": centrale["minimum"],
+            "maximum_autorise": centrale["maximum"],
 
-            "production_minimum":
-                centrale["minimum"],
+            "production_minimum_technique": (
+                centrale["minimum_technique"]
+            ),
 
-            "production_maximum":
-                centrale["maximum"]
+            "production_maximum_technique": (
+                centrale["maximum_technique"]
+            ),
 
+            "rampe_montee_maximale": (
+                centrale["rampe_montee"]
+            ),
+
+            "rampe_descente_maximale": (
+                centrale["rampe_descente"]
+            )
         })
+
+        etat_precedent[centrale["plant_id"]] = (centrale["production"])
+
+# ============================================================
+# VERIFICATION DES RAMPES
+# ============================================================
+
+erreurs_rampes = []
+
+for production in prod_reelle:
+
+    variation = production["variation_mw"]
+
+    if variation > production["rampe_montee_maximale"] + 0.000001:
+        erreurs_rampes.append({
+            "plant_id": production["plant_id"],
+            "heure": production["heure"],
+            "type": "montee_trop_rapide",
+            "variation_mw": variation,
+            "limite_mw": production["rampe_montee_maximale"]
+        })
+
+    if variation < -production["rampe_descente_maximale"] - 0.000001:
+        erreurs_rampes.append({
+            "plant_id": production["plant_id"],
+            "heure": production["heure"],
+            "type": "descente_trop_rapide",
+            "variation_mw": variation,
+            "limite_mw": production["rampe_descente_maximale"]
+        })
+
+print(
+    "NOMBRE D'ERREURS DE RAMPE :",
+    len(erreurs_rampes)
+)
+
+print(
+    "ERREURS DE RAMPE :",
+    erreurs_rampes
+)
+
 
 
 # ============================================================
@@ -622,10 +757,11 @@ print(
 )
 
 print("\nPRODUCTIONS RÉELLES :")
-print(prod_reelle)
+print(prod_reelle[:40])
 
 print("\nENERGIE A REVENDRE :")
 print(energie_a_revendre)
 
 print("\nENERGIE NON FOURNIE :")
 print(energie_non_fournie)
+

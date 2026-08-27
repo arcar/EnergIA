@@ -132,7 +132,8 @@ for heure, pourcentage in zip(non_pilotable_data["timestamps"], pourc_prod):
     demande_heure = 0
 
     for centrale in params_temporels["plants"]:
-        centrales_heure = calculer_centrales_heure(centrale, pourcentage, etat_precedent)
+        resultat = calculer_centrales_heure(centrale, pourcentage, etat_precedent)
+        centrales_heure.append(resultat)
         demande_heure = calculer_demande_heure(centrales_heure)
         
         # plant_id = centrale["plant_id"]

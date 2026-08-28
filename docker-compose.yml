@@ -12,8 +12,9 @@ services:
     ports:
       - "8000:8000"
 
-  angular:
+  frontend:
     image: flor3473/energia:frontend
+    ports:
       - "4200:4200"
     depends_on:
       - node_gateway

@@ -50,8 +50,16 @@ def simuler_augmentation(region, augmentation):
         region
     )
 
+    print("===== DEBUG APRES REPARTITION =====")
+    print(resultat_repartition)
+    print("===================================")
+
     logger.info("Répartition terminée")
 
+    print("===== DEBUG AVANT RETURN =====")
+    print("Simulation terminée")
+    print("==============================")
+    
     return {
         "success": True,
         "region": region,

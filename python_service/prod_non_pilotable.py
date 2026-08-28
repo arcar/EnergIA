@@ -197,6 +197,7 @@ print("Solaire :", get_production_solaire("normandie", "12:00"))
 print("Eolien :", get_production_eolienne("normandie", "12:00"))
 
 print("Demande résiduelle :", get_demande_residuelle("normandie", "12:00"))
+
 print("=======================================================================")
 
 resultats = get_demande_residuelle_toutes_regions()

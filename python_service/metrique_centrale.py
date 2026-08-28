@@ -586,7 +586,7 @@ def prod_initiale_a_repartir():
 
     return production_regional_initial_a_repartir
 
-print(prod_initiale_a_repartir()) 
+
 
 
 def repartition_initiale_minuit():
@@ -657,7 +657,7 @@ def repartition_initiale_minuit():
             if resultat is not None:
                 candidats.append(resultat)
                 
-print(repartition_initiale_minuit())
+
 def repartition(augmentation, region):
     donnees = extract_data()
     demande_residuelle, puissance_disponible_regional = calcul_demande_residuelle(augmentation, region)

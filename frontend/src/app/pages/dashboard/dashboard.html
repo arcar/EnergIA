@@ -1,53 +1,260 @@
+
 <div class="dashboard">
 
   <div class="dashboard-header">
+
     <div>
       <h2>Dashboard</h2>
       <p>Vue d'ensemble du réseau énergétique</p>
     </div>
+
   </div>
+
+
+  <div class="security-margin">
+
+    <div class="security-header">
+
+      <span>Marge de sécurité</span>
+
+      <strong>{{ securityMargin }} %</strong>
+
+    </div>
+
+    <input
+      type="range"
+      min="0"
+      max="30"
+      step="1"
+      [(ngModel)]="securityMargin"
+    />
+
+  </div>
+
 
   <div class="stats-grid">
 
     <app-stat-card
       title="Consommation"
-      value="52 430"
+      [value]="currentState.consommation.toLocaleString('fr-FR')"
       unit="MW"
       icon="⚡"
     />
 
     <app-stat-card
       title="Production nucléaire"
-      value="51 200"
+      [value]="currentState.nucleaire.toLocaleString('fr-FR')"
       unit="MW"
       icon="🏭"
     />
 
     <app-stat-card
       title="Réserve disponible"
-      value="8 400"
+      [value]="currentState.reserve.toLocaleString('fr-FR')"
       unit="MW"
       icon="🔋"
     />
 
     <app-stat-card
       title="Centrales disponibles"
-      value="18 / 18"
+      [value]="currentState.centralesDisponibles"
       unit=""
       icon="✓"
     />
 
+    <app-stat-card
+      title="Production solaire"
+      [value]="currentState.solaire.toLocaleString('fr-FR')"
+      unit="MW"
+      icon="☀️"
+    />
+
+    <app-stat-card
+      title="Production éolienne"
+      [value]="currentState.eolienne.toLocaleString('fr-FR')"
+      unit="MW"
+      icon="🌬️"
+    />
+
+    <app-stat-card
+      title="Demande résiduelle"
+      [value]="currentState.demandeResiduelle.toLocaleString('fr-FR')"
+      unit="MW"
+      icon="📊"
+    />
+
   </div>
+
 
   <div class="network-status">
 
-    <div class="status-indicator"></div>
+    <div
+      class="status-indicator"
+      [class.normal]="networkStatusClass === 'normal'"
+      [class.warning]="networkStatusClass === 'warning'"
+      [class.danger]="networkStatusClass === 'danger'"
+    ></div>
 
     <div>
-      <span class="status-label">État du réseau</span>
-      <strong>Situation normale</strong>
+
+      <span class="status-label">
+        État du réseau
+      </span>
+
+      <strong>
+        {{ networkStatus }}
+      </strong>
+
+    </div>
+
+  </div>
+
+
+  <div class="energy-overview">
+
+    <div class="energy-overview-header">
+
+      <div>
+
+        <h3>Répartition de la production</h3>
+
+        <p>État actuel des différentes sources d'énergie</p>
+
+      </div>
+
+    </div>
+
+
+    <div class="energy-list">
+
+      <div class="energy-item">
+
+        <div class="energy-info">
+
+          <span class="energy-name">Nucléaire</span>
+
+          <span class="energy-value">
+            {{ currentState.nucleaire.toLocaleString('fr-FR') }} MW
+          </span>
+
+        </div>
+
+        <div class="energy-bar">
+
+          <div
+            class="energy-bar-fill nuclear"
+            [style.width.%]="(currentState.nucleaire / currentState.consommation) * 100"
+          ></div>
+
+        </div>
+
+      </div>
+
+
+      <div class="energy-item">
+
+        <div class="energy-info">
+
+          <span class="energy-name">Solaire</span>
+
+          <span class="energy-value">
+            {{ currentState.solaire.toLocaleString('fr-FR') }} MW
+          </span>
+
+        </div>
+
+        <div class="energy-bar">
+
+          <div
+            class="energy-bar-fill solar"
+            [style.width.%]="(currentState.solaire / currentState.consommation) * 100"
+          ></div>
+
+        </div>
+
+      </div>
+
+
+      <div class="energy-item">
+
+        <div class="energy-info">
+
+          <span class="energy-name">Éolien</span>
+
+          <span class="energy-value">
+            {{ currentState.eolienne.toLocaleString('fr-FR') }} MW
+          </span>
+
+        </div>
+
+        <div class="energy-bar">
+
+          <div
+            class="energy-bar-fill wind"
+            [style.width.%]="(currentState.eolienne / currentState.consommation) * 100"
+          ></div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <div class="production-chart">
+
+    <div class="production-chart-header">
+
+      <h3>Évolution de la production</h3>
+
+      <span>Journée de référence · 96 états</span>
+
+    </div>
+
+
+    <div class="timeline">
+
+      <div class="timeline-line"></div>
+
+      <div class="timeline-points">
+
+        @for (state of timeline; track state.index) {
+
+          <div
+            class="timeline-point"
+            [class.active]="selectedState === state.index"
+            (click)="selectState(state.index)"
+          >
+
+            <span class="point"></span>
+
+            <span class="time">
+
+              @if (
+                state.index === 0 ||
+                state.index === 24 ||
+                state.index === 48 ||
+                state.index === 72 ||
+                state.index === 95
+              ) {
+
+                {{ state.time }}
+
+              }
+
+            </span>
+
+          </div>
+
+        }
+
+      </div>
+
     </div>
 
   </div>
 
 </div>
+

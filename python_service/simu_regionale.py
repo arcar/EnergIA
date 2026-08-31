@@ -1,4 +1,5 @@
-from simu_nationale import (charger_donnees, construire_centrales_heure, enregistrer_productions, EPSILON, initialiser_etat)
+from simu_nationale import (charger_donnees, construire_centrales_heure, enregistrer_productions, EPSILON, initialiser_etat, verifier_rampes)
+from metrique_centrale import (router_deficit)
 
 data = charger_donnees()
 
@@ -38,6 +39,18 @@ def production_non_pilotables_regional():
         ]
     return production_np_regional
 
+def production_non_pilotable_detail_regional():
+    detail = {}
+    for non_pilotable in data["non_pilotable"]["regions"]:
+        solar = non_pilotable["production_mw"]["solar"]
+        wind = non_pilotable["production_mw"]["wind"]
+        detail[non_pilotable["id"]] = {
+            "solar_mw": solar,
+            "wind_mw": wind,
+            "total_mw": [s + w for s, w in zip(solar, wind)]
+        }
+    return detail
+
 
 def demande_moins_non_pilotable():
     consommation = demande_regionale()
@@ -74,7 +87,7 @@ def pourcentage_repartition_regionale():
         pourcentage_regional[region["region_id"]] = [
             valeur_demande / capacite_dispo_region for valeur_demande in demande_residuelle_region
         ]
-    return pourcentage_regional
+    return pourcentage_regional, facteur_reserve
 
 def sous_minimum(centrales_heure, heure, productions_sous_minimum):
 
@@ -147,6 +160,7 @@ def equilibrer_region_localement(region_id, heure, centrales, pourcentage, etat_
             "region_id" : region_id,
             "demande_mw" : demande_heure,
             "production_mw" : minimum_regional,
+            "maximum_regional_mw" : maximum_regional,
             "surplus_residuel" : surplus_residuel,
             "deficit_residuel" : 0
         }
@@ -162,6 +176,7 @@ def equilibrer_region_localement(region_id, heure, centrales, pourcentage, etat_
             "region_id" : region_id,
             "demande_mw" : demande_heure,
             "production_mw" : maximum_regional,
+            "maximum_regional_mw" : maximum_regional,
             "surplus_residuel" : 0,
             "deficit_residuel" : deficit_residuel
         }
@@ -178,6 +193,7 @@ def equilibrer_region_localement(region_id, heure, centrales, pourcentage, etat_
         "region_id" : region_id,
         "demande_mw" : demande_heure,
         "production_mw" :  sum(centrale["production"] for centrale in centrales_heure),
+        "maximum_regional_mw" : maximum_regional,
         "surplus_residuel" : surplus_restant,
         "deficit_residuel" : deficit_restant
     }
@@ -227,9 +243,145 @@ def redistribuer_deficit(centrales_heure, deficit_a_repartir):
         )
     )
 
+def plant_id_vers_region(regions_avec_nucleaire):
+    mapping = {}
+    for region in regions_avec_nucleaire:
+        for centrale in region["plants"]:
+            mapping[centrale["plant_id"]] = region["region_id"]
+    return mapping
+
+def repartir_surplus_vers_deficits(resultats_heure):
+    surplus_regions = [r for r in resultats_heure if r["surplus_residuel"] > EPSILON]
+    deficit_regions = [r for r in resultats_heure if r["deficit_residuel"] > EPSILON]
+
+    echanges = []
+    index_surplus = 0
+
+    for deficit_region in deficit_regions:
+        while deficit_region["deficit_residuel"] > EPSILON and index_surplus < len(surplus_regions):
+            surplus_region = surplus_regions[index_surplus]
+
+            if surplus_region["surplus_residuel"] <= EPSILON:
+                index_surplus += 1
+                continue
+
+            transfert = min(
+                deficit_region["deficit_residuel"],
+                surplus_region["surplus_residuel"]
+            )
+
+            echanges.append({
+                "region_source": surplus_region["region_id"],
+                "region_destination": deficit_region["region_id"],
+                "quantite_mw": transfert
+            })
+
+            deficit_region["deficit_residuel"] -= transfert
+            surplus_region["surplus_residuel"] -= transfert
+
+    return echanges
+
+def resultats_regions_sans_nucleaire(regions_sans_nucleaire, demande_residuelle_toutes, index, ids_deconnectees):
+    resultats = []
+
+    for region in regions_sans_nucleaire:
+        region_id = region["region_id"]
+
+        if region_id in ids_deconnectees:
+            continue
+
+        valeur_demande = demande_residuelle_toutes[region_id][index]
+        deficit = max(valeur_demande, 0)
+
+        resultats.append({
+            "region_id": region_id,
+            "demande_mw": valeur_demande,
+            "production_mw": 0,
+            "maximum_regional_mw": 0,
+            "surplus_residuel": 0,
+            "deficit_residuel": deficit
+        })
+
+    return resultats
+
+def capacite_max_par_region(regions_avec_nucleaire):
+    capacites = {}
+    for region in regions_avec_nucleaire:
+        capacites[region["region_id"]] = sum(
+            centrale["maximum_power_mw"] for centrale in region["plants"]
+        )
+    return capacites
+
+def detecter_situation_degradee(region_id, heure, production_mw, maximum_regional_mw, capacite_max_region, minimum_reserve_percent):
+    reserve_disponible_mw = maximum_regional_mw - production_mw
+
+    if capacite_max_region > 0:
+        reserve_disponible_percent = (reserve_disponible_mw / capacite_max_region) * 100
+    else:
+        reserve_disponible_percent = 0
+
+    situation_degradee = reserve_disponible_percent < minimum_reserve_percent
+
+    return {
+        "region_id": region_id,
+        "heure": heure,
+        "production_mw": production_mw,
+        "maximum_technique_mw": maximum_regional_mw,
+        "capacite_max_region_mw": capacite_max_region,
+        "reserve_disponible_mw": reserve_disponible_mw,
+        "reserve_disponible_percent": reserve_disponible_percent,
+        "seuil_minimum_percent": minimum_reserve_percent,
+        "situation_degradee": situation_degradee,
+    }
+
+def construire_detail_regional(region_id, heure, index, production_mw, production_precedente_mw, consommation_par_region, non_pilotable_detail, demande_residuelle_toutes):
+    variation_mw = production_mw - production_precedente_mw
+
+    if variation_mw > EPSILON:
+        sens_variation = "hausse"
+    elif variation_mw < -EPSILON:
+        sens_variation = "baisse"
+    else:
+        sens_variation = "stable"
+
+    if region_id in non_pilotable_detail:
+        solar_mw = non_pilotable_detail[region_id]["solar_mw"][index]
+        wind_mw = non_pilotable_detail[region_id]["wind_mw"][index]
+        non_pilotable_total_mw = non_pilotable_detail[region_id]["total_mw"][index]
+    else:
+        solar_mw = 0
+        wind_mw = 0
+        non_pilotable_total_mw = 0
+
+    return {
+        "region_id": region_id,
+        "heure": heure,
+        "consommation_mw": consommation_par_region[region_id][index],
+        "solar_mw": solar_mw,
+        "wind_mw": wind_mw,
+        "non_pilotable_total_mw": non_pilotable_total_mw,
+        "demande_residuelle_mw": demande_residuelle_toutes[region_id][index],
+        "production_nucleaire_mw": production_mw,
+        "production_nucleaire_precedente_mw": production_precedente_mw,
+        "variation_mw": variation_mw,
+        "sens_variation": sens_variation,
+    }
+
+def production_regionale_initiale(regions):
+    initiale = {}
+    for region in regions:
+        initiale[region["region_id"]] = sum(
+            centrale["initial_output_mw_at_23_45_previous_day"] for centrale in region["plants"]
+        )
+    return initiale
+
 def equilibrage_local_toutes_regions_nucleaires():
     regions = regions_avec_centrales()
-    pourcentages = pourcentage_repartition_regionale()
+    pourcentages, facteur_reserve = pourcentage_repartition_regionale()
+    demande_residuelle_toutes = demande_moins_non_pilotable()
+    consommation_par_region = demande_regionale()
+    non_pilotable_detail = production_non_pilotable_detail_regional()
+    minimum_reserve_percent = 8.0
 
     etat_precedent = initialiser_etat(data["params_temporels"])
 
@@ -237,15 +389,118 @@ def equilibrage_local_toutes_regions_nucleaires():
     productions_sous_minimum = []
     productions_sur_maximum = []
     resultats_toutes_regions = []
+    resultats_routage = []
+    echanges_surplus_deficit = []
+    energie_non_fournie = []
+    energie_a_revendre = []
+    situations_degradees = []
+    details_regionaux = []
 
-    regions_avec_nucleaire =  [region for region in regions if region["region_id"] in pourcentages]
+    regions_avec_nucleaire = [region for region in regions if region["region_id"] in pourcentages]
     regions_sans_nucleaire = [region for region in regions if region["region_id"] not in pourcentages]
     regions_deconnectees = [region for region in data["parc_nucleaire"]["regions"] if not region["connected_to_continental_grid"]]
+    ids_deconnectees = {region["id"] for region in regions_deconnectees}
+
+    mapping = plant_id_vers_region(regions_avec_nucleaire)
+    capacite_max_region_dict = capacite_max_par_region(regions_avec_nucleaire)
+
+    production_regionale_precedente = production_regionale_initiale(regions)
 
     for index, quarts_heure in enumerate(data["consommation"]["timestamps"]):
+        production_debut_heure = dict(etat_precedent)
+
+        resultats_heure = []
+
         for region in regions_avec_nucleaire:
-            resultat = equilibrer_region_localement(region["region_id"], quarts_heure,region["plants"], pourcentages[region["region_id"]][index], etat_precedent, prod_reelle, productions_sous_minimum, productions_sur_maximum)
-            resultats_toutes_regions.append(resultat) 
+            resultat = equilibrer_region_localement(region["region_id"], quarts_heure, region["plants"], pourcentages[region["region_id"]][index], etat_precedent, prod_reelle, productions_sous_minimum, productions_sur_maximum)
+            resultats_heure.append(resultat)
 
-    return resultats_toutes_regions, prod_reelle, productions_sous_minimum, productions_sur_maximum
+            situation = detecter_situation_degradee(
+                resultat["region_id"], quarts_heure, resultat["production_mw"],
+                resultat["maximum_regional_mw"], capacite_max_region_dict[resultat["region_id"]],
+                minimum_reserve_percent
+            )
+            situations_degradees.append(situation)
 
+        resultats_heure.extend(
+            resultats_regions_sans_nucleaire(regions_sans_nucleaire, demande_residuelle_toutes, index, ids_deconnectees)
+        )
+
+        echanges = repartir_surplus_vers_deficits(resultats_heure)
+        echanges_surplus_deficit.extend(echanges)
+
+        for resultat in resultats_heure:
+            region_id = resultat["region_id"]
+
+            if resultat["deficit_residuel"] > EPSILON:
+                gerer_deficit = router_deficit(region_id, resultat["deficit_residuel"], etat_precedent, facteur_reserve, data["params_temporels"]["plants"], mapping, production_debut_heure)
+                resultats_routage.append(gerer_deficit)
+
+                if gerer_deficit["demande_non_couverte"] > EPSILON:
+                    energie_non_fournie.append({
+                        "region_id": region_id,
+                        "heure": quarts_heure,
+                        "energie_non_fournie_mw": gerer_deficit["demande_non_couverte"]
+                    })
+
+            if resultat["surplus_residuel"] > EPSILON:
+                energie_a_revendre.append({
+                    "region_id": region_id,
+                    "heure": quarts_heure,
+                    "energie_a_revendre_mw": resultat["surplus_residuel"]
+                })
+
+            detail = construire_detail_regional(region_id, quarts_heure, index, resultat["production_mw"], production_regionale_precedente[region_id], consommation_par_region, non_pilotable_detail, demande_residuelle_toutes)
+            details_regionaux.append(detail)
+
+            production_regionale_precedente[region_id] = resultat["production_mw"]
+
+        resultats_toutes_regions.extend(resultats_heure)
+
+    erreurs_rampes = verifier_rampes(prod_reelle)
+
+    return {
+        "resultats_toutes_regions": resultats_toutes_regions,
+        "prod_reelle": prod_reelle,
+        "productions_sous_minimum": productions_sous_minimum,
+        "productions_sur_maximum": productions_sur_maximum,
+        "resultats_routage": resultats_routage,
+        "echanges_surplus_deficit": echanges_surplus_deficit,
+        "energie_non_fournie": energie_non_fournie,
+        "energie_a_revendre": energie_a_revendre,
+        "situations_degradees": situations_degradees,
+        "details_regionaux": details_regionaux,
+        "erreurs_rampes": erreurs_rampes,
+    }
+
+def repartition_par_heure(prod_reelle, heure_demandee):
+    resultats = []
+
+    for entree in prod_reelle:
+        if entree["heure"] != heure_demandee:
+            continue
+
+        centrale = trouver_centrales(entree["plant_id"])
+        puissance_max = centrale["maximum_power_mw"]
+
+        taux_utilisation = (entree["production"] / puissance_max) * 100 if puissance_max > 0 else 0
+
+        resultats.append({
+            "plant_id": entree["plant_id"],
+            "plant_name": centrale["plant_name"],
+            "heure": entree["heure"],
+            "production_mw": entree["production"],
+            "production_demandee_mw": entree["production_demandee"],
+            "puissance_maximum_mw": puissance_max,
+            "puissance_minimum_mw": centrale["minimum_operating_power_mw"],
+            "taux_utilisation_percent": taux_utilisation,
+            "minimum_autorise_mw": entree["minimum_autorise"],
+            "maximum_autorise_mw": entree["maximum_autorise"],
+            "variation_mw": entree["variation_mw"],
+        })
+
+    return resultats
+
+resultats = equilibrage_local_toutes_regions_nucleaires()
+repartition_heure_test = repartition_par_heure(resultats["prod_reelle"], "10:00")
+print(repartition_heure_test)

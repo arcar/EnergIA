@@ -1,4 +1,4 @@
-from calcul_score_central import extract_data, calcul_scores, find_centrale, extract_production, extract_consomation_temporels
+from calcul_score_central import extract_data, calcul_scores, find_centrale, extract_production, extract_consomation_temporels, find_centrale_reacteurs
 
 from dijkstra.region_service import RegionService
 from dijkstra.json_repository import JsonRepository
@@ -658,104 +658,61 @@ def repartition_initiale_minuit():
                 candidats.append(resultat)
                 
 
-def repartition(augmentation, region):
-    donnees = extract_data()
-    demande_residuelle, puissance_disponible_regional = calcul_demande_residuelle(augmentation, region)
-    centrales_regionale = get_centrale_regionale(region)
+def router_deficit(region_id, deficit_residuel, etat_precedent, facteur_reserve, toutes_les_centrales, plant_id_region, production_debut_heure):
+    result = region_service.compute_routes(region_id)
+    source_plant = result["source_plant"]
+    routes = result["routes"]
 
-    for regions in donnees["regions"]:
-        if(region == regions["id"]):
-            if (regions["connected_to_continental_grid"] == False):
-                return {"reponse": "La région n'est pas connecté au réseau national"}
-    
-    if (demande_residuelle <= 0):
-        production_affectee = [centrale["puissance_disponible"] / puissance_disponible_regional * augmentation for centrale in centrales_regionale]
-        repartition_locale = []
+    candidats = []
 
-        for i, centrale in enumerate(centrales_regionale):
-            repartition_locale.append({
-                "central_id": centrale["central_id"],
-                "production_affectee": production_affectee[i],
-                "production_restante": (
-                    centrale["puissance_disponible"] - production_affectee[i]
-                )
-            })
+    for destination, route_info in routes.items():
+        if destination.startswith("PDL_"):
+            continue
+        if plant_id_region.get(destination) == region_id:
+            continue
+        if destination == source_plant:
+            continue
 
-        return repartition_locale
-    else:
-        repartition_locale = []
-    
-        for centrale in centrales_regionale:
-            repartition_locale.append({
-                "central_id": centrale["central_id"],
-                "production_affectee": centrale["puissance_disponible"],
-                "production_restante": 0
-                
-            })
-        
-        result = region_service.compute_routes(region)
-        source_plant = result["source_plant"]
+        centrale = find_centrale(toutes_les_centrales, destination)
+        centrale_reacteurs = find_centrale_reacteurs(extract_data()["plants"], destination)
 
-        donnees = extract_data()
-        plant_ids = set(p["id"] for p in donnees["plants"])
+        distance_km = route_info["distance_km"]
+        total_loss_percent = route_info["total_loss_percent"]
+        max_transfer_mw = route_info["max_transfer_mw"]
 
-        candidats  = []
-        for destination, route_info in result["routes"].items():
+        resultat = calcul_scores(source_plant, destination, distance_km, total_loss_percent, max_transfer_mw, deficit_residuel, etat_precedent, facteur_reserve, centrale, centrale_reacteurs, production_debut_heure)
+        if resultat is not None:
+            candidats.append(resultat)
 
-            centrale = find_centrale(extract_data()["plants"], destination)
+    candidats.sort(key=lambda x: x["score_candidat"])
 
-            if centrale is not None and centrale["location"]["region_name"] == region:
-                print("DESTINATION DANS LA REGION :", destination)
-                continue
+    repartition_externe = []
+    demande_restante = deficit_residuel
+    index = 0
 
-            if destination == source_plant:
-                continue
+    while demande_restante > 0 and index < len(candidats):
+        candidat = candidats[index]
+        production_affectee = min(
+            candidat["puissance_disponible"],
+            candidat["max_transfer_mw"],
+            demande_restante
+        )
+        candidat["production_affectee"] = production_affectee
+        repartition_externe.append(candidat)
+        demande_restante -= production_affectee
+        index += 1
+        candidat["production_restante"] = (
+            candidat["puissance_disponible"] - production_affectee
+        )
 
-            distance_km = route_info["distance_km"]
-            total_loss_percent = route_info["total_loss_percent"]
-            max_transfer_mw = route_info["max_transfer_mw"]
+        etat_precedent[candidat["destination_centrale"]] += production_affectee
 
-            
+    return {
+        "region_id": region_id,
+        "repartition_externe": repartition_externe,
+        "demande_non_couverte": demande_restante
+    }
 
-            
-
-            resultat = calcul_scores(
-                source_plant,
-                destination,
-                distance_km,
-                total_loss_percent,
-                max_transfer_mw,
-                demande_residuelle
-            )
-            if resultat is not None:
-                candidats.append(resultat)
-
-        candidats.sort(key=lambda x: x["score_candidat"])
-
-        repartition_externe = []
-        demande_restante = demande_residuelle
-        index = 0
-
-        while demande_restante > 0 and index < len(candidats):
-            candidat = candidats[index]
-            production_affectee = min(
-                candidat["puissance_disponible"],
-                candidat["max_transfer_mw"],
-                demande_restante
-            )
-            candidat["production_affectee"] = production_affectee 
-            repartition_externe.append(candidat)
-            demande_restante -= production_affectee
-            index += 1
-            candidat["production_restante"] = (
-                candidat["puissance_disponible"] - production_affectee
-            )
-
-        return {
-            "repartition_locale" : repartition_locale,
-            "repartition_externe" : repartition_externe,
-            "demande_non_couverte" : demande_restante
-        }
 
 def consomation_regionale():
     donnees_regionale = extract_consomation_temporels

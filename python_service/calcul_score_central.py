@@ -20,15 +20,19 @@ def extract_consomation_temporels():
 
 def find_centrale(plants, destination):
     for centrale in plants:
-        if (centrale["id"] == destination):
+        if centrale["plant_id"] == destination:
+            return centrale
+    return None
+
+def find_centrale_reacteurs(plants, destination):
+    for centrale in plants:
+        if centrale["id"] == destination:
             return centrale
     return None
 
 
-def final_load_ratio(centrale, puissance_affectee):
-    initial_output = centrale["simulation"]["initial_output_mw"]
-    soft_upper_bound = centrale["simulation"]["soft_upper_bound_mw"]
-    return ((initial_output + puissance_affectee) / soft_upper_bound)
+def final_load_ratio(soft_upper_bound, production_actuelle, puissance_affectee):
+    return (production_actuelle + puissance_affectee) / soft_upper_bound
 
 def technical_penalty(centrale):
     penalty = 0
@@ -44,36 +48,28 @@ def technical_penalty(centrale):
 
 
 
-def donnees_scores( source_plant, destination, distance_km, total_loss_percent, centrale, demande_residuelle, max_transfer_mw):
+def donnees_scores(source_plant, destination, distance_km, total_loss_percent, centrale, demande_residuelle, max_transfer_mw, etat_precedent, facteur_reserve, centrale_reacteurs, production_debut_heure):
+    production_actuelle = etat_precedent[centrale["plant_id"]]
+    soft_upper_bound = centrale["maximum_power_mw"] * facteur_reserve
 
-  
+    rampe_deja_utilisee = production_actuelle - production_debut_heure[centrale["plant_id"]]
+    marge_rampe_restante = centrale["max_ramp_up_mw_per_15_min"] - rampe_deja_utilisee
+
+    marge_technique = soft_upper_bound - production_actuelle
+    puissance_disponible = min(marge_technique, marge_rampe_restante)
 
     return {
-            "source_central": source_plant,
-            "destination_centrale": destination,
-            "distance_km": distance_km,
-            "loss_percent": total_loss_percent,
-            
-            "final_load_ratio": final_load_ratio(
-                centrale,
-                min(
-                    centrale["simulation"]["soft_upper_bound_mw"] - centrale["simulation"]["initial_output_mw"],
-                    max_transfer_mw
-                )
-            ),
-            "technical_penalty": technical_penalty(centrale),
-            "max_transfer_mw": max_transfer_mw,
-            "puissance_disponible": (
-                centrale["simulation"]["soft_upper_bound_mw"]
-                - centrale["simulation"]["initial_output_mw"]
-            ),
-        }
+        "source_central": source_plant,
+        "destination_centrale": destination,
+        "distance_km": distance_km,
+        "loss_percent": total_loss_percent,
+        "final_load_ratio": final_load_ratio(soft_upper_bound, production_actuelle, min(puissance_disponible, max_transfer_mw)),
+        "technical_penalty": technical_penalty(centrale_reacteurs),
+        "max_transfer_mw": max_transfer_mw,
+        "puissance_disponible": puissance_disponible,
+    }
 
-def calcul_scores(source_plant, destination, distance_km, total_loss_percent, max_transfer_mw, demande_residuelle):
-    donnees = extract_data()
-    centrale = find_centrale(donnees["plants"], destination)
-
-
+def calcul_scores(source_plant, destination, distance_km, total_loss_percent, max_transfer_mw, demande_residuelle, etat_precedent, facteur_reserve, centrale, centrale_reacteurs, production_debut_heure):
     if centrale is None:
         print("Centrale introuvable :", destination)
         return None
@@ -81,10 +77,9 @@ def calcul_scores(source_plant, destination, distance_km, total_loss_percent, ma
     distance_weight = 1.0
     loss_weight = 45.0
     saturation_weight = 900.0
-    technical_penalty_weight = 200.0 
-    resultats = donnees_scores(source_plant, destination, distance_km, total_loss_percent, centrale, demande_residuelle , max_transfer_mw)
-    
-    
+    technical_penalty_weight = 200.0
+    resultats = donnees_scores(source_plant, destination, distance_km, total_loss_percent, centrale, demande_residuelle, max_transfer_mw, etat_precedent, facteur_reserve, centrale_reacteurs, production_debut_heure)
+
     resultats["score_candidat"] = (
         resultats["distance_km"] * distance_weight
         + resultats["loss_percent"] * loss_weight

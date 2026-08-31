@@ -1,5 +1,4 @@
 services:
-
   node_gateway:
     image: flor3473/energia:node_gateway
     ports:
@@ -15,10 +14,6 @@ services:
   frontend:
     image: flor3473/energia:frontend
     ports:
-<<<<<<< HEAD
-      - "4200:4200"
-=======
       - "4200:4200"
     depends_on:
       - node_gateway
->>>>>>> yassine

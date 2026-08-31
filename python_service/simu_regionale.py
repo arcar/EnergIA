@@ -1,4 +1,4 @@
-from simu_nationale import (charger_donnees, construire_centrales_heure, enregistrer_productions, EPSILON)
+from simu_nationale import (charger_donnees, construire_centrales_heure, enregistrer_productions, EPSILON, initialiser_etat)
 
 data = charger_donnees()
 
@@ -166,6 +166,22 @@ def equilibrer_region_localement(region_id, heure, centrales, pourcentage, etat_
             "deficit_residuel" : deficit_residuel
         }
 
+    surplus_a_retirer = sous_minimum(centrales_heure, heure, productions_sous_minimum)
+    deficit_a_repartir = sur_maximum(centrales_heure, heure, productions_sur_maximum)
+
+    surplus_restant = redistribuer_surplus(centrales_heure, surplus_a_retirer)
+    deficit_restant = redistribuer_deficit(centrales_heure, deficit_a_repartir)
+
+    enregistrer_productions(centrales_heure, heure, prod_reelle, etat_precedent)
+
+    return {
+        "region_id" : region_id,
+        "demande_mw" : demande_heure,
+        "production_mw" :  sum(centrale["production"] for centrale in centrales_heure),
+        "surplus_residuel" : surplus_restant,
+        "deficit_residuel" : deficit_restant
+    }
+
 def redistribuer(centrales_heure, quantite, borne, operation):
     while quantite > EPSILON:
 
@@ -178,11 +194,58 @@ def redistribuer(centrales_heure, quantite, borne, operation):
 
         variation_par_centrale = quantite / len(centrales_disponibles)
 
-        quantit_restante = 0
+        quantite_restante = 0
 
         for centrale in centrales_disponibles:
             variation, reste = operation(centrale, variation_par_centrale)
             centrale["production"] += variation
-            quantit_restante += reste
+            quantite_restante += reste
 
-        quantite = quantit_restante
+        quantite = quantite_restante
+    return quantite
+
+
+def redistribuer_surplus(centrales_heure, surplus_a_retirer): 
+
+    return redistribuer(
+        centrales_heure, surplus_a_retirer,
+        lambda centrale : centrale["production"] > centrale["minimum"] + EPSILON,
+        lambda centrale, reduction_demandee: (
+            (-min(reduction_demandee, centrale["production"] - centrale["minimum"])),
+            (reduction_demandee - min(reduction_demandee, centrale["production"] - centrale["minimum"]))
+        )
+    )
+
+def redistribuer_deficit(centrales_heure, deficit_a_repartir):
+
+    return redistribuer(
+        centrales_heure, deficit_a_repartir,
+        lambda centrale : centrale["production"] < centrale["maximum"] - EPSILON,
+        lambda centrale, augmentation_demandee: (
+            (min(augmentation_demandee, centrale["maximum"] - centrale["production"])),
+            (augmentation_demandee - min(augmentation_demandee, centrale["maximum"] - centrale["production"]))
+        )
+    )
+
+def equilibrage_local_toutes_regions_nucleaires():
+    regions = regions_avec_centrales()
+    pourcentages = pourcentage_repartition_regionale()
+
+    etat_precedent = initialiser_etat(data["params_temporels"])
+
+    prod_reelle = []
+    productions_sous_minimum = []
+    productions_sur_maximum = []
+    resultats_toutes_regions = []
+
+    regions_avec_nucleaire =  [region for region in regions if region["region_id"] in pourcentages]
+    regions_sans_nucleaire = [region for region in regions if region["region_id"] not in pourcentages]
+    regions_deconnectees = [region for region in data["parc_nucleaire"]["regions"] if not region["connected_to_continental_grid"]]
+
+    for index, quarts_heure in enumerate(data["consommation"]["timestamps"]):
+        for region in regions_avec_nucleaire:
+            resultat = equilibrer_region_localement(region["region_id"], quarts_heure,region["plants"], pourcentages[region["region_id"]][index], etat_precedent, prod_reelle, productions_sous_minimum, productions_sur_maximum)
+            resultats_toutes_regions.append(resultat) 
+
+    return resultats_toutes_regions, prod_reelle, productions_sous_minimum, productions_sur_maximum
+

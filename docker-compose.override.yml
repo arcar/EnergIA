@@ -1,4 +1,5 @@
 services:
+
   node_gateway:
     build: ./node_gateway
     volumes:

@@ -1,5 +1,4 @@
 services:
-
   node_gateway:
     image: flor3473/energia:node_gateway
     ports:

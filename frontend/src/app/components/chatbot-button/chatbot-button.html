@@ -1,0 +1,31 @@
+<button class="chatbot-button" type="button" aria-label="Ouvrir l'assistant IA" (click)="toggleChat()">
+  🤖
+</button>
+
+@if (isOpen) {
+  <div class="chatbot-panel">
+    <div class="chatbot-header">
+      <span>🤖 Assistant EnergIA</span>
+      <button type="button" aria-label="Fermer l'assistant" (click)="toggleChat()">✕</button>
+    </div>
+
+    <div class="chatbot-messages">
+      <div class="message assistant-message">
+        Bonjour ! Je suis l'assistant EnergIA. Comment puis-je vous aider ?
+      </div>
+
+      <div class="message user-message">
+        Quelle région consomme le plus ?
+      </div>
+
+      <div class="message assistant-message">
+        Je peux répondre à cette question lorsque je serai connecté au backend.
+      </div>
+    </div>
+
+    <div class="chatbot-input">
+      <input type="text" placeholder="Écrivez votre question..." />
+      <button type="button" aria-label="Envoyer le message">➤</button>
+    </div>
+  </div>
+}

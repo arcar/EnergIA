@@ -18,3 +18,9 @@ services:
       - /app/node_modules
     depends_on:
       - node_gateway
+
+  assistant:
+    build: ./assistant
+    volumes:
+      - ./assistant:/app
+      - /app/node_modules

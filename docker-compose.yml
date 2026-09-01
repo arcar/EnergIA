@@ -17,3 +17,8 @@ services:
       - "4200:4200"
     depends_on:
       - node_gateway
+
+  assistant:
+    image: flor3473/energia:assistant
+    ports:
+      - "3002:3002"

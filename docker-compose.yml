@@ -22,6 +22,7 @@ services:
     image: flor3473/energia:assistant
     ports:
       - "3002:3002"
+      
   ollama:
     image: ollama/ollama
     container_name: ollama

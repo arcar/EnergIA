@@ -69,6 +69,13 @@ async function getRoutes(regionId) {
     return data;
 }
 
+async function getDashboard(){
+    const {data}=await axios.get(
+        `${process.env.PYTHON_SERVICE_URL}/dashboard`
+    );
+    return data;
+}
+
 module.exports = {
-    getPlants, simulate, getRegions, getRoutes
+    getPlants, simulate, getRegions, getRoutes,getDashboard
 };

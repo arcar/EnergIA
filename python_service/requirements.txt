@@ -5,3 +5,4 @@ pytest
 pydantic
 dijkstra
 requests
+numpy

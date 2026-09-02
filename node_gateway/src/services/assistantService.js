@@ -1,8 +1,11 @@
 async function askReply(request) {
     const reply = await fetch(
-        `${process.env.ASSISTANT_URL}/api/chat?search=${encodeURIComponent(request)}`,
+        `${process.env.ASSISTANT_URL}/api/chat`,
         {
-            method: "POST"
+            method: "POST",
+            body: JSON.stringify({
+                prompt: request
+            })
         }
     );
 

@@ -1,4 +1,9 @@
 const axios = require("axios");
+const { Ollama } = require('ollama');
+
+const ollamaClient = new Ollama({
+    host: process.env.OLLAMA_URL
+});
 
 async function askLLM(prompt) {
     console.log("➡️ Appel Ollama...");
@@ -6,10 +11,10 @@ async function askLLM(prompt) {
 
     try {
         const response = await axios.post(
-            "http://127.0.0.1:11434/api/generate",
+            ollamaClient.chat,
             {
                 model: "qwen2.5:3b",
-                prompt: prompt,
+                messages : prompt,
                 stream: false
             },
             {

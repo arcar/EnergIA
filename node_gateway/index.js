@@ -1,0 +1,22 @@
+const express = require("express");
+require("dotenv").config();
+const cors = require('cors');
+
+const app = express();
+
+app.use(cors());
+
+app.use(express.json());
+
+const port = 3000
+const plantRoutes = require("./src/routes/plantRoutes");
+const simulationRoutes = require("./src/routes/simulationRoutes")
+const assistantRoutes = require("./src/routes/assistantRoutes")
+
+app.use("/assistant", assistantRoutes)
+app.use("/plants", plantRoutes); 
+app.use("/simulation", simulationRoutes)
+
+app.listen(port, () => {
+  console.log(`Application à l'écoute sur le port ${port}!`);
+});

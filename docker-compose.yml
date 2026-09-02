@@ -22,6 +22,10 @@ services:
     image: flor3473/energia:assistant
     ports:
       - "3002:3002"
+    env_file:
+      - ./assistant/.env
+    depends_on:
+      - ollama
       
   ollama:
     image: ollama/ollama

@@ -4,10 +4,7 @@ const router = express.Router();
 const simulationController = require("../controllers/simulationController");
 
 
-router.post(
-    "/",
-    simulationController.simulation
-);
+router.post("/", simulationController.simulation);
 
 
 module.exports = router;

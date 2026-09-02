@@ -1,6 +1,10 @@
 const assistantService = require("../services/assistantService");
 
 const ollamaMessage = async (req, res) => {
+    console.log("🔥 ASSISTANT MICROSERVICE RECEIVED HTTP REQUEST");
+    console.log("Method:", req.method);
+    console.log("Path:", req.path);
+    console.log("Body:", req.body);
     try {
         const question = req.body.prompt;
 
@@ -9,6 +13,8 @@ const ollamaMessage = async (req, res) => {
                 error: "Missing Question!"
             });
         }
+        
+        
 
         const answer = await assistantService.generateAnswer(question);
 

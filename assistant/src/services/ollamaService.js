@@ -1,23 +1,31 @@
 const axios = require("axios");
+const { Ollama } = require("ollama");
+
+const ollamaClient = new Ollama({
+    host: process.env.OLLAMA_URL
+});
 
 async function askLLM(prompt) {
     console.log("➡️ Appel Ollama...");
     console.log("Prompt :", prompt);
 
     try {
-        const response = await axios.post(
-            "http://host.docker.internal:11434/api/generate",
-            {
-                model: "qwen2.5:3b",
-                prompt: prompt,
-                stream: false
-            }
-        );
+        const response = await ollamaClient.chat({
+            model: "qwen2.5:3b",
+            messages: [
+                {
+                    role: "user",
+                    content: prompt
+                }
+            ],
+            stream: false
+        });
 
-        console.log("📦 STATUS :", response.status);
-        console.log("📦 DATA BRUTE :", JSON.stringify(response.data, null, 2));
+        console.log("✅ Réponse Ollama reçue");
+        console.log("Réponse complète :", response);
+        console.log("Texte :", response.message.content);
 
-        return response.data.response;
+        return response.message.content;
 
     } catch (error) {
         console.error("❌ ERREUR OLLAMA");

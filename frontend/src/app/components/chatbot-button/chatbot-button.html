@@ -10,21 +10,18 @@
     </div>
 
     <div class="chatbot-messages">
-      <div class="message assistant-message">
-        Bonjour ! Je suis l'assistant EnergIA. Comment puis-je vous aider ?
-      </div>
-
-      <div class="message user-message">
-        Quelle région consomme le plus ?
-      </div>
-
-      <div class="message assistant-message">
-        Je peux répondre à cette question lorsque je serai connecté au backend.
-      </div>
+        <div class="chatbot-messages">
+            @for (message of messages; track $index) {
+                <div class="message" [class.user-message]="message.role === 'user'" [class.assistant-message]="message.role === 'assistant'">
+                {{ message.content }}
+                </div>
+            }
+        </div>
     </div>
 
     <div class="chatbot-input">
-      <input type="text" placeholder="Écrivez votre question..." />
+      <input type="text" placeholder="Écrivez votre question..." [(ngModel)]="messageInput" />
+      
       <button type="button" aria-label="Envoyer le message">➤</button>
     </div>
   </div>

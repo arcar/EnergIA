@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from pathlib import Path
-
+from routes import simulation_route
 import json
 from dijkstra.json_repository import JsonRepository
 from dijkstra.region_service import RegionService
@@ -15,7 +15,7 @@ logging.basicConfig(
 
 app = FastAPI()
 
-
+app.include_router(simulation_route.router)
 
 # Chemin vers le fichier JSON
 

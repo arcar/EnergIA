@@ -16,7 +16,7 @@ const dashboardRoutes = require("./src/routes/dashboardRoutes");
 app.use("/assistant", assistantRoutes)
 app.use("/plants", plantRoutes); 
 app.use("/repartition_heure", simulationRoutes)
-app.use("/simulation", simulationRoutes)
+
 app.use("/dashboard", dashboardRoutes);
 
 app.listen(3000, () => {

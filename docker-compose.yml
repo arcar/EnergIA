@@ -5,11 +5,20 @@ services:
       - "3000:3000"
     env_file:
       - ./node_gateway/.env
+    depends_on:
+      python_service:
+        condition: service_healthy
 
   python_service:
     image: flor3473/energia:python_service
     ports:
       - "8000:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/dashboard')"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
 
   frontend:
     image: flor3473/energia:frontend
@@ -26,7 +35,7 @@ services:
       - ./assistant/.env
     depends_on:
       - ollama
-      
+
   ollama:
     image: ollama/ollama
     container_name: ollama

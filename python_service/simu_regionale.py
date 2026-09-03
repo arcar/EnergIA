@@ -375,6 +375,61 @@ def production_regionale_initiale(regions):
         )
     return initiale
 
+def construire_etats_dashboard(resultats):
+    details_regionaux=resultats["details_regionaux"]
+    energie_non_fournie=resultats["energie_non_fournie"]
+    situations_degradees=resultats["situations_degradees"]
+
+    energie_non_fournie_par_heure={}
+    for situation in energie_non_fournie:
+        heure=situation["heure"]
+        energie_non_fournie_par_heure[heure]=energie_non_fournie_par_heure.get(heure,0)+situation["energie_non_fournie_mw"]
+
+    reserve_par_heure={}
+    for situation in situations_degradees:
+        heure=situation["heure"]
+        reserve_par_heure[heure]=reserve_par_heure.get(heure,0)+situation["reserve_disponible_mw"]
+
+    heures_degradees=set(
+        situation["heure"]
+        for situation in situations_degradees
+        if situation["situation_degradee"]
+    )
+
+    heures=sorted(set(detail["heure"] for detail in details_regionaux))
+    etats=[]
+
+    for index,heure in enumerate(heures):
+        details_heure=[
+            detail
+            for detail in details_regionaux
+            if detail["heure"]==heure
+        ]
+
+        unmet_demand=energie_non_fournie_par_heure.get(heure,0)
+
+        if unmet_demand>0:
+            status="insufficient"
+        elif heure in heures_degradees:
+            status="degraded"
+        else:
+            status="normal"
+
+        etat={
+            "time":heure,
+            "totalConsumptionMw":sum(detail["consommation_mw"] for detail in details_heure),
+            "nuclearProductionMw":sum(detail["production_nucleaire_mw"] for detail in details_heure),
+            "solarProductionMw":sum(detail["solar_mw"] for detail in details_heure),
+            "windProductionMw":sum(detail["wind_mw"] for detail in details_heure),
+            "unmetDemandMw":unmet_demand,
+            "availableReserveMw":reserve_par_heure.get(heure,0),
+            "status":status
+        }
+
+        etats.append(etat)
+
+    return etats
+
 def equilibrage_local_toutes_regions_nucleaires():
     regions = regions_avec_centrales()
     pourcentages, facteur_reserve = pourcentage_repartition_regionale()
@@ -502,5 +557,37 @@ def repartition_par_heure(prod_reelle, heure_demandee):
     return resultats
 
 resultats = equilibrage_local_toutes_regions_nucleaires()
+
+def dashboard():
+    resultats = equilibrage_local_toutes_regions_nucleaires()
+    return construire_etats_dashboard(resultats)
+
+# print("===== DEBUG STATUT =====")
+# nombre_degradees=sum(
+#     1
+#     for situation in resultats["situations_degradees"]
+#     if situation["situation_degradee"]
+# )
+# print("Situations dégradées :",nombre_degradees)
+
+# heures_degradees=set(
+#     situation["heure"]
+#     for situation in resultats["situations_degradees"]
+#     if situation["situation_degradee"]
+# )
+# print("Heures avec situation dégradée :",len(heures_degradees))
+# print("Heures :",sorted(heures_degradees))
+
+# print("========================")
+
+etats_dashboard=construire_etats_dashboard(resultats)
+
+print("===== DEBUG DASHBOARD =====")
+print("Nombre d'états :",len(etats_dashboard))
+print("Premier état :",etats_dashboard[0])
+print("État 48 :",etats_dashboard[48])
+print("Dernier état :",etats_dashboard[-1])
+print("===========================")
+
 repartition_heure_test = repartition_par_heure(resultats["prod_reelle"], "10:00")
-print(repartition_heure_test)
+# print(repartition_heure_test)

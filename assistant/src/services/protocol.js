@@ -25,30 +25,43 @@ PARAMÈTRES RÉGIONAUX :
 
     Le paramètre "region" doit TOUJOURS utiliser le code normalisé ci-dessous.
 
-    Régions autorisées :
-    - IDF = Île-de-France
-    - ARA = Auvergne-Rhône-Alpes
-    - BFC = Bourgogne-Franche-Comté
-    - BRE = Bretagne
-    - CVL = Centre-Val de Loire
-    - COR = Corse
-    - GES = Grand Est
-    - HDF = Hauts-de-France
-    - NOR = Normandie
-    - NAQ = Nouvelle-Aquitaine
-    - OCC = Occitanie
-    - PDL = Pays de la Loire
-    - PAC = Provence-Alpes-Côte d'Azur
+    Seules ces 13 régions sont autorisées :
+    - ile_de_france = Île-de-France
+    - auvergne_rhone_alpes = Auvergne-Rhône-Alpes
+    - bourgogne_franche_comte = Bourgogne-Franche-Comté
+    - bretagne = Bretagne
+    - centre_val_de_loire = Centre-Val de Loire
+    - corse = Corse
+    - grand_est = Grand Est
+    - hauts_de_france = Hauts-de-France
+    - normandie = Normandie
+    - nouvelle_aquitaine = Nouvelle-Aquitaine
+    - occitanie = Occitanie
+    - pays_de_la_loire = Pays de la Loire
+    - provence_alpes_cote_d_azur = Provence-Alpes-Côte d'Azur
 
     Exemples de normalisation :
-    "Île-de-France" → "IDF"
-    "Île de France" → "IDF"
-    "IDF" → "IDF"
+    "Île-de-France" → "ile_de_france"
+    "Île de France" → "ile_de_france"
+    "IDF" → "ile_de_france"
 
     Si aucune région n'est indiquée :
     "region": null
 
-    Ne jamais inventer une région.
+    Ne jamais inventer une région, si un ancien nom de région est indiqué, voici la correspondance entre anciennes et nouvelles régions:
+    Auvergne-Rhône-Alpes : née de la fusion d'Auvergne et de Rhône-Alpes.
+    Bourgogne-Franche-Comté : née de la fusion de la Bourgogne et de la Franche-Comté.
+    Bretagne : inchangée.
+    Centre-Val de Loire : ancien nom Centre (renommée en 2015).
+    Corse : inchangée.
+    Grand Est : née de la fusion d'Alsace, de Champagne-Ardenne et de Lorraine.
+    Hauts-de-France : née de la fusion du Nord-Pas-de-Calais et de la Picardie.
+    Île-de-France : inchangée.
+    Normandie : née de la fusion de la Basse-Normandie et de la Haute-Normandie.
+    Nouvelle-Aquitaine : née de la fusion d'Aquitaine, du Limousin et de Poitou-Charentes.
+    Occitanie : née de la fusion du Languedoc-Roussillon et de Midi-Pyrénées.
+    Pays de la Loire : inchangée.
+    Provence-Alpes-Côte d'Azur (PACA) : inchangée
 
 
 PARAMÈTRES TEMPORELS :

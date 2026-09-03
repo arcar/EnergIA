@@ -33,7 +33,7 @@ async function askLLM(prompt) {
 
     try {
         const response = await ollamaClient.chat({
-            model: "qwen2.5:3b",
+            model: "qwen2.5:7b",
             messages: [
                 {role : "system", content : SYSTEM_PROMPT},
                 {

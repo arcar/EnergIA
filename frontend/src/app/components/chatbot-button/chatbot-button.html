@@ -1,0 +1,28 @@
+<button class="chatbot-button" type="button" aria-label="Ouvrir l'assistant IA" (click)="toggleChat()">
+  🤖
+</button>
+
+@if (isOpen) {
+  <div class="chatbot-panel">
+    <div class="chatbot-header">
+      <span>🤖 Assistant EnergIA</span>
+      <button type="button" aria-label="Fermer l'assistant" (click)="toggleChat()">✕</button>
+    </div>
+
+    <div class="chatbot-messages">
+        <div class="chatbot-messages">
+            @for (message of messages; track $index) {
+                <div class="message" [class.user-message]="message.role === 'user'" [class.assistant-message]="message.role === 'assistant'">
+                {{ message.content }}
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="chatbot-input">
+      <input type="text" placeholder="Écrivez votre question..." [(ngModel)]="messageInput" />
+      
+      <button type="button" aria-label="Envoyer le message">➤</button>
+    </div>
+  </div>
+}

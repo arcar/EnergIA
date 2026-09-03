@@ -1,10 +1,11 @@
 from fastapi import FastAPI, HTTPException
 from pathlib import Path
-from routes import simulation_route
+
 import json
 from dijkstra.json_repository import JsonRepository
 from dijkstra.region_service import RegionService
 import logging
+from simu_regionale import dashboard
 
 
 logging.basicConfig(
@@ -14,7 +15,7 @@ logging.basicConfig(
 
 app = FastAPI()
 
-app.include_router(simulation_route.router)
+
 
 # Chemin vers le fichier JSON
 
@@ -77,3 +78,7 @@ def compute_routes(region_id: str):
             status_code=404,
             detail=str(e)
         )
+
+@app.get("/dashboard")
+def get_dashboard():
+    return dashboard()

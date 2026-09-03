@@ -1,7 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 import { StatCard } from '../../components/stat-card/stat-card';
+import { DashboardService } from '../../services/dashboard';
+import { ChangeDetectorRef } from '@angular/core';
 
 @Component({
   selector: 'app-dashboard',
@@ -9,11 +11,38 @@ import { StatCard } from '../../components/stat-card/stat-card';
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss'
 })
-export class Dashboard {
+export class Dashboard implements OnInit {
 
   selectedState = 0;
   securityMargin = 15;
+  constructor(
+    private dashboardService: DashboardService,
+    private cdr: ChangeDetectorRef
+  ) {}
 
+  ngOnInit(): void {
+    this.dashboardService.getDashboard().subscribe({
+      next: (data) => {
+       
+        this.states = data.map((state, index) => ({
+          index,
+          time: state.time,
+          consommation: state.totalConsumptionMw,
+          nucleaire: state.nuclearProductionMw,
+          reserve: state.availableReserveMw,
+          centralesDisponibles: '18 / 18',
+          solaire: state.solarProductionMw,
+          eolienne: state.windProductionMw,
+          demandeResiduelle: state.totalConsumptionMw - state.nuclearProductionMw - state.solarProductionMw - state.windProductionMw
+        }));
+        
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Erreur dashboard :', error);
+      }
+    });
+  }
 
   timeline = Array.from({ length: 96 }, (_, index) => {
 
@@ -28,35 +57,7 @@ export class Dashboard {
 
   });
 
-
-  states = this.timeline.map((state) => {
-
-    return {
-      index: state.index,
-      time: state.time,
-
-      consommation: 52000 + state.index * 20,
-
-      nucleaire: 50000 + state.index * 15,
-
-      reserve: 8400 - state.index * 5,
-
-      centralesDisponibles: '18 / 18',
-
-      solaire: Math.max(
-        0,
-        Math.round(
-          4200 * Math.sin((Math.PI * state.index) / 96)
-        )
-      ),
-
-      eolienne: 2250 + (state.index % 8) * 80,
-
-      demandeResiduelle: 45550 + state.index * 10
-
-    };
-
-  });
+  states: any[] = [];
 
 
   selectState(index: number): void {
@@ -67,9 +68,16 @@ export class Dashboard {
 
 
   get currentState() {
-
-    return this.states[this.selectedState];
-
+    return this.states[this.selectedState] ?? {
+      consommation: 0,
+      nucleaire: 0,
+      reserve: 0,
+      centralesDisponibles: '0 / 0',
+      solaire: 0,
+      eolienne: 0,
+      demandeResiduelle: 0,
+      time: '00:00'
+    };
   }
 
 

@@ -9,3 +9,6 @@ class SimulationRequest(BaseModel):
         gt=0,
         description="L'augmentation de consommation doit être supérieure à 0 MW"
     )
+
+class RepartitionHeureRequest(BaseModel):
+    heure: str

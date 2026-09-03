@@ -1,4 +1,5 @@
-from metrique_centrale import get_metrique_centrale, get_centrale_regionale, calcul_demande_residuelle, repartition
+from metrique_centrale import get_metrique_centrale, get_centrale_regionale, calcul_demande_residuelle
+# , repartition
 from calcul_score_central import extract_data
 import logging
 logger = logging.getLogger(__name__)
@@ -45,16 +46,16 @@ def simuler_augmentation(region, augmentation):
     # 4. Répartir la demande
     logger.info("Début de la répartition de la demande")
 
-    resultat_repartition = repartition(
-        augmentation,
-        region
-    )
+    # resultat_repartition = repartition(
+    #     augmentation,
+    #     region
+    # )
 
-    print("===== DEBUG APRES REPARTITION =====")
-    print(resultat_repartition)
-    print("===================================")
+    # print("===== DEBUG APRES REPARTITION =====")
+    # print(resultat_repartition)
+    # print("===================================")
 
-    logger.info("Répartition terminée")
+    # logger.info("Répartition terminée")
 
     print("===== DEBUG AVANT RETURN =====")
     print("Simulation terminée")

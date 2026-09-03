@@ -7,7 +7,7 @@ export const toolBox = [
             "parameters" : {
                 "type": "object",
                 "properties": {},
-                "required": ["all_plants"]
+                "required": []
             }
         }
     }

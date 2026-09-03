@@ -1,5 +1,6 @@
 const axios = require("axios");
 const { Ollama } = require("ollama");
+const SYSTEM_PROMPT = require("./protocol");
 
 const ollamaClient = new Ollama({
     host: process.env.OLLAMA_URL
@@ -8,11 +9,13 @@ const ollamaClient = new Ollama({
 async function askLLM(prompt) {
     console.log("➡️ Appel Ollama...");
     console.log("Prompt :", prompt);
+    console.log("SYSTEM PROMPT :", SYSTEM_PROMPT);
 
     try {
         const response = await ollamaClient.chat({
             model: "qwen2.5:3b",
             messages: [
+                {role : "system", content : SYSTEM_PROMPT},
                 {
                     role: "user",
                     content: prompt

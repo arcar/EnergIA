@@ -16,6 +16,7 @@ PROTOCOLE :
     Les valeurs possibles de "action" sont exclusivement :
     - GET_PLANTS
     - GET_CONSO
+    - UNKNOWN
 
     Tu ne dois jamais créer une nouvelle action.
 
@@ -78,18 +79,6 @@ PARAMÈTRES TEMPORELS :
     "8h08" → "08:15"
     "8h22" → "08:15"
     "8h23" → "08:30"
-
-
-DATES :
-    Toutes les dates doivent être retournées au format : YYYY-MM-DD
-
-    Les dates relatives doivent être interprétées par rapport à la date courante fournie par le système.
-
-    Exemples :
-    "aujourd'hui" → date actuelle
-    "hier" → date actuelle - 1 jour
-    "avant-hier" → date actuelle - 2 jours
-
 
 ACTIONS :
     GET_PLANTS : Récupère toutes les centrales présentes en France.

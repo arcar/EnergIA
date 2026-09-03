@@ -32,7 +32,36 @@ async function simulation(req, res) {
     }
 }
 
+async function repartition_heure(req, res) {
+
+    console.log("repartition demandée");
+    console.log("Heure :", req.body.heure);
+  
+    try {
+
+        const resultat = await pythonService.repartir_heure(req.body);
+
+        console.log("Repartition terminée");
+
+        res.json({
+            success: true,
+            data: resultat
+        });
+
+    } catch(error){
+
+        console.log("Erreur répartition :", error);
+
+        res.status(error.status || 500).json({
+            success:false,
+            message:"Impossible d'effectuer la répartition",
+            error:error.message || error,
+            status:error.status || 500
+        });
+
+    }
+}
 
 module.exports = {
-    simulation
+    simulation, repartition_heure
 };

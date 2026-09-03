@@ -95,27 +95,3 @@ EXEMPLES :
     `;
 
 module.exports = SYSTEM_PROMPT;
-
-
-
-
-
-function normalizeQuarterHour(time) {
-    const [hours, minutes] = time.split(":").map(Number);
-
-    const roundedMinutes = Math.round(minutes / 15) * 15;
-
-    let normalizedHours = hours;
-    let normalizedMinutes = roundedMinutes;
-
-    if (normalizedMinutes === 60) {
-        normalizedMinutes = 0;
-        normalizedHours++;
-
-        if (normalizedHours === 24) {
-            normalizedHours = 0;
-        }
-    }
-
-    return `${String(normalizedHours).padStart(2, "0")}:${String(normalizedMinutes).padStart(2, "0")}`;
-}

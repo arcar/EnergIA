@@ -26,7 +26,7 @@ async function generateAnswer(question) {
                 }
             break;
         case "GET_PROD_NATIONALE_HEURE":
-             try {
+            try {
             
                     const response = await axios.post(`${process.env.PYTHON_SERVICE_URL}/repartition_heure`, result.parameters);
             
@@ -54,12 +54,16 @@ async function generateAnswer(question) {
             } catch (error) {
         
                 console.log(error.message);
+                console.log("STATUS:", error.response?.status);
+                console.log("DATA:", error.response?.data);
+                console.log("PARAMS ENVOYÉS:", result.parameters);
         
                 throw new Error(
                     "Impossible de contacter l'API Python333333333"
                 );
         
             }
+            break;
         case "UNKNOWN":
             try {
             

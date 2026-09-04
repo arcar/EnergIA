@@ -50,7 +50,7 @@ async function askLLM(prompt) {
 
         const result = JSON.parse(response.message.content);
 
-        if (result.action === "GET_CONSO" && result.parameters.heure) {
+        if (result.action === "GET_PROD_NATIONALE_HEURE" && result.parameters.heure) {
             result.parameters.heure = normalizeHour(result.parameters.heure);
         }
 

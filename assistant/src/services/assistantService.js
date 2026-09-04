@@ -25,9 +25,42 @@ async function generateAnswer(question) {
             
                 }
             break;
-        case "GET_CONSO":
+        case "GET_PROD_NATIONALE_HEURE":
+             try {
+            
+                    const response = await axios.post(`${process.env.PYTHON_SERVICE_URL}/repartition_heure`, result.parameters);
+            
+                    return response.data;
+            
+                } catch (error) {
+            
+                    console.log(error.message);
+            
+                    throw new Error(
+                        "Impossible de contacter l'API Python222222222"
+                    );
+            
+                }
 
             break;
+        case "UNKNOWN":
+            try {
+            
+                    const response = "Je n'ai pas les informations à ma disposition pour vous répondre";
+            
+                    return response;
+            
+                } catch (error) {
+            
+                    console.log(error.message);
+            
+                    throw new Error(
+                        "Impossible de contacter l'API Python!!!!!!!!!!!!!!!!!!"
+                    );
+            
+                }
+
+
     }
 
     console.log("Réponse Ollama reçue");

@@ -15,7 +15,8 @@ PROTOCOLE :
 
     Les valeurs possibles de "action" sont exclusivement :
     - GET_PLANTS
-    - GET_CONSO
+    - GET_PROD_NATIONALE_HEURE
+    - GET_CONSO_REGION_HEURE
     - UNKNOWN
 
     Tu ne dois jamais créer une nouvelle action.
@@ -77,11 +78,14 @@ ACTIONS :
     GET_PLANTS : Récupère toutes les centrales présentes en France.
     Parameters : null
 
-    GET_CONSO : Récupère la consommation d'une région à une heure donnée.
+    GET_PROD_NATIONALE_HEURE : Récupère la repartition de la production nationale à une heure donnée.
     Parameters :
-    - region
-    - heure
+      - heure
 
+    GET_CONSO_REGION_HEURE : Récupère la consommation demandée d'une région à une heure donnée.
+    Parameters :
+      - region
+      - heure
 
 RÈGLES DE NORMALISATION :
     1. Deux demandes ayant le même objectif doivent produire exactement la même action.
@@ -103,8 +107,11 @@ EXEMPLES :
     Utilisateur : "Liste toutes les centrales"
     Réponse : {"action": "GET_PLANTS", "parameters": {}}
 
-    Utilisateur : "Donne moi la consommation de l'Aquitaine à 11h00"
-    Réponse : {"action": "GET_CONSO", "parameters": {"region" : "NAQ", "heure" : "11:00"}}
+    Utilisateur : "Donne moi la repartition de la production à 11h00"
+    Réponse : {"action": "GET_PROD_NATIONALE_HEURE", "parameters": {"heure" : "11:00"}}
+
+    Utilisateur : "Donne moi la consommation de la bretagne à 11h00"
+    Réponse : {"action": "GET_CONSO_REGION_HEURE", "parameters": {"region": "bretagne", "heure" : "11:00"}}
     `;
 
 module.exports = SYSTEM_PROMPT;

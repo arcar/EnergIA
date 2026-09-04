@@ -591,3 +591,21 @@ print("===========================")
 
 repartition_heure_test = repartition_par_heure(resultats["prod_reelle"], "10:00")
 # print(repartition_heure_test)
+
+
+def conso_heure_region(id_region, heure):
+    region_demande = id_region
+    temp_demande = heure
+    index = None
+
+    for i, time in enumerate(data["consommation"]["timestamps"]):
+        if time == temp_demande:
+            index = i
+            break
+
+    for region in data["consommation"]["regions"]:
+        if region_demande == region["id"]:
+            return {
+                "region" : region["id"],
+                "consommation" : region["consumption_mw"][index]
+            }

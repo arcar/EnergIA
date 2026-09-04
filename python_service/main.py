@@ -5,7 +5,7 @@ import json
 from dijkstra.json_repository import JsonRepository
 from dijkstra.region_service import RegionService
 import logging
-from simu_regionale import dashboard
+from simu_regionale import dashboard, conso_heure_region
 
 
 logging.basicConfig(
@@ -82,3 +82,17 @@ def compute_routes(region_id: str):
 @app.get("/dashboard")
 def get_dashboard():
     return dashboard()
+
+@app.post("/conso_regionale_horaire")
+def conso_regionale_horaire(id_region, heure):
+    try:
+
+        return conso_heure_region(id_region, heure)
+
+    except ValueError as e:
+
+        raise HTTPException(
+            status_code=404,
+            detail=str(e)
+        )
+    

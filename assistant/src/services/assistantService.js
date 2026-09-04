@@ -43,6 +43,23 @@ async function generateAnswer(question) {
                 }
 
             break;
+        
+        case "GET_CONSO_REGION_HEURE":
+            try {
+        
+                const response = await axios.post(`${process.env.PYTHON_SERVICE_URL}/conso_regionale_horaire`, result.parameters);
+        
+                return response.data;
+        
+            } catch (error) {
+        
+                console.log(error.message);
+        
+                throw new Error(
+                    "Impossible de contacter l'API Python333333333"
+                );
+        
+            }
         case "UNKNOWN":
             try {
             
@@ -60,8 +77,8 @@ async function generateAnswer(question) {
             
                 }
 
-
-    }
+            }
+    
 
     console.log("Réponse Ollama reçue");
 }

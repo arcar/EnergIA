@@ -2,11 +2,25 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
+interface PlantsResponse {
+  count: number;
+  plants: string[];
+}
+
+interface ProductionNationaleResponse {
+  success: boolean;
+  heure: string;
+  production_nationale_mw: number;
+  resultats: unknown[];
+}
+
+type AssistantData =
+  | PlantsResponse
+  | ProductionNationaleResponse
+  | string;
+
 interface AssistantResponse {
-  response: {
-    count: number;
-    plants: string[];
-  } | string;
+  response: AssistantData;
 }
 
 @Injectable({

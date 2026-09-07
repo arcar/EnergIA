@@ -30,7 +30,7 @@ async function generateAnswer(question) {
             
                     const response = await axios.post(`${process.env.PYTHON_SERVICE_URL}/repartition_heure`, result.parameters);
             
-                    return response.data;
+                    return  `À ${response.data.heure}, la production nucléaire nationale est de ${response.data.production_nationale_mw.toFixed(2)} MW.`;;
             
                 } catch (error) {
             

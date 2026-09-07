@@ -6,7 +6,7 @@ import json
 from dijkstra.json_repository import JsonRepository
 from dijkstra.region_service import RegionService
 from simu_regionale import dashboard, conso_heure_region
-from simu_regionale import (repartition_par_heure, equilibrage_local_toutes_regions_nucleaires)
+from simu_regionale import (repartition_par_heure, equilibrage_local_toutes_regions_nucleaires, production_nationale_par_heure)
 
 class ConsoRegionRequest(BaseModel):
     id_region: str
@@ -113,6 +113,7 @@ def repartition_heure(request: RepartitionHeureRequest):
     prod_reelle = resultat_global["prod_reelle"]
 
     repartition = repartition_par_heure(prod_reelle, request.heure)
+    production_nationale = production_nationale_par_heure(prod_reelle, request.heure)
 
     if not repartition:
         logger.warning(f"Aucune donnée de production trouvée pour l'heure : {request.heure}")
@@ -127,5 +128,6 @@ def repartition_heure(request: RepartitionHeureRequest):
     return {
         "success": True,
         "heure": request.heure,
-        "resultats": repartition,
+        "production_nationale_mw": production_nationale,
+        "resultats": repartition
     }

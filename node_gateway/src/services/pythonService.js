@@ -87,6 +87,26 @@ async function repartir_heure(data) {
     }
 }
 
+async function getRepartition() {
+    try{
+        const { data } = await axios.get(`${process.env.PYTHON_SERVICE_URL}/repartition`);
+        return data;
+    } catch (error) {
+        // Python a répondu avec une erreur
+        if (error.response) {
+            throw {
+                status: error.response.status,
+                message: error.response.data
+            };
+        }
+
+        // Python inaccessible
+        throw {
+            status: 503,
+            message: "Impossible de contacter l'API Python"
+        };
+    }
+}
 
 async function getRegions() {
     const { data } = await axios.get(`${process.env.PYTHON_SERVICE_URL}/regions`);
@@ -109,5 +129,5 @@ async function getDashboard(){
 }
 
 module.exports = {
-    getPlants, simulate, getRegions, getRoutes,getDashboard, repartir_heure
+    getPlants, simulate, getRegions, getRoutes,getDashboard, repartir_heure, getRepartition
 };

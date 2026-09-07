@@ -6,5 +6,7 @@ const simulationController = require("../controllers/simulationController");
 
 router.post("/", simulationController.repartition_heure);
 
+router.get("/regions", simulationController.repartition);
+
 
 module.exports = router;

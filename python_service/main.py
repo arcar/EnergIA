@@ -129,3 +129,9 @@ def repartition_heure(request: RepartitionHeureRequest):
         "heure": request.heure,
         "resultats": repartition,
     }
+
+@app.get("/repartition")
+def get_repartition():
+   result = equilibrage_local_toutes_regions_nucleaires()
+   repartition = result["prod_reelle"]
+   return repartition

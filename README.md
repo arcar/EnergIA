@@ -135,6 +135,14 @@ Body :
     "heure":"21:00"
 }
 ```
+---
+### Obtenir la répartition de la production de toutes les centrales sur une journée, quart d'heure par quart d'heure
+
+```
+GET /repartition/regions
+```
+
+
 ## Routes disponibles depuis python-service et non connecté à la Gateway : http://localhost:8000
 
 ### Obtenir les informations d'une région donnée

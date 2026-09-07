@@ -1,63 +1,9 @@
-import os
-import json
+from extraction_json import charger_donnees
 import numpy as np
 
 
-# ============================================================
-# CONFIGURATION DES FICHIERS
-# ============================================================
-
-PARENT = os.path.dirname(os.path.abspath(__file__))
-
-PARC_NUCLEAIRE_DATA = os.path.join(
-    PARENT,
-    "data",
-    "parc-nucleaire-prescriptif-france.json"
-)
-
-PARAMETRES_TEMPORELS_NUCLEAIRE_DATA = os.path.join(
-    PARENT,
-    "data",
-    "energia-parametres-temporels-nucleaire.json"
-)
-
-REFERENCE_CONSOMMATION_DATA = os.path.join(
-    PARENT,
-    "data",
-    "energia-journee-reference-consommation.json"
-)
-
-PARC_NON_PILOTABLE_DATA = os.path.join(
-    PARENT,
-    "data",
-    "energia-production-non-pilotable.json"
-)
-
 EPSILON = 0.000001
 
-
-# ============================================================
-# CHARGEMENT
-# ============================================================
-
-def charger_json(chemin):
-    with open(chemin, "r", encoding="utf-8") as fichier:
-        return json.load(fichier)
-
-
-def charger_donnees():
-    return {
-        "parc_nucleaire": charger_json(PARC_NUCLEAIRE_DATA),
-        "params_temporels": charger_json(
-            PARAMETRES_TEMPORELS_NUCLEAIRE_DATA
-        ),
-        "consommation": charger_json(
-            REFERENCE_CONSOMMATION_DATA
-        ),
-        "non_pilotable": charger_json(
-            PARC_NON_PILOTABLE_DATA
-        ),
-    }
 
 
 # ============================================================
@@ -66,16 +12,8 @@ def charger_donnees():
 
 def calculer_capacites_nucleaires(params_temporels):
 
-    production_maximale = sum(
-        centrale["maximum_power_mw"]
-        for centrale in params_temporels["plants"]
-    )
-
-    production_minimale = sum(
-        centrale["minimum_operating_power_mw"]
-        for centrale in params_temporels["plants"]
-    )
-
+    production_maximale = sum(centrale["maximum_power_mw"] for centrale in params_temporels["plants"])
+    production_minimale = sum(centrale["minimum_operating_power_mw"] for centrale in params_temporels["plants"])
     return production_minimale, production_maximale
 
 
@@ -85,30 +23,15 @@ def calculer_capacites_nucleaires(params_temporels):
 
 def calculer_demande_residuelle(consommation, non_pilotable):
 
-    consommation_nationale = np.array(
-        consommation["national_total_consumption_mw"]
-    )
+    consommation_nationale = np.array(consommation["national_total_consumption_mw"])
 
-    production_non_pilotable = np.array(
-        non_pilotable[
-            "national_total_production_mw"
-        ]["solar_plus_wind"]
-    )
+    production_non_pilotable = np.array(non_pilotable["national_total_production_mw"]["solar_plus_wind"])
 
-    return (
-        consommation_nationale - production_non_pilotable
-    ).tolist()
+    return (consommation_nationale - production_non_pilotable).tolist()
 
 
-def calculer_pourcentages_production(
-    demande_residuelle,
-    production_maximale_nucleaire
-):
-
-    return (
-        np.array(demande_residuelle)
-        / production_maximale_nucleaire
-    ).tolist()
+def calculer_pourcentages_production(demande_residuelle, production_maximale_nucleaire):
+    return (np.array(demande_residuelle) / production_maximale_nucleaire).tolist()
 
 
 # ============================================================
@@ -116,72 +39,42 @@ def calculer_pourcentages_production(
 # ============================================================
 
 def initialiser_etat(params_temporels):
-
-    return {
-        centrale["plant_id"]:
-            centrale["initial_output_mw_at_23_45_previous_day"]
-        for centrale in params_temporels["plants"]
-    }
+    return {centrale["plant_id"]: centrale["initial_output_mw_at_23_45_previous_day"] for centrale in params_temporels["plants"]}
 
 
 # ============================================================
 # CALCUL D'UNE CENTRALE POUR UN QUART D'HEURE
 # ============================================================
 
-def calculer_centrale_heure(
-    centrale,
-    pourcentage,
-    etat_precedent
-):
+def calculer_centrale_heure(centrale, pourcentage, etat_precedent):
 
     plant_id = centrale["plant_id"]
-
-    production_demandee = (
-        centrale["maximum_power_mw"]
-        * pourcentage
-    )
-
+    production_demandee = (centrale["maximum_power_mw"] * pourcentage)
     production_precedente = etat_precedent[plant_id]
 
     # --------------------------------------------------------
     # LIMITES TECHNIQUES
     # --------------------------------------------------------
 
-    minimum_technique = (
-        centrale["minimum_operating_power_mw"]
-    )
+    minimum_technique = (centrale["minimum_operating_power_mw"])
 
-    maximum_technique = (
-        centrale["maximum_power_mw"]
-    )
+    maximum_technique = (centrale["maximum_power_mw"])
 
     # --------------------------------------------------------
     # LIMITES TEMPORELLES
     # --------------------------------------------------------
 
-    minimum_temporel = (
-        production_precedente
-        - centrale["max_ramp_down_mw_per_15_min"]
-    )
+    minimum_temporel = (production_precedente - centrale["max_ramp_down_mw_per_15_min"])
 
-    maximum_temporel = (
-        production_precedente
-        + centrale["max_ramp_up_mw_per_15_min"]
-    )
+    maximum_temporel = (production_precedente + centrale["max_ramp_up_mw_per_15_min"])
 
     # --------------------------------------------------------
     # LIMITES EFFECTIVEMENT APPLICABLES
     # --------------------------------------------------------
 
-    minimum_autorise = max(
-        minimum_technique,
-        minimum_temporel
-    )
+    minimum_autorise = max(minimum_technique, minimum_temporel)
 
-    maximum_autorise = min(
-        maximum_technique,
-        maximum_temporel
-    )
+    maximum_autorise = min(maximum_technique, maximum_temporel)
 
     return {
         "plant_id": plant_id,
@@ -192,12 +85,8 @@ def calculer_centrale_heure(
         "maximum": maximum_autorise,
         "minimum_technique": minimum_technique,
         "maximum_technique": maximum_technique,
-        "rampe_montee": centrale[
-            "max_ramp_up_mw_per_15_min"
-        ],
-        "rampe_descente": centrale[
-            "max_ramp_down_mw_per_15_min"
-        ],
+        "rampe_montee": centrale["max_ramp_up_mw_per_15_min"],
+        "rampe_descente": centrale["max_ramp_down_mw_per_15_min"],
     }
 
 
@@ -205,22 +94,12 @@ def calculer_centrale_heure(
 # CONSTRUCTION DES CENTRALES POUR UNE HEURE
 # ============================================================
 
-def construire_centrales_heure(
-    centrales,
-    pourcentage,
-    etat_precedent
-):
+def construire_centrales_heure(centrales, pourcentage, etat_precedent):
 
     centrales_heure = []
 
     for centrale in centrales:
-
-        centrale_heure = calculer_centrale_heure(
-            centrale,
-            pourcentage,
-            etat_precedent
-        )
-
+        centrale_heure = calculer_centrale_heure(centrale, pourcentage, etat_precedent)
         centrales_heure.append(centrale_heure)
 
     return centrales_heure
@@ -232,10 +111,7 @@ def construire_centrales_heure(
 
 def calculer_demande_heure(centrales_heure):
 
-    return sum(
-        centrale["production_demandee"]
-        for centrale in centrales_heure
-    )
+    return sum(centrale["production_demandee"] for centrale in centrales_heure)
 
 
 # ============================================================
@@ -243,16 +119,8 @@ def calculer_demande_heure(centrales_heure):
 # ============================================================
 
 def calculer_limites_globales(centrales_heure):
-
-    production_minimale = sum(
-        centrale["minimum"]
-        for centrale in centrales_heure
-    )
-
-    production_maximale = sum(
-        centrale["maximum"]
-        for centrale in centrales_heure
-    )
+    production_minimale = sum(centrale["minimum"] for centrale in centrales_heure)
+    production_maximale = sum(centrale["maximum"] for centrale in centrales_heure)
 
     return production_minimale, production_maximale
 
@@ -261,12 +129,7 @@ def calculer_limites_globales(centrales_heure):
 # ENREGISTREMENT
 # ============================================================
 
-def enregistrer_productions(
-    centrales,
-    heure,
-    prod_reelle,
-    etat_precedent
-):
+def enregistrer_productions(centrales, heure, prod_reelle, etat_precedent):
 
     for centrale in centrales:
 
@@ -276,29 +139,16 @@ def enregistrer_productions(
             "production": centrale["production"],
             "production_demandee": centrale["production_demandee"],
             "production_precedente": centrale["production_precedente"],
-            "variation_mw": (
-                centrale["production"]
-                - centrale["production_precedente"]
-            ),
+            "variation_mw": (centrale["production"] - centrale["production_precedente"]),
             "minimum_autorise": centrale["minimum"],
             "maximum_autorise": centrale["maximum"],
-            "production_minimum_technique": (
-                centrale["minimum_technique"]
-            ),
-            "production_maximum_technique": (
-                centrale["maximum_technique"]
-            ),
-            "rampe_montee_maximale": (
-                centrale["rampe_montee"]
-            ),
-            "rampe_descente_maximale": (
-                centrale["rampe_descente"]
-            ),
+            "production_minimum_technique": (centrale["minimum_technique"]),
+            "production_maximum_technique": (centrale["maximum_technique"]),
+            "rampe_montee_maximale": (centrale["rampe_montee"]),
+            "rampe_descente_maximale": (centrale["rampe_descente"])
         })
 
-        etat_precedent[
-            centrale["plant_id"]
-        ] = centrale["production"]
+        etat_precedent[centrale["plant_id"]] = centrale["production"]
 
 
 # ============================================================

@@ -1,8 +1,10 @@
-from calcul_score_central import extract_data, calcul_scores, find_centrale, extract_production, extract_consomation_temporels, find_centrale_reacteurs
-
+from calcul_score_central import calcul_scores, find_centrale, find_centrale_reacteurs
 from dijkstra.region_service import RegionService
 from dijkstra.json_repository import JsonRepository
 from pathlib import Path
+from extraction_json import charger_donnees
+
+data = charger_donnees()
 
 BASE_DIR = Path(__file__).resolve().parent
 json_file = BASE_DIR / "data" / "parc-nucleaire-prescriptif-france.json"
@@ -32,10 +34,9 @@ def get_central_id(centrale):
     return centrale["id"]
 
 def get_metrique_centrale():
-    donnees = extract_data()
     metriques = []
 
-    for centrale in donnees["plants"]:
+    for centrale in data["parc_nucleaire"]["plants"]:
 
         metriques.append({
             "puissance_disponible" : get_puissance_disponible(centrale),
@@ -69,81 +70,28 @@ def calcul_demande_residuelle(augmentation, region):
 
 def match_central_region():
 
-    donnees_centrale = extract_production()
-    donnees_parc_nucleaire = extract_data()
+    donnees_centrale = data["params_temporels"]
+    donnees_parc_nucleaire = data["parc_nucleaire"]
 
     resultats = []
 
     for centrales in donnees_centrale["plants"]:
-
         for centrale_parc_nucleaire in donnees_parc_nucleaire["plants"]:
-
             if centrales["plant_id"] == centrale_parc_nucleaire["id"]:
-
-                simulation = centrale_parc_nucleaire.get(
-                    "simulation",
-                    {}
-                )
-
+                simulation = centrale_parc_nucleaire.get("simulation", {})
                 resultats.append({
-
-                    "region":
-                        centrale_parc_nucleaire["location"]["region_id"],
-
-                    "centrale":
-                        centrales["plant_id"],
-
-                    "nom":
-                        centrale_parc_nucleaire["name"],
-
-                    "initial_output_mw":
-                        centrales[
-                            "initial_output_mw_at_23_45_previous_day"
-                        ],
-
-                    "minimum_operating_power_mw":
-                        centrales[
-                            "minimum_operating_power_mw"
-                        ],
-
-                    "maximum_power_mw":
-                        centrales[
-                            "maximum_power_mw"
-                        ],
-
-                    "max_ramp_up_mw_per_15_min":
-                        centrales[
-                            "max_ramp_up_mw_per_15_min"
-                        ],
-
-                    "max_ramp_down_mw_per_15_min":
-                        centrales[
-                            "max_ramp_down_mw_per_15_min"
-                        ],
-
-                    "soft_upper_bound_mw":
-                        simulation.get(
-                            "soft_upper_bound_mw",
-                            centrales["maximum_power_mw"]
-                        ),
-
-                    "initial_dispatchable_margin_mw":
-                        simulation.get(
-                            "initial_dispatchable_margin_mw",
-                            0
-                        ),
-
-                    "technical_penalty":
-                        simulation.get(
-                            "technical_penalty",
-                            1.0
-                        ),
-
-                    "installed_power_mw":
-                        centrale_parc_nucleaire.get(
-                            "installed_power_mw",
-                            0
-                        )
+                    "region": centrale_parc_nucleaire["location"]["region_id"],
+                    "centrale": centrales["plant_id"],
+                    "nom": centrale_parc_nucleaire["name"],
+                    "initial_output_mw": centrales["initial_output_mw_at_23_45_previous_day"],
+                    "minimum_operating_power_mw": centrales["minimum_operating_power_mw"],
+                    "maximum_power_mw": centrales["maximum_power_mw"],
+                    "max_ramp_up_mw_per_15_min": centrales["max_ramp_up_mw_per_15_min"],
+                    "max_ramp_down_mw_per_15_min": centrales["max_ramp_down_mw_per_15_min"],
+                    "soft_upper_bound_mw": simulation.get("soft_upper_bound_mw", centrales["maximum_power_mw"]),
+                    "initial_dispatchable_margin_mw": simulation.get("initial_dispatchable_margin_mw", 0),
+                    "technical_penalty": simulation.get("technical_penalty", 1.0),
+                    "installed_power_mw": centrale_parc_nucleaire.get("installed_power_mw", 0)
                 })
 
     return resultats
@@ -161,100 +109,53 @@ def calcul_prodduction_regional():
     regions = {}
 
     for centrale in donnees_centrale_regional:
-
         region = centrale["region"]
-
         if region not in regions:
-
-            regions[region] = {
-                "region": region,
-                "production_initial": 0,
-                "centrales": []
-            }
+            regions[region] = {"region": region, "production_initial": 0, "centrales": []}
 
         # --------------------------------------------------------
         # PRODUCTION REGIONALE
         # --------------------------------------------------------
 
-        regions[region]["production_initial"] += (
-            centrale["initial_output_mw"]
-        )
+        regions[region]["production_initial"] += (centrale["initial_output_mw"])
 
         # --------------------------------------------------------
         # AJOUT DE LA CENTRALE
         # --------------------------------------------------------
 
         regions[region]["centrales"].append({
-
-            "id":
-                centrale["centrale"],
-
-            "name":
-                centrale["nom"],
-
-            "production_initial":
-                centrale["initial_output_mw"],
-
-            "minimum_operating_power_mw":
-                centrale["minimum_operating_power_mw"],
-
-            "maximum_power_mw":
-                centrale["maximum_power_mw"],
-
-            "soft_upper_bound_mw":
-                centrale["soft_upper_bound_mw"],
-
-            "initial_dispatchable_margin_mw":
-                centrale[
-                    "initial_dispatchable_margin_mw"
-                ],
-
-            "max_ramp_up_mw_per_15_min":
-                centrale[
-                    "max_ramp_up_mw_per_15_min"
-                ],
-
-            "max_ramp_down_mw_per_15_min":
-                centrale[
-                    "max_ramp_down_mw_per_15_min"
-                ],
-
-            "technical_penalty":
-                centrale["technical_penalty"]
+            "id": centrale["centrale"],
+            "name": centrale["nom"],
+            "production_initial": centrale["initial_output_mw"],
+            "minimum_operating_power_mw": centrale["minimum_operating_power_mw"],
+            "maximum_power_mw": centrale["maximum_power_mw"],
+            "soft_upper_bound_mw": centrale["soft_upper_bound_mw"],
+            "initial_dispatchable_margin_mw": centrale["initial_dispatchable_margin_mw"],
+            "max_ramp_up_mw_per_15_min": centrale["max_ramp_up_mw_per_15_min"],
+            "max_ramp_down_mw_per_15_min": centrale["max_ramp_down_mw_per_15_min"],
+            "technical_penalty": centrale["technical_penalty"]
         })
 
     # ============================================================
     # CONVERSION EN LISTE
     # ============================================================
 
-    production_regional_initial = list(
-        regions.values()
-    )
-
+    production_regional_initial = list(regions.values())
     return production_regional_initial
 
 
 
 def prod_initiale_a_repartir():
 
-    donnees_centrale_regional_a_repartir = (
-        calcul_prodduction_regional()
-    )
-
-    donnees_region_a_deduire = (
-        extract_consomation_temporels()
-    )
-
+    donnees_centrale_regional_a_repartir = (calcul_prodduction_regional())
+    donnees_region_a_deduire = data["consommation"]
     production_regional_initial_a_repartir = []
 
     # ============================================================
     # INDEX DES REGIONS DU JSON DE CONSOMMATION
     # ============================================================
 
-    regions_json = {
-        region["id"]: region
-        for region in donnees_region_a_deduire["regions"]
-    }
+    regions_json = {region["id"]: region for region in donnees_region_a_deduire["regions"]}
 
     # ============================================================
     # REGIONS AYANT UNE PRODUCTION
@@ -265,58 +166,31 @@ def prod_initiale_a_repartir():
     for region_data in donnees_centrale_regional_a_repartir:
 
         region = region_data["region"]
-
-        production_totale = region_data[
-            "production_initial"
-        ]
-
+        production_totale = region_data["production_initial"]
         centrales = region_data["centrales"]
-
         regions_production.add(region)
-
         donnees_region = regions_json.get(region)
 
         # --------------------------------------------------------
         # CONSOMMATION LOCALE
         # --------------------------------------------------------
 
-        if (
-            donnees_region
-            and donnees_region.get("consumption_mw")
-        ):
-
-            consommation_initiale = (
-                donnees_region["consumption_mw"][0]
-            )
-
+        if (donnees_region and donnees_region.get("consumption_mw")):
+            consommation_initiale = (donnees_region["consumption_mw"][0])
         else:
-
             consommation_initiale = 0
 
         # --------------------------------------------------------
         # CONSOMMATION ANNUELLE MOYENNE
         # --------------------------------------------------------
 
-        annual_average_consumption = (
-
-            donnees_region.get(
-                "annual_average_consumption_mw_2024",
-                0
-            )
-
-            if donnees_region
-
-            else 0
-        )
+        annual_average_consumption = (donnees_region.get("annual_average_consumption_mw_2024", 0) if donnees_region else 0)
 
         # --------------------------------------------------------
         # PRODUCTION REGIONALE A REPARTIR
         # --------------------------------------------------------
 
-        production_a_repartir = (
-            production_totale
-            - consommation_initiale
-        )
+        production_a_repartir = (production_totale - consommation_initiale)
 
         # ========================================================
         # CENTRALES
@@ -326,108 +200,52 @@ def prod_initiale_a_repartir():
 
         for centrale in centrales:
 
-            production_centrale = (
-                centrale["production_initial"]
-            )
+            production_centrale = (centrale["production_initial"])
 
             # ----------------------------------------------------
             # PART DE LA CENTRALE
             # ----------------------------------------------------
 
             if production_totale > 0:
-
-                part_centrale = (
-                    production_centrale
-                    / production_totale
-                )
-
+                part_centrale = (production_centrale / production_totale)
             else:
-
                 part_centrale = 0
 
             # ----------------------------------------------------
             # PRODUCTION APRES CONSOMMATION LOCALE
             # ----------------------------------------------------
 
-            production_centrale_a_repartir = (
-
-                production_a_repartir
-                * part_centrale
-            )
+            production_centrale_a_repartir = (production_a_repartir * part_centrale)
 
             # ----------------------------------------------------
             # SOFT UPPER BOUND
             # ----------------------------------------------------
 
-            soft_upper_bound = (
-                centrale["soft_upper_bound_mw"]
-            )
+            soft_upper_bound = (centrale["soft_upper_bound_mw"])
 
             # ----------------------------------------------------
             # MAXIMUM ENVOYABLE
             # ----------------------------------------------------
 
-            production_max_a_envoyer = min(
-
-                max(
-                    production_centrale_a_repartir,
-                    0
-                ),
-
-                soft_upper_bound
-            )
+            production_max_a_envoyer = min(max(production_centrale_a_repartir, 0), soft_upper_bound)
 
             # ----------------------------------------------------
             # RESULTAT CENTRALE
             # ----------------------------------------------------
 
             centrales_resultat.append({
-
-                "id":
-                    centrale["id"],
-
-                "name":
-                    centrale["name"],
-
-                "production_initial":
-                    production_centrale,
-
-                "production_initial_a_repartir":
-                    round(production_centrale_a_repartir),
-
-                "soft_upper_bound_mw":
-                    soft_upper_bound,
-
-                "production_max_a_envoyer":
-                    round(production_max_a_envoyer),
-
-                "initial_dispatchable_margin_mw":
-                    centrale[
-                        "initial_dispatchable_margin_mw"
-                    ],
-
-                "max_ramp_up_mw_per_15_min":
-                    centrale[
-                        "max_ramp_up_mw_per_15_min"
-                    ],
-
-                "max_ramp_down_mw_per_15_min":
-                    centrale[
-                        "max_ramp_down_mw_per_15_min"
-                    ],
-
-                "minimum_operating_power_mw":
-                    centrale[
-                        "minimum_operating_power_mw"
-                    ],
-
-                "maximum_power_mw":
-                    centrale[
-                        "maximum_power_mw"
-                    ],
-
-                "technical_penalty":
-                    centrale["technical_penalty"]
+                "id": centrale["id"],
+                "name": centrale["name"],
+                "production_initial": production_centrale,
+                "production_initial_a_repartir": round(production_centrale_a_repartir),
+                "soft_upper_bound_mw": soft_upper_bound,
+                "production_max_a_envoyer": round(production_max_a_envoyer),
+                "initial_dispatchable_margin_mw": centrale["initial_dispatchable_margin_mw"],
+                "max_ramp_up_mw_per_15_min": centrale["max_ramp_up_mw_per_15_min"],
+                "max_ramp_down_mw_per_15_min": centrale["max_ramp_down_mw_per_15_min"],
+                "minimum_operating_power_mw": centrale["minimum_operating_power_mw"],
+                "maximum_power_mw": centrale["maximum_power_mw"],
+                "technical_penalty": centrale["technical_penalty"]
             })
 
         # ========================================================
@@ -435,24 +253,12 @@ def prod_initiale_a_repartir():
         # ========================================================
 
         production_regional_initial_a_repartir.append({
-
-            "region":
-                region,
-
-            "production_initial":
-                production_totale,
-
-            "consommation_locale":
-                consommation_initiale,
-
-            "production_initial_a_repartir":
-                production_a_repartir,
-
-            "annual_average_consumption_mw_2024":
-                annual_average_consumption,
-
-            "centrales":
-                centrales_resultat
+            "region": region,
+            "production_initial": production_totale,
+            "consommation_locale": consommation_initiale,
+            "production_initial_a_repartir": production_a_repartir,
+            "annual_average_consumption_mw_2024": annual_average_consumption,
+            "centrales": centrales_resultat
         })
 
 # ============================================================
@@ -460,14 +266,10 @@ def prod_initiale_a_repartir():
 # ============================================================
 
     # Lecture du JSON parc nucléaire
-    donnees_parc_nucleaire = extract_data()
+    donnees_parc_nucleaire = data["parc_nucleaire"]
 
     # Index des PDL par region_id
-    pdl_par_region = {
-        pdl["location"]["region_id"]: pdl
-        for pdl in donnees_parc_nucleaire.get("PDL", [])
-    }
-
+    pdl_par_region = {pdl["location"]["region_id"]: pdl for pdl in donnees_parc_nucleaire.get("PDL", [])}
 
     for region in donnees_region_a_deduire["regions"]:
 
@@ -484,13 +286,8 @@ def prod_initiale_a_repartir():
             # ----------------------------------------------------
 
             if region.get("consumption_mw"):
-
-                consommation_initiale = (
-                    region["consumption_mw"][0]
-                )
-
+                consommation_initiale = (region["consumption_mw"][0])
             else:
-
                 consommation_initiale = 0
 
             # ----------------------------------------------------
@@ -502,47 +299,20 @@ def prod_initiale_a_repartir():
             centrales_region = []
 
             if pdl:
-
                 centrales_region.append({
-
-                    "id":
-                        pdl["id"],
-
-                    "name":
-                        pdl["name"],
-
-                    "type":
-                        "PDL",
-
-                    "production_initial":
-                        0,
-
-                    "production_initial_a_repartir":
-                        0,
-
-                    "production_max_a_envoyer":
-                        0,
-
-                    "soft_upper_bound_mw":
-                        0,
-
-                    "initial_dispatchable_margin_mw":
-                        0,
-
-                    "max_ramp_up_mw_per_15_min":
-                        0,
-
-                    "max_ramp_down_mw_per_15_min":
-                        0,
-
-                    "minimum_operating_power_mw":
-                        0,
-
-                    "maximum_power_mw":
-                        0,
-
-                    "technical_penalty":
-                        1.0
+                    "id": pdl["id"],
+                    "name": pdl["name"],
+                    "type": "PDL",
+                    "production_initial": 0,
+                    "production_initial_a_repartir": 0,
+                    "production_max_a_envoyer": 0,
+                    "soft_upper_bound_mw": 0,
+                    "initial_dispatchable_margin_mw": 0,
+                    "max_ramp_up_mw_per_15_min": 0,
+                    "max_ramp_down_mw_per_15_min": 0,
+                    "minimum_operating_power_mw": 0,
+                    "maximum_power_mw":0,
+                    "technical_penalty":1.0
                 })
 
             # ----------------------------------------------------
@@ -550,39 +320,19 @@ def prod_initiale_a_repartir():
             # ----------------------------------------------------
 
             production_regional_initial_a_repartir.append({
-
-                "region":
-                    region_id,
-
-                "production_initial":
-                    0,
-
-                "consommation_locale":
-                    consommation_initiale,
-
-                "production_initial_a_repartir":
-                    -consommation_initiale,
-
-                "annual_average_consumption_mw_2024":
-                    region.get(
-                        "annual_average_consumption_mw_2024",
-                        0
-                    ),
-
-                "centrales":
-                    centrales_region
+                "region": region_id,
+                "production_initial": 0,
+                "consommation_locale": consommation_initiale,
+                "production_initial_a_repartir": -consommation_initiale,
+                "annual_average_consumption_mw_2024": region.get("annual_average_consumption_mw_2024", 0),
+                "centrales": centrales_region
             })
+
     # ============================================================
     # TRI DES REGIONS
     # ============================================================
 
-    production_regional_initial_a_repartir.sort(
-
-        key=lambda x:
-            x["annual_average_consumption_mw_2024"],
-
-        reverse=True
-    )
+    production_regional_initial_a_repartir.sort(key=lambda x: x["annual_average_consumption_mw_2024"], reverse=True)
 
     return production_regional_initial_a_repartir
 
@@ -591,47 +341,25 @@ def prod_initiale_a_repartir():
 
 def repartition_initiale_minuit():
 
-    production_regional_initial_a_repartir = (
-        prod_initiale_a_repartir()
-    )
-
+    production_regional_initial_a_repartir = (prod_initiale_a_repartir())
     regions_a_fournir = []
     regions_sugar_daddy = []
 
     for region in production_regional_initial_a_repartir:
-
         if region["production_initial_a_repartir"] < 0:
             regions_a_fournir.append(region)
-
         else:
             regions_sugar_daddy.append(region)
 
     for region in regions_a_fournir:
 
-        result = region_service.compute_routes(
-            region["region"]
-        )
-
+        result = region_service.compute_routes(region["region"])
         source_plant = result["source_plant"]
-
         candidats = []
-
         for destination, route_info in result["routes"].items():
-
-            centrale = find_centrale(
-                extract_data()["plants"],
-                destination
-            )
-
-            if (
-                centrale is not None
-                and centrale["location"]["region_name"]
-                == region["region"]
-            ):
-                print(
-                    "DESTINATION DANS LA REGION :",
-                    destination
-                )
+            centrale = find_centrale(data["parc_nucleaire"]["plants"], destination)
+            if (centrale is not None and centrale["location"]["region_name"] == region["region"]):
+                print("DESTINATION DANS LA REGION :", destination)
                 continue
 
             if destination == source_plant:
@@ -641,19 +369,9 @@ def repartition_initiale_minuit():
             total_loss_percent = route_info["total_loss_percent"]
             max_transfer_mw = route_info["max_transfer_mw"]
 
-            demande_residuelle = (
-                region["production_initial_a_repartir"] * -1
-            )
+            demande_residuelle = (region["production_initial_a_repartir"] * -1)
 
-            resultat = calcul_scores(
-                source_plant,
-                destination,
-                distance_km,
-                total_loss_percent,
-                max_transfer_mw,
-                demande_residuelle
-            )
-
+            resultat = calcul_scores(source_plant, destination, distance_km, total_loss_percent, max_transfer_mw, demande_residuelle)
             if resultat is not None:
                 candidats.append(resultat)
                 
@@ -674,7 +392,7 @@ def router_deficit(region_id, deficit_residuel, etat_precedent, facteur_reserve,
             continue
 
         centrale = find_centrale(toutes_les_centrales, destination)
-        centrale_reacteurs = find_centrale_reacteurs(extract_data()["plants"], destination)
+        centrale_reacteurs = find_centrale_reacteurs(data["parc_nucleaire"]["plants"], destination)
 
         distance_km = route_info["distance_km"]
         total_loss_percent = route_info["total_loss_percent"]
@@ -692,30 +410,22 @@ def router_deficit(region_id, deficit_residuel, etat_precedent, facteur_reserve,
 
     while demande_restante > 0 and index < len(candidats):
         candidat = candidats[index]
-        production_affectee = min(
-            candidat["puissance_disponible"],
-            candidat["max_transfer_mw"],
-            demande_restante
-        )
+        production_affectee = min(candidat["puissance_disponible"], candidat["max_transfer_mw"], demande_restante)
         candidat["production_affectee"] = production_affectee
         repartition_externe.append(candidat)
         demande_restante -= production_affectee
         index += 1
-        candidat["production_restante"] = (
-            candidat["puissance_disponible"] - production_affectee
-        )
-
+        candidat["production_restante"] = (candidat["puissance_disponible"] - production_affectee)
         etat_precedent[candidat["destination_centrale"]] += production_affectee
 
     return {
         "region_id": region_id,
         "repartition_externe": repartition_externe,
-        "demande_non_couverte": demande_restante
-    }
+        "demande_non_couverte": demande_restante}
 
 
 def consomation_regionale():
-    donnees_regionale = extract_consomation_temporels
+    donnees_regionale = data["consommation"]
     for region in donnees_regionale["regions"]:
         for consomation_quart in region["consumption_mw"]:
             return {
@@ -724,8 +434,8 @@ def consomation_regionale():
             }
 
 def match_central_region():
-    donnees_centrale = extract_production()
-    donnees_parc_nucleaire = extract_data()
+    donnees_centrale = data["params_temporels"]
+    donnees_parc_nucleaire = data["parc_nucleaire"]
 
     for centrales in donnees_centrale["plants"]:
         for centrale_parc_nucleaire in donnees_parc_nucleaire["plants"]:
@@ -734,6 +444,3 @@ def match_central_region():
                     "region": centrale_parc_nucleaire["location"]["region_id"],
                     "centrale": centrales["plant_id"]
                 }
-
-
-    

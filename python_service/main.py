@@ -1,21 +1,28 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, APIRouter
+from pydantic import BaseModel
 from pathlib import Path
-from routes import simulation_route
+import logging
 import json
 from dijkstra.json_repository import JsonRepository
 from dijkstra.region_service import RegionService
-import logging
 from simu_regionale import dashboard, conso_heure_region
+from simu_regionale import (repartition_par_heure, equilibrage_local_toutes_regions_nucleaires)
 
 
+
+class RepartitionHeureRequest(BaseModel):
+    heure: str
+
+logger = logging.getLogger(__name__)
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
 app = FastAPI()
+router = APIRouter()
 
-app.include_router(simulation_route.router)
+app.include_router(router)
 
 # Chemin vers le fichier JSON
 
@@ -86,7 +93,6 @@ def get_dashboard():
 @app.post("/conso_regionale_horaire")
 def conso_regionale_horaire(id_region, heure):
     try:
-
         return conso_heure_region(id_region, heure)
 
     except ValueError as e:
@@ -95,4 +101,30 @@ def conso_regionale_horaire(id_region, heure):
             status_code=404,
             detail=str(e)
         )
-    
+
+
+@app.post("/repartition_heure")
+def repartition_heure(request: RepartitionHeureRequest):
+
+    logger.info(f"Demande de répartition horaire - Heure: {request.heure}")
+
+    resultat_global = equilibrage_local_toutes_regions_nucleaires()
+    prod_reelle = resultat_global["prod_reelle"]
+
+    repartition = repartition_par_heure(prod_reelle, request.heure)
+
+    if not repartition:
+        logger.warning(f"Aucune donnée de production trouvée pour l'heure : {request.heure}")
+        raise HTTPException(
+            status_code=404,
+            detail={
+                "success": False,
+                "message": f"Aucune donnée de production pour l'heure '{request.heure}'"
+            }
+        )
+
+    return {
+        "success": True,
+        "heure": request.heure,
+        "resultats": repartition,
+    }

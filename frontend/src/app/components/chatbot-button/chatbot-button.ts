@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectorRef, Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AssistantService } from '../../services/assistant'
 
@@ -10,6 +10,7 @@ import { AssistantService } from '../../services/assistant'
 })
 export class ChatbotButton {
   isOpen = false;
+  isLoading = false;
   messageInput = '';
   messages: {
     content: string;
@@ -21,7 +22,10 @@ export class ChatbotButton {
     }
   ];
 
-  constructor(private assistantService: AssistantService) {}
+  constructor(
+  private assistantService: AssistantService,
+  private cdr: ChangeDetectorRef
+) {}
 
   toggleChat(): void {
     this.isOpen = !this.isOpen;
@@ -40,6 +44,7 @@ export class ChatbotButton {
     });
 
     this.messageInput = '';
+    this.isLoading = true;
 
     this.assistantService.sendMessage(prompt).subscribe({
       
@@ -53,6 +58,8 @@ export class ChatbotButton {
             content: data,
             role: 'assistant'
           });
+          this.isLoading = false;
+          this.cdr.detectChanges();
           return;
         }
 
@@ -60,6 +67,8 @@ export class ChatbotButton {
           content: `${data.count} centrales nucléaires disponibles :\n\n${data.plants.map(plant => `• ${plant}`).join('\n')}`,
           role: 'assistant'
         });
+        this.isLoading = false;
+        this.cdr.detectChanges();
       },
       error: (error) => {
         console.error('Erreur assistant :', error);
@@ -68,6 +77,8 @@ export class ChatbotButton {
           content: 'Une erreur est survenue lors de la communication avec l’assistant.',
           role: 'assistant'
         });
+        this.isLoading = false;
+        this.cdr.detectChanges();
       }
     });
   }

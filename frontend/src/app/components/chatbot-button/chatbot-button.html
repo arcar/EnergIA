@@ -16,6 +16,16 @@
                 <div class="message-content">{{ message.content }}</div>
                 </div>
             }
+            @if (isLoading) {
+                <div class="message assistant-message thinking-message">
+                  <div class="thinking-dots">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                  </div>
+                  <span>Réflexion en cours...</span>
+                </div>
+            }
         </div>
     </div>
 

@@ -34,6 +34,7 @@ def chercher_index(heure):
     return index
 
 def perturber_consommation(id_region, start, end, deltaMw):
+    deltaMw = float(deltaMw)
     if not any(region["id"] == id_region for region in data["consommation"]["regions"]):
         raise ValueError(f"Région inconnue : {id_region}")
 
@@ -50,11 +51,6 @@ def perturber_consommation(id_region, start, end, deltaMw):
 
     return perturbation
 
-id_region = "bretagne"
-start = "11:30"
-end = "15:15"
-deltaMw = 3000
-print(perturber_consommation(id_region, start, end, deltaMw))
 
 def demande_regionale(id_region=None, start=None, end=None, deltaMw=None):
     consommation_region = {}
@@ -597,23 +593,14 @@ def repartition_par_heure(prod_reelle, heure_demandee):
 
     return resultats
 
-resultats = equilibrage_local_toutes_regions_nucleaires()
+
 
 def dashboard(id_region=None, start=None, end=None, deltaMw=None):
     resultats = equilibrage_local_toutes_regions_nucleaires(id_region, start, end, deltaMw)
     return construire_etats_dashboard(resultats)
 
 
-etats_dashboard=construire_etats_dashboard(resultats)
 
-'''print("===== DEBUG DASHBOARD =====")
-print("Nombre d'états :",len(etats_dashboard))
-print("Premier état :",etats_dashboard[0])
-print("État 48 :",etats_dashboard[48])
-print("Dernier état :",etats_dashboard[-1])
-print("===========================")
-'''
-repartition_heure_test = repartition_par_heure(resultats["prod_reelle"], "10:00")
 
 
 def conso_heure_region(id_region, heure):

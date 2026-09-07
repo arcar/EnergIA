@@ -5,8 +5,8 @@ import logging
 import json
 from dijkstra.json_repository import JsonRepository
 from dijkstra.region_service import RegionService
-from simu_regionale import dashboard, conso_heure_region
-from simu_regionale import (repartition_par_heure, equilibrage_local_toutes_regions_nucleaires)
+from simu_regionale import dashboard, conso_heure_region, perturber_consommation, repartition_par_heure, equilibrage_local_toutes_regions_nucleaires
+
 
 class ConsoRegionRequest(BaseModel):
     id_region: str
@@ -15,6 +15,12 @@ class ConsoRegionRequest(BaseModel):
 
 class RepartitionHeureRequest(BaseModel):
     heure: str
+
+class PerturbationRequest(BaseModel):
+    id_region: str
+    start: str
+    end: str
+    deltaMw: float 
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
@@ -129,3 +135,14 @@ def repartition_heure(request: RepartitionHeureRequest):
         "heure": request.heure,
         "resultats": repartition,
     }
+
+@app.post("/perturber_consommation")
+def perturbation(id_region, start, end, deltaMw):
+    try:
+        result =  equilibrage_local_toutes_regions_nucleaires(id_region, start, end, deltaMw)
+        return result["details_regionaux"], result["energie_non_fournie"], result["energie_a_revendre"]
+    except ValueError as e:
+        raise HTTPException(
+            status_code=404,
+            detail=str(e)
+        )

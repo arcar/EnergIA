@@ -1,7 +1,9 @@
-from simu_nationale import (charger_donnees, construire_centrales_heure, enregistrer_productions, EPSILON, initialiser_etat, verifier_rampes)
+from simu_nationale import (construire_centrales_heure, enregistrer_productions, EPSILON, initialiser_etat, verifier_rampes)
 from metrique_centrale import (router_deficit)
+from extraction_json import charger_donnees
 
 data = charger_donnees()
+
 
 def trouver_centrales(plant_id):
     for centrale in data["params_temporels"]["plants"]:
@@ -601,23 +603,6 @@ def dashboard(id_region=None, start=None, end=None, deltaMw=None):
     resultats = equilibrage_local_toutes_regions_nucleaires(id_region, start, end, deltaMw)
     return construire_etats_dashboard(resultats)
 
-# print("===== DEBUG STATUT =====")
-# nombre_degradees=sum(
-#     1
-#     for situation in resultats["situations_degradees"]
-#     if situation["situation_degradee"]
-# )
-# print("Situations dégradées :",nombre_degradees)
-
-# heures_degradees=set(
-#     situation["heure"]
-#     for situation in resultats["situations_degradees"]
-#     if situation["situation_degradee"]
-# )
-# print("Heures avec situation dégradée :",len(heures_degradees))
-# print("Heures :",sorted(heures_degradees))
-
-# print("========================")
 
 etats_dashboard=construire_etats_dashboard(resultats)
 
@@ -629,7 +614,6 @@ print("Dernier état :",etats_dashboard[-1])
 print("===========================")
 '''
 repartition_heure_test = repartition_par_heure(resultats["prod_reelle"], "10:00")
-# print(repartition_heure_test)
 
 
 def conso_heure_region(id_region, heure):

@@ -1,23 +1,3 @@
-import os 
-import json
-
-parent = os.path.dirname(os.path.abspath(__file__))
-parc_nucleaire_data = os.path.join(parent, "data", "parc-nucleaire-prescriptif-france.json")
-parametres_temporels_nucleaire_data = os.path.join(parent, "data", "energia-parametres-temporels-nucleaire.json")
-reference_consomation_data = os.path.join(parent, "data", "energia-journee-reference-consommation.json")
-
-def extract_data():
-    with open(parc_nucleaire_data, "r", encoding="utf-8") as json_file:
-        return json.load(json_file)
-
-def extract_production():
-    with open(parametres_temporels_nucleaire_data, "r", encoding="utf-8") as donnees_production_centrales:
-        return json.load(donnees_production_centrales)
-
-def extract_consomation_temporels():
-    with open(reference_consomation_data, "r", encoding="utf-8") as donnees_consomation_regionale:
-            return json.load(donnees_consomation_regionale)
-
 def find_centrale(plants, destination):
     for centrale in plants:
         if centrale["plant_id"] == destination:
@@ -80,12 +60,7 @@ def calcul_scores(source_plant, destination, distance_km, total_loss_percent, ma
     technical_penalty_weight = 200.0
     resultats = donnees_scores(source_plant, destination, distance_km, total_loss_percent, centrale, demande_residuelle, max_transfer_mw, etat_precedent, facteur_reserve, centrale_reacteurs, production_debut_heure)
 
-    resultats["score_candidat"] = (
-        resultats["distance_km"] * distance_weight
-        + resultats["loss_percent"] * loss_weight
-        + pow(resultats["final_load_ratio"], 4) * saturation_weight
-        + resultats["technical_penalty"] * technical_penalty_weight
-    )
+    resultats["score_candidat"] = (resultats["distance_km"] * distance_weight + resultats["loss_percent"] * loss_weight + pow(resultats["final_load_ratio"], 4) * saturation_weight + resultats["technical_penalty"] * technical_penalty_weight)
 
     return resultats
     

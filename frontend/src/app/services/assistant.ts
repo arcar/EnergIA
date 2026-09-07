@@ -14,9 +14,15 @@ interface ProductionNationaleResponse {
   resultats: unknown[];
 }
 
+interface ConsoRegionResponse {
+  region: string;
+  heure: string;
+  consommation: number;
+}
 type AssistantData =
   | PlantsResponse
   | ProductionNationaleResponse
+  | ConsoRegionResponse
   | string;
 
 interface AssistantResponse {

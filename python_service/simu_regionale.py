@@ -604,5 +604,6 @@ def conso_heure_region(id_region, heure):
         if region_demande == region["id"]:
             return {
                 "region" : region["id"],
+                "heure": heure,
                 "consommation" : region["consumption_mw"][index]
             }

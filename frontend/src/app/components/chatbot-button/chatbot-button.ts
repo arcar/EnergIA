@@ -78,6 +78,18 @@ export class ChatbotButton {
           return;
         }
 
+        // Si la réponse contient la consommation d'une région
+        if ('consommation' in data) {
+          this.messages.push({
+            content: `À ${data.heure}, la consommation de la région ${data.region} est de ${data.consommation} MW.`,
+            role: 'assistant'
+          });
+
+          this.isLoading = false;
+          this.cdr.detectChanges();
+          return;
+        }
+
         // Si la réponse contient la liste des centrales
         if ('count' in data) {
           this.messages.push({

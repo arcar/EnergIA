@@ -33,7 +33,9 @@ export class Dashboard implements OnInit {
           centralesDisponibles: '18 / 18',
           solaire: state.solarProductionMw,
           eolienne: state.windProductionMw,
-          demandeResiduelle: state.totalConsumptionMw - state.nuclearProductionMw - state.solarProductionMw - state.windProductionMw
+          demandeResiduelle: state.totalConsumptionMw - state.solarProductionMw - state.windProductionMw,
+          status: state.status,
+          unmetDemand: state.unmetDemandMw
         }));
         
         this.cdr.detectChanges();
@@ -82,32 +84,24 @@ export class Dashboard implements OnInit {
 
 
   get networkStatus(): string {
-
-    if (this.currentState.demandeResiduelle < 0) {
+    if (this.currentState.status === 'insufficient') {
       return 'Demande non satisfaite';
     }
-
-    if (this.currentState.reserve < 1000) {
+    if (this.currentState.status === 'degraded') {
       return 'Situation dégradée';
     }
-
     return 'Situation normale';
-
   }
 
 
   get networkStatusClass(): string {
-
-    if (this.currentState.demandeResiduelle < 0) {
+    if (this.currentState.status === 'insufficient') {
       return 'danger';
     }
-
-    if (this.currentState.reserve < 1000) {
+    if (this.currentState.status === 'degraded') {
       return 'warning';
     }
-
     return 'normal';
-
   }
 
 }

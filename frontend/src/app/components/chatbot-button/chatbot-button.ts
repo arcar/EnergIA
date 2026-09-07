@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { AssistantService } from '../../services/assistant'
 
 @Component({
   imports: [FormsModule],
@@ -14,12 +15,60 @@ export class ChatbotButton {
     content: string;
     role: 'user' | 'assistant';
   }[] = [
-  {
-    content: 'Bonjour ! Je suis l’assistant EnergIA. Comment puis-je vous aider ?',
-    role: 'assistant'
-  }
+    {
+      content: 'Bonjour ! Je suis l’assistant EnergIA. Comment puis-je vous aider ?',
+      role: 'assistant'
+    }
   ];
+
+  constructor(private assistantService: AssistantService) {}
+
   toggleChat(): void {
     this.isOpen = !this.isOpen;
+  }
+
+  sendMessage(): void {
+    const prompt = this.messageInput.trim();
+
+    if (!prompt) {
+      return;
+    }
+
+    this.messages.push({
+      content: prompt,
+      role: 'user'
+    });
+
+    this.messageInput = '';
+
+    this.assistantService.sendMessage(prompt).subscribe({
+      
+
+      next: (response) => {
+        console.log('Réponse reçue par Angular :', response);
+        const data = response.response;
+
+        if (typeof data === 'string') {
+          this.messages.push({
+            content: data,
+            role: 'assistant'
+          });
+          return;
+        }
+
+        this.messages.push({
+          content: `${data.count} centrales nucléaires disponibles :\n\n${data.plants.map(plant => `• ${plant}`).join('\n')}`,
+          role: 'assistant'
+        });
+      },
+      error: (error) => {
+        console.error('Erreur assistant :', error);
+
+        this.messages.push({
+          content: 'Une erreur est survenue lors de la communication avec l’assistant.',
+          role: 'assistant'
+        });
+      }
+    });
   }
 }

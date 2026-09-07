@@ -53,7 +53,9 @@ async function askLLM(prompt) {
         if (result.action === "GET_PROD_NATIONALE_HEURE" && result.parameters.heure) {
             result.parameters.heure = normalizeHour(result.parameters.heure);
         }
-
+        if (result.action === "GET_CONSO_REGION_HEURE" && result.parameters.heure) {
+            result.parameters.heure = normalizeHour(result.parameters.heure);
+        }
         return result;
 
 

@@ -29,6 +29,19 @@ git clone https://github.com/arcar/EnergIA.git
 Créer un fichier .env dans le dossier node_gateway contenant :
 ```
 PYTHON_SERVICE_URL=http://python_service:8000
+ASSISTANT_URL = http://assistant:3002
+```
+
+Créer un fichier .env dans le dossier assistant contenant :
+```
+PYTHON_SERVICE_URL=http://python_service:8000
+OLLAMA_URL=http://ollama:11434
+GATEWAY_URL=http://node_gateway:3000
+```
+
+Créer un fichier .env dans le dossier python_service contenant :
+```
+NODE_GATEWAY_URL=http://node_gateway:3000
 ```
 
 
@@ -62,9 +75,29 @@ Les tests couvrent notamment :
 
 
 # Routes disponibles
-Toutes les routes sont disponibles depuis la Gateway : http://localhost:3000
 
-## Centrales
+## Routes appelées par le MCP via Ollama : 
+
+```
+GET http://localhost:3000/assistant/assistant
+
+Params:
+name : request
+value : question posée en language naturel
+
+La réponse fournie fera appel aux routes:
+
+    - GET_PLANTS : Pour récupèrer toutes les centrales présentes en France.
+    - GET_PROD_NATIONALE_HEURE : Pour récupèrer la repartition de la production nationale à une heure donnée.
+    - GET_CONSO_REGION_HEURE : Pour récupèrer la consommation demandée d'une région à une heure donnée.
+    - UNKNOWN pour renvoyer : "Je n'ai pas les informations à ma disposition pour vous répondre"
+```
+
+
+---
+## Routes disponibles depuis la Gateway : http://localhost:3000
+
+
 
 ### Obtenir toutes les centrales
 
@@ -73,43 +106,49 @@ GET /plants
 ```
 
 ---
-
-### Obtenir toutes les routes pour une région
-
-```
-GET /plants/routes
-```
-
-Params :
-```
-"regionId" : "occitanie"
-```
-
-
----
-
-### Obtenir toutes les regions
+### Obtenir toutes les informations des régions
 
 ```
-GET /plants/region
+GET /plants/regions
 ```
 
 ---
 
-
-### Simuler une augmentation de la consommation pour une région donnée
+### Obtenir toutes les informations de consommation et production pour la France
 
 ```
-POST /simulation
+GET /dashboard
+```
+
+---
+
+### Obtenir repartition de la production à une heure donnée
+
+```
+POST /repartition_heure 
 ```
 
 Body :
 
 ```json
 {
-    "region":"Normandie",
-    "augmentation":"500"
+    "heure":"21:00"
 }
+```
+## Routes disponibles depuis python-service et non connecté à la Gateway : http://localhost:8000
+
+### Obtenir les informations d'une région donnée
+
+```
+GET /routes/{region_id}
+```
+
+---
+
+### Obtenir tous les chemins de la première centrale de la région vers toutes les autres
+
+```
+GET /regions/routes/(region_id)
 ```
 
 ---

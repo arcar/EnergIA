@@ -8,6 +8,9 @@ from dijkstra.region_service import RegionService
 from simu_regionale import dashboard, conso_heure_region
 from simu_regionale import (repartition_par_heure, equilibrage_local_toutes_regions_nucleaires)
 
+class ConsoRegionRequest(BaseModel):
+    id_region: str
+    heure: str
 
 
 class RepartitionHeureRequest(BaseModel):
@@ -91,12 +94,10 @@ def get_dashboard():
     return dashboard()
 
 @app.post("/conso_regionale_horaire")
-def conso_regionale_horaire(id_region, heure):
+def conso_regionale_horaire(payload: ConsoRegionRequest):
     try:
-        return conso_heure_region(id_region, heure)
-
+        return conso_heure_region(payload.id_region, payload.heure)
     except ValueError as e:
-
         raise HTTPException(
             status_code=404,
             detail=str(e)

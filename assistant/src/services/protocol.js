@@ -24,7 +24,7 @@ PROTOCOLE :
 PARAMÈTRES RÉGIONAUX : 
     Les données de consommation sont associées à une région.
 
-    Le paramètre "region" doit TOUJOURS utiliser le code normalisé ci-dessous.
+    Le paramètre "id_region" doit TOUJOURS utiliser le code normalisé ci-dessous.
 
     Seules ces 13 régions sont autorisées :
     - ile_de_france = Île-de-France
@@ -47,7 +47,7 @@ PARAMÈTRES RÉGIONAUX :
     "IDF" → "ile_de_france"
 
     Si aucune région n'est indiquée :
-    "region": null
+    "id_region": null
 
     Ne jamais inventer une région, si un ancien nom de région est indiqué, voici la correspondance entre anciennes et nouvelles régions:
     Auvergne-Rhône-Alpes : née de la fusion d'Auvergne et de Rhône-Alpes.
@@ -84,7 +84,7 @@ ACTIONS :
 
     GET_CONSO_REGION_HEURE : Récupère la consommation demandée d'une région à une heure donnée.
     Parameters :
-      - region
+      - id_region
       - heure
 
 RÈGLES DE NORMALISATION :
@@ -111,7 +111,7 @@ EXEMPLES :
     Réponse : {"action": "GET_PROD_NATIONALE_HEURE", "parameters": {"heure" : "11:00"}}
 
     Utilisateur : "Donne moi la consommation de la bretagne à 11h00"
-    Réponse : {"action": "GET_CONSO_REGION_HEURE", "parameters": {"region": "bretagne", "heure" : "11:00"}}
+    Réponse : {"action": "GET_CONSO_REGION_HEURE", "parameters": {"id_region": "bretagne", "heure" : "11:00"}}
     `;
 
 module.exports = SYSTEM_PROMPT;

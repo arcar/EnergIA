@@ -144,9 +144,9 @@ def get_repartition():
    return repartition
 
 @app.post("/perturber_consommation")
-def perturbation(id_region, start, end, deltaMw):
+def perturbation(request : PerturbationRequest):
     try:
-        result =  equilibrage_local_toutes_regions_nucleaires(id_region, start, end, deltaMw)
+        result =  equilibrage_local_toutes_regions_nucleaires(request.id_region, request.start, request.end, request.deltaMw)
         return result["details_regionaux"], result["energie_non_fournie"], result["energie_a_revendre"]
     except ValueError as e:
         raise HTTPException(

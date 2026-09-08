@@ -13,7 +13,17 @@
         <div class="chatbot-messages">
             @for (message of messages; track $index) {
                 <div class="message" [class.user-message]="message.role === 'user'" [class.assistant-message]="message.role === 'assistant'">
-                {{ message.content }}
+                <div class="message-content">{{ message.content }}</div>
+                </div>
+            }
+            @if (isLoading) {
+                <div class="message assistant-message thinking-message">
+                  <div class="thinking-dots">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                  </div>
+                  <span>Réflexion en cours...</span>
                 </div>
             }
         </div>
@@ -22,7 +32,7 @@
     <div class="chatbot-input">
       <input type="text" placeholder="Écrivez votre question..." [(ngModel)]="messageInput" />
       
-      <button type="button" aria-label="Envoyer le message">➤</button>
+      <button type="button" aria-label="Envoyer le message" (click)="sendMessage()">➤</button>
     </div>
   </div>
 }

@@ -1,8 +1,9 @@
 
 import { Component } from '@angular/core';
+import { FranceMap } from '../../shared/france-map/france-map';
 
 @Component({
-  imports: [],
+  imports: [FranceMap],
   selector: 'app-parc',
   styleUrl: './parc.scss',
   templateUrl: './parc.html',

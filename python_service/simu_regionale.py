@@ -24,12 +24,48 @@ def regions_avec_centrales():
 
     return regions
 
-def demande_regionale():
+def chercher_index(heure):
+    index = None
+    heuredemandee = heure
+    for i, time in enumerate(data["consommation"]["timestamps"]):
+            if time == heuredemandee:
+                index = i
+                break
+    return index
+
+def perturber_consommation(id_region, start, end, deltaMw):
+    deltaMw = float(deltaMw)
+    if not any(region["id"] == id_region for region in data["consommation"]["regions"]):
+        raise ValueError(f"Région inconnue : {id_region}")
+
+    index_start = chercher_index(start)
+    index_end = chercher_index(end)
+
+    perturbation = {id_region: []}
+    for index in range(index_start, index_end + 1):  # bornes incluses
+        perturbation[id_region].append({
+            "index": index,
+            "heure": data["consommation"]["timestamps"][index],
+            "augmentation": deltaMw
+        })
+
+    return perturbation
+
+
+def demande_regionale(id_region=None, start=None, end=None, deltaMw=None):
     consommation_region = {}
     for region in data["consommation"]["regions"]:
-        consommation_region[region["id"]] = region["consumption_mw"]
+        consommation_region[region["id"]] = list(region["consumption_mw"])
+
+    if id_region is not None:
+        scenario_perturbation = perturber_consommation(id_region, start, end, deltaMw)
+
+        for r_id, quarts in scenario_perturbation.items():
+            for quart in quarts:
+                consommation_region[r_id][quart["index"]] += quart["augmentation"]
 
     return consommation_region
+
 
 def production_non_pilotables_regional():
     production_np_regional = {}
@@ -40,6 +76,7 @@ def production_non_pilotables_regional():
             production_solaire + production_eolienne for production_solaire, production_eolienne in zip(solar, wind)
         ]
     return production_np_regional
+
 
 def production_non_pilotable_detail_regional():
     detail = {}
@@ -54,22 +91,22 @@ def production_non_pilotable_detail_regional():
     return detail
 
 
-def demande_moins_non_pilotable():
-    consommation = demande_regionale()
+def demande_moins_non_pilotable(id_region=None, start=None, end=None, deltaMw=None):
+    consommation = demande_regionale(id_region, start, end, deltaMw)
     production_np = production_non_pilotables_regional()
 
     demande_residuelle = {}
-
     for region in consommation:
         demande_residuelle[region] = [
-            valeur_consommation - valeur_production for valeur_consommation, valeur_production in zip(consommation[region], production_np[region])
+            valeur_consommation - valeur_production
+            for valeur_consommation, valeur_production in zip(consommation[region], production_np[region])
         ]
-
     return demande_residuelle
 
-def pourcentage_repartition_regionale():
+
+def pourcentage_repartition_regionale(id_region=None, start=None, end=None, deltaMw=None):
     regions = regions_avec_centrales()
-    demande_residuelle = demande_moins_non_pilotable()
+    demande_residuelle = demande_moins_non_pilotable(id_region, start, end, deltaMw)
     minimum_reserve_percent = 8.0
     facteur_reserve = 1 - (minimum_reserve_percent / 100)
     pourcentage_regional = {}
@@ -79,11 +116,9 @@ def pourcentage_repartition_regionale():
             continue
 
         capacite_max_region = sum(centrales["maximum_power_mw"] for centrales in region["plants"] if centrales is not None)
-
         if capacite_max_region == 0:
             continue
         capacite_dispo_region = capacite_max_region * facteur_reserve
-
         demande_residuelle_region = demande_residuelle[region["region_id"]]
 
         pourcentage_regional[region["region_id"]] = [
@@ -432,11 +467,11 @@ def construire_etats_dashboard(resultats):
 
     return etats
 
-def equilibrage_local_toutes_regions_nucleaires():
+def equilibrage_local_toutes_regions_nucleaires(id_region=None, start=None, end=None, deltaMw=None):
     regions = regions_avec_centrales()
-    pourcentages, facteur_reserve = pourcentage_repartition_regionale()
-    demande_residuelle_toutes = demande_moins_non_pilotable()
-    consommation_par_region = demande_regionale()
+    pourcentages, facteur_reserve = pourcentage_repartition_regionale(id_region, start, end, deltaMw)
+    demande_residuelle_toutes = demande_moins_non_pilotable(id_region, start, end, deltaMw)
+    consommation_par_region = demande_regionale(id_region, start, end, deltaMw)
     non_pilotable_detail = production_non_pilotable_detail_regional()
     minimum_reserve_percent = 8.0
 
@@ -532,10 +567,14 @@ def equilibrage_local_toutes_regions_nucleaires():
 
 def repartition_par_heure(prod_reelle, heure_demandee):
     resultats = []
+    total_production = 0
 
     for entree in prod_reelle:
         if entree["heure"] != heure_demandee:
             continue
+
+
+        total_production += entree["production"]
 
         centrale = trouver_centrales(entree["plant_id"])
         puissance_max = centrale["maximum_power_mw"]
@@ -558,38 +597,24 @@ def repartition_par_heure(prod_reelle, heure_demandee):
 
     return resultats
 
-resultats = equilibrage_local_toutes_regions_nucleaires()
 
-def dashboard():
-    resultats = equilibrage_local_toutes_regions_nucleaires()
+
+def dashboard(id_region=None, start=None, end=None, deltaMw=None):
+    resultats = equilibrage_local_toutes_regions_nucleaires(id_region, start, end, deltaMw)
     return construire_etats_dashboard(resultats)
 
 
-etats_dashboard=construire_etats_dashboard(resultats)
 
-'''print("===== DEBUG DASHBOARD =====")
-print("Nombre d'états :",len(etats_dashboard))
-print("Premier état :",etats_dashboard[0])
-print("État 48 :",etats_dashboard[48])
-print("Dernier état :",etats_dashboard[-1])
-print("===========================")'''
-
-repartition_heure_test = repartition_par_heure(resultats["prod_reelle"], "10:00")
 
 
 def conso_heure_region(id_region, heure):
     region_demande = id_region
-    temp_demande = heure
-    index = None
-
-    for i, time in enumerate(data["consommation"]["timestamps"]):
-        if time == temp_demande:
-            index = i
-            break
+    index = chercher_index(heure)
 
     for region in data["consommation"]["regions"]:
         if region_demande == region["id"]:
             return {
                 "region" : region["id"],
+                "heure": heure,
                 "consommation" : region["consumption_mw"][index]
             }

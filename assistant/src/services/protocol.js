@@ -17,6 +17,7 @@ PROTOCOLE :
     - GET_PLANTS
     - GET_PROD_NATIONALE_HEURE
     - GET_CONSO_REGION_HEURE
+    - GET_PERTURBATION
     - UNKNOWN
 
     Tu ne dois jamais créer une nouvelle action.
@@ -87,6 +88,13 @@ ACTIONS :
       - id_region
       - heure
 
+    GET_PERTURBATION : Simule une perturbation pour une région et l'applique sur la repartition de la production nationale (augmentation ou diminution de consommation sur une période donnée).
+    Parameters :
+      - id_region
+      - start
+      - end
+      - deltaMw
+
 RÈGLES DE NORMALISATION :
     1. Deux demandes ayant le même objectif doivent produire exactement la même action.
     2. Les synonymes et formulations différentes doivent être considérés comme équivalents.
@@ -112,6 +120,11 @@ EXEMPLES :
 
     Utilisateur : "Donne moi la consommation de la bretagne à 11h00"
     Réponse : {"action": "GET_CONSO_REGION_HEURE", "parameters": {"id_region": "bretagne", "heure" : "11:00"}}
+    
+    Utilisateur : "Il y une augmentation pour l'occitanie de 200 Mw entre 12:00 et 14h30, donne moi la répartion de la production nucléaire sur la journée"
+    Réponse : {"action": "GET_PERTURBATION", "parameters": {"id_region": "occitanie", "start": "12:00", "end": "14:00", "deltaMw": 10000}}
     `;
+
+    
 
 module.exports = SYSTEM_PROMPT;

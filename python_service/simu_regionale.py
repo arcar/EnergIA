@@ -567,10 +567,14 @@ def equilibrage_local_toutes_regions_nucleaires(id_region=None, start=None, end=
 
 def repartition_par_heure(prod_reelle, heure_demandee):
     resultats = []
+    total_production = 0
 
     for entree in prod_reelle:
         if entree["heure"] != heure_demandee:
             continue
+
+
+        total_production += entree["production"]
 
         centrale = trouver_centrales(entree["plant_id"])
         puissance_max = centrale["maximum_power_mw"]
@@ -611,5 +615,6 @@ def conso_heure_region(id_region, heure):
         if region_demande == region["id"]:
             return {
                 "region" : region["id"],
+                "heure": heure,
                 "consommation" : region["consumption_mw"][index]
             }

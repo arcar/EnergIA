@@ -119,6 +119,7 @@ def repartition_heure(request: RepartitionHeureRequest):
     prod_reelle = resultat_global["prod_reelle"]
 
     repartition = repartition_par_heure(prod_reelle, request.heure)
+    
 
     if not repartition:
         logger.warning(f"Aucune donnée de production trouvée pour l'heure : {request.heure}")
@@ -133,7 +134,7 @@ def repartition_heure(request: RepartitionHeureRequest):
     return {
         "success": True,
         "heure": request.heure,
-        "resultats": repartition,
+        "resultats": repartition
     }
 
 @app.get("/repartition")

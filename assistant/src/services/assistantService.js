@@ -26,12 +26,20 @@ async function generateAnswer(question) {
                 }
             break;
         case "GET_PROD_NATIONALE_HEURE":
-            try {
-            
-                    const response = await axios.post(`${process.env.PYTHON_SERVICE_URL}/repartition_heure`, result.parameters);
-            
-                    return  response.data.resultats
-            
+            try {   
+                const response = await axios.post(`${process.env.PYTHON_SERVICE_URL}/repartition_heure`, result.parameters);      
+                const data = response.data;
+                const heure = data.heure;
+                const resultats = data.resultats;
+
+                let message = `Répartition nationale à ${heure} :\n\n`;
+
+                resultats.forEach((plant) => {
+                    message += `- ${plant.plant_name} : ${plant.production_mw.toFixed(0)} MW\n`;
+                });
+
+                return message
+                               
                 } catch (error) {
             
                     console.log(error.message);
@@ -68,7 +76,7 @@ async function generateAnswer(question) {
         case "GET_PERTURBATION":
             try {
                 const response = await axios.post(`${process.env.PYTHON_SERVICE_URL}/perturber_consommation`, result.parameters)
-                return `La production à été perturber comme moi <:)`
+                return "La production à été perturber comme moi <:)"
             }catch (error) {
                 console.log(error.message);
             

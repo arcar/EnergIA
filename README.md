@@ -105,7 +105,7 @@ La réponse fournie fera appel aux routes:
 GET /plants
 ```
 
----
+***
 ### Obtenir toutes les informations des régions
 
 ```
@@ -203,6 +203,48 @@ Si la puissance disponible est inférieure à la demande d'augmentation, une ré
 Si il est impossible de satisfaire la demande d'augmentation même partiellement, un message "Impossible d'effectuer la simulation" apparait.
 
 
+# Règles de montée et de descente en puissance des centrales
+Les centrales respectent des limites de descente et montée en puissance. Si la puissance demandée est supérieure à ces limites, la centrale augmente ou diminue sa production au maximum de la limite puis une redistribustion l'excédent est réalisée sur les autres centrales.
+
+# Calcul de la demande résiduelle
+La demande résiduelle correspond à la demande de production nucléaire. À chaque pas de temps de 15 minutes, la demande résiduelle est calculée selon la formule : 
+```
+Demande résiduelle = Consommation - Production_solaire - Production_eolienne
+```
+Elle peut être régionale ou nationale.
+
+# Fonctionnement de la réserve minimale
+Le moteur conserve une réserve minimale de capacité disponible sur le parc nucléaire. Elle permet aux centrales de garder une marge de fonctionnement. Cette marge a été fixée à 8%. Ainsi, une centrale pourra produire au maximum 92% de sa capacité maximum.
+Si ce seuil est atteint la centrale sera identifiée comme étant en situation dégradée.
+
+# Gestion des validations, logs et erreurs de simulation
+Une amélioration de l'API de simulation a été réalisée afin de rendre les échanges plus fiables et plus compréhensibles.
+
+## Validations ajoutées
+- Vérification que la région demandée existe avant de lancer une simulation.
+- Vérification que l'augmentation de consommation est valide (valeur strictement supérieure à 0 MW).
+- Gestion des demandes impossibles lorsque la puissance disponible des centrales locales est insuffisante.
+
+## Gestion des erreurs
+- Mise en place de réponses d'erreurs structurées avec un statut, un message explicite et le détail de l'erreur.
+- Retour de messages compréhensibles pour faciliter le diagnostic côté utilisateur ou frontend.
+- Gestion des erreurs de communication entre la gateway Express et le service FastAPI.
+
+## Ajout des logs
+Des journaux ont été ajoutés dans le service de simulation afin de suivre les différentes étapes du traitement :
+- Début d'une simulation avec la région et l'augmentation demandée.
+- Chargement des données des centrales.
+- Calcul des métriques des centrales.
+- Nombre de centrales disponibles dans la région demandée.
+- Calcul de la demande résiduelle.
+- Fin de la répartition de puissance.
+
+## Demander les logs en cas de non affichage après compose up
+```
+docker compose logs -f NOM_DOSSIER
+```
+
+
 # Limites connues du prototype
 Nous avons identifié plusieurs limites :
 
@@ -214,30 +256,4 @@ Nous avons identifié plusieurs limites :
 * Le moteur recherche le chemin le plus court pour relier une centrale à toutes les centrales présentes sur la metropole.
 * Les coefficients de pondération (distance_weight, loss_weight, saturation_weight, etc.) ont été définis pour le prototype afin de prioriser les centrales. Ils n'ont pas été déterminés à partir de données réelles ni validés sur un réseau électrique
 
-## Gestion des validations, logs et erreurs de simulation
-Une amélioration de l'API de simulation a été réalisée afin de rendre les échanges plus fiables et plus compréhensibles.
-
-### Validations ajoutées
-- Vérification que la région demandée existe avant de lancer une simulation.
-- Vérification que l'augmentation de consommation est valide (valeur strictement supérieure à 0 MW).
-- Gestion des demandes impossibles lorsque la puissance disponible des centrales locales est insuffisante.
-
-### Gestion des erreurs
-- Mise en place de réponses d'erreurs structurées avec un statut, un message explicite et le détail de l'erreur.
-- Retour de messages compréhensibles pour faciliter le diagnostic côté utilisateur ou frontend.
-- Gestion des erreurs de communication entre la gateway Express et le service FastAPI.
-
-### Ajout des logs
-Des journaux ont été ajoutés dans le service de simulation afin de suivre les différentes étapes du traitement :
-- Début d'une simulation avec la région et l'augmentation demandée.
-- Chargement des données des centrales.
-- Calcul des métriques des centrales.
-- Nombre de centrales disponibles dans la région demandée.
-- Calcul de la demande résiduelle.
-- Fin de la répartition de puissance.
-
-# demander les logs en cas de non affichage après compose up
-```
-docker compose logs -f NOM_DOSSIER
-```
 

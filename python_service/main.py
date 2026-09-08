@@ -6,7 +6,7 @@ import json
 from dijkstra.json_repository import JsonRepository
 from dijkstra.region_service import RegionService
 from simu_regionale import dashboard, conso_heure_region, perturber_consommation, repartition_par_heure, equilibrage_local_toutes_regions_nucleaires
-
+from extraction_json import charger_donnees
 
 class ConsoRegionRequest(BaseModel):
     id_region: str
@@ -43,17 +43,17 @@ repository = JsonRepository(
 )
 region_service = RegionService(repository)
 
-# Chargement JSON pour /plants
 
-with open(DATA_FILE, "r", encoding="utf-8") as f:
-    data = json.load(f)
+
+
+data = charger_donnees()
 
 @app.get("/plants")
 def get_plants():
 
     return {
-        "count": len(data["plants"]),
-        "plants": [plant["name"] for plant in data["plants"]]
+        "count": len(data["parc_nucleaire"]["plants"]),
+        "plants": [plant["name"] for plant in data["parc_nucleaire"]["plants"]]
     }
 
 

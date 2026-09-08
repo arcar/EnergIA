@@ -796,14 +796,7 @@ def main():
     # AFFICHAGE
     # --------------------------------------------------------
 
-    afficher_resultats(
-        prod_reelle,
-        productions_sous_minimum,
-        productions_sur_maximum,
-        energie_a_revendre,
-        energie_non_fournie,
-        erreurs_rampes
-    )
+    afficher_resultats(prod_reelle, productions_sous_minimum, productions_sur_maximum, energie_a_revendre, energie_non_fournie, erreurs_rampes)
 
 
 # ============================================================

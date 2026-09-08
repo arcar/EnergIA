@@ -20,7 +20,7 @@ async function generateAnswer(question) {
                     console.log(error.message);
             
                     throw new Error(
-                        "Impossible de contacter l'API Python"
+                        "Impossible de contacter l'API Python 1"
                     );
             
                 }
@@ -37,7 +37,7 @@ async function generateAnswer(question) {
                     console.log(error.message);
             
                     throw new Error(
-                        "Impossible de contacter l'API Python222222222"
+                        "Impossible de contacter l'API Python 2"
                     );
             
                 }
@@ -59,11 +59,23 @@ async function generateAnswer(question) {
                 console.log("PARAMS ENVOYÉS:", result.parameters);
         
                 throw new Error(
-                    "Impossible de contacter l'API Python333333333"
+                    "Impossible de contacter l'API Python 3"
                 );
         
             }
             break;
+
+        case "GET_PERTURBATION":
+            try {
+                const response = await axios.post(`${process.env.PYTHON_SERVICE_URL}/perturber_consommation`, result.parameters)
+                return `La production à été perturber comme moi <:)`
+            }catch (error) {
+                console.log(error.message);
+            
+                    throw new Error(
+                        "Impossible de contacter l'API Python 4"
+                    );
+            }
         case "UNKNOWN":
             try {
             

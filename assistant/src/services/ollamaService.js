@@ -56,6 +56,9 @@ async function askLLM(prompt) {
         if (result.action === "GET_CONSO_REGION_HEURE" && result.parameters.heure) {
             result.parameters.heure = normalizeHour(result.parameters.heure);
         }
+        if (result.action === "GET_PERTURBATION" && result.parameters.heure){
+            result.parameters.heure = normalizeHour(result.parameters.heure);
+        }
         return result;
 
 

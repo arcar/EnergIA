@@ -217,6 +217,18 @@ Elle peut être régionale ou nationale.
 Le moteur conserve une réserve minimale de capacité disponible sur le parc nucléaire. Elle permet aux centrales de garder une marge de fonctionnement. Cette marge a été fixée à 8%. Ainsi, une centrale pourra produire au maximum 92% de sa capacité maximum.
 Si ce seuil est atteint la centrale sera identifiée comme étant en situation dégradée.
 
+# Format utilisé pour définir une perturbation de consommation
+Pour définir une perturbation, le format suivant a été défini : 
+```json
+{
+  "regionId": "occitanie",
+  "start": "17:30",
+  "end": "21:00",
+  "deltaMw": 850
+}
+```
+
+
 # Gestion des validations, logs et erreurs de simulation
 Une amélioration de l'API de simulation a été réalisée afin de rendre les échanges plus fiables et plus compréhensibles.
 

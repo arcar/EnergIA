@@ -90,6 +90,7 @@ La réponse fournie fera appel aux routes:
     - GET_PLANTS : Pour récupèrer toutes les centrales présentes en France.
     - GET_PROD_NATIONALE_HEURE : Pour récupèrer la repartition de la production nationale à une heure donnée.
     - GET_CONSO_REGION_HEURE : Pour récupèrer la consommation demandée d'une région à une heure donnée.
+    - GET_PERTURBATION : Simule une perturbation pour une région et l'applique sur la repartition de la production nationale (augmentation ou   diminution de consommation sur une période donnée).
     - UNKNOWN pour renvoyer : "Je n'ai pas les informations à ma disposition pour vous répondre"
 ```
 

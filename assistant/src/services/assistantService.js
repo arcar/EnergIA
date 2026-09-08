@@ -76,7 +76,7 @@ async function generateAnswer(question) {
         case "GET_PERTURBATION":
             try {
                 const response = await axios.post(`${process.env.PYTHON_SERVICE_URL}/perturber_consommation`, result.parameters)
-                return "La production à été perturber comme moi <:)"
+                return `La production a été perturbée comme moi <:)`
             }catch (error) {
                 console.log(error.message);
             

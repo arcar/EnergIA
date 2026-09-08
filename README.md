@@ -58,7 +58,10 @@ Cela va permettre de démarrer les conteneurs présents dans le docker compose.
 
 
 # Exécution des tests
-Des tests unitaires ont été réalisés avec **pytest** afin de vérifier le bon fonctionnement du module `metrique_centrale.py`.
+Des tests unitaires ont été réalisés avec **pytest** :
+```
+python -m pytest
+```
 
 Les tests couvrent notamment :
 
@@ -68,10 +71,7 @@ Les tests couvrent notamment :
 * l'identification de la région et de l'identifiant d'une centrale,
 * la récupération des centrales d'une région,
 * le calcul de la demande résiduelle,
-* la répartition de la demande lorsque la puissance disponible est suffisante localement,
-* la répartition externe lorsque les capacités locales sont insuffisantes.
-
-**Résultat : 9 tests exécutés, 9 tests réussis.**
+* le respect des limites de montée et descente en puissance
 
 
 # Routes disponibles
@@ -90,7 +90,6 @@ La réponse fournie fera appel aux routes:
     - GET_PLANTS : Pour récupèrer toutes les centrales présentes en France.
     - GET_PROD_NATIONALE_HEURE : Pour récupèrer la repartition de la production nationale à une heure donnée.
     - GET_CONSO_REGION_HEURE : Pour récupèrer la consommation demandée d'une région à une heure donnée.
-    - GET_PERTURBATION : Simule une perturbation pour une région et l'applique sur la repartition de la production nationale (augmentation ou   diminution de consommation sur une période donnée).
     - UNKNOWN pour renvoyer : "Je n'ai pas les informations à ma disposition pour vous répondre"
 ```
 

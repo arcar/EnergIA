@@ -206,6 +206,14 @@ Si il est impossible de satisfaire la demande d'augmentation même partiellement
 # Règles de montée et de descente en puissance des centrales
 Les centrales respectent des limites de descente et montée en puissance. Si la puissance demandée est supérieure à ces limites, la centrale augmente ou diminue sa production au maximum de la limite puis une redistribustion l'excédent est réalisée sur les autres centrales.
 
+# Format des données temporelles attendues
+Les données doivent être fournies au format HH:mm. Elles correspondent à des pas de 15min (ex: 12:00, 12:15, 12:30,....).
+
+# Calcul des états successifs
+Pour chaque quart d’heure, le moteur récupère la consommation de chaque région, détermine la production nucléaire nécessaire et 
+répartit cette production entre les centrales en respectant les puissances minimales et maximales de chaque centrale et leurs vitesses de montée et de descente en puissance.
+Puis, il conserve l’état obtenu pour le quart d’heure suivant et relance une répartition.
+
 # Calcul de la demande résiduelle
 La demande résiduelle correspond à la demande de production nucléaire. À chaque pas de temps de 15 minutes, la demande résiduelle est calculée selon la formule : 
 ```
@@ -227,7 +235,6 @@ Pour définir une perturbation, le format suivant a été défini :
   "deltaMw": 850
 }
 ```
-
 
 # Gestion des validations, logs et erreurs de simulation
 Une amélioration de l'API de simulation a été réalisée afin de rendre les échanges plus fiables et plus compréhensibles.

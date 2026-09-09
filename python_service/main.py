@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from pathlib import Path
 import logging
 import json
+from fastapi.middleware.cors import CORSMiddleware
 from dijkstra.json_repository import JsonRepository
 from dijkstra.region_service import RegionService
 from simu_regionale import dashboard, conso_heure_region, perturber_consommation, repartition_par_heure, equilibrage_local_toutes_regions_nucleaires
@@ -30,6 +31,14 @@ logging.basicConfig(
 
 app = FastAPI()
 router = APIRouter()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:4200"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.include_router(router)
 
@@ -99,6 +108,10 @@ def compute_routes(region_id: str):
 def get_dashboard():
     return dashboard()
 
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+
 @app.post("/conso_regionale_horaire")
 def conso_regionale_horaire(payload: ConsoRegionRequest):
     try:
@@ -144,12 +157,8 @@ def get_repartition():
    return repartition
 
 @app.post("/perturber_consommation")
-def perturbation(request : PerturbationRequest):
+def perturbation(request:PerturbationRequest):
     try:
-        result =  equilibrage_local_toutes_regions_nucleaires(request.id_region, request.start, request.end, request.deltaMw)
-        return result["details_regionaux"], result["energie_non_fournie"], result["energie_a_revendre"]
+        return dashboard(request.id_region,request.start,request.end,request.deltaMw)
     except ValueError as e:
-        raise HTTPException(
-            status_code=404,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=404,detail=str(e))

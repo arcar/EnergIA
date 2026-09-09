@@ -1,5 +1,5 @@
 from metrique_centrale import ( get_puissance_disponible,get_centrale_disponible,get_taux_saturation, 
-                               get_nom_region,get_central_id,get_centrale_regionale, calcul_demande_residuelle,repartition)
+                               get_nom_region,get_central_id,get_centrale_regionale, calcul_demande_residuelle)
 from unittest.mock import patch
 
 def test_get_puissance_disponible():

@@ -63,6 +63,7 @@ def demande_regionale(id_region=None, start=None, end=None, deltaMw=None):
         for r_id, quarts in scenario_perturbation.items():
             for quart in quarts:
                 consommation_region[r_id][quart["index"]] += quart["augmentation"]
+                print("PERTURBATION:",r_id,quart["heure"],quart["augmentation"],"=>",consommation_region[r_id][quart["index"]])
 
     return consommation_region
 
@@ -390,6 +391,8 @@ def construire_detail_regional(region_id, heure, index, production_mw, productio
         wind_mw = 0
         non_pilotable_total_mw = 0
 
+    if region_id == "normandie" and heure in ["12:00", "13:00", "14:00"]:
+        print("DETAIL:", region_id, heure, "consommation =", consommation_par_region[region_id][index])
     return {
         "region_id": region_id,
         "heure": heure,

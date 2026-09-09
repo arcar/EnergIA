@@ -4,7 +4,8 @@
   "main": "src/index.js",
   "scripts": {
     "start": "node index.js",
-    "dev": "nodemon -L index.js"
+    "dev": "nodemon -L index.js",
+    "test:integration": "node --test test"
   },
   "keywords": [],
   "author": "",

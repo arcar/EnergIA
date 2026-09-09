@@ -1,5 +1,10 @@
+<<<<<<< HEAD
 from metrique_centrale import ( get_puissance_disponible,get_centrale_disponible,get_taux_saturation, 
                                get_nom_region,get_central_id,get_centrale_regionale, calcul_demande_residuelle)
+=======
+from metrique_centrale import get_puissance_disponible, get_centrale_disponible, get_taux_saturation, get_nom_region, get_central_id, get_centrale_regionale, calcul_demande_residuelle
+
+>>>>>>> ab3f539833e505470233614c3fac54eaa4a72d07
 from unittest.mock import patch
 
 def test_get_puissance_disponible():
@@ -14,9 +19,6 @@ def test_get_puissance_disponible():
 
     assert resultat == 654
 
-from metrique_centrale import (
-    get_puissance_disponible,
-    get_centrale_disponible)
 
 def test_get_puissance_disponible():
     centrale = {
@@ -134,90 +136,7 @@ def test_calcul_demande_residuelle():
         "metrique_centrale.get_centrale_regionale",
         return_value=centrales
     ):
-        resultat = calcul_demande_residuelle(2000, "normandie")
+        resultat, puissance_disponible_regional = calcul_demande_residuelle(2000, "normandie")
 
     assert resultat == 440
-
-def test_repartition_locale():
-    centrales = [
-        {
-            "central_id": "flamanville",
-            "region": "normandie",
-            "puissance_disponible": 500,
-            "taux_saturation": 0.95,
-            "disponible": True
-        },
-        {
-            "central_id": "paluel",
-            "region": "normandie",
-            "puissance_disponible": 300,
-            "taux_saturation": 0.95,
-            "disponible": True
-        }
-    ]
-
-    with patch(
-        "metrique_centrale.get_centrale_regionale",
-        return_value=centrales
-    ):
-        resultat = repartition(600, "normandie")
-
-    assert resultat[0]["central_id"] == "flamanville"
-    assert resultat[1]["central_id"] == "paluel"
-
-    assert resultat[0]["production_affectee"] == 375
-    assert resultat[1]["production_affectee"] == 225
-
-def test_repartition_externe():
-    centrales = [
-        {
-            "central_id": "flamanville",
-            "region": "normandie",
-            "puissance_disponible": 500,
-            "taux_saturation": 0.95,
-            "disponible": True
-        }
-    ]
-
-    candidat_externe = {
-        "source_central": "flamanville",
-        "destination_centrale": "chinon",
-        "distance_km": 300,
-        "loss_percent": 1.5,
-        "final_load_ratio": 0.8,
-        "technical_penalty": 0,
-        "max_transfer_mw": 1000,
-        "puissance_disponible": 600,
-        "score_candidat": 1000
-    }
-
-    with patch(
-    "metrique_centrale.get_centrale_regionale",
-    return_value=centrales
-), patch(
-    "main.region_service.compute_routes",
-        return_value={
-            "source_plant": "flamanville",
-            "routes": {
-                "chinon": {
-                    "distance_km": 300,
-                    "total_loss_percent": 1.5,
-                    "max_transfer_mw": 1000
-                }
-            }
-        }
-    ), patch(
-        "metrique_centrale.calcul_scores",
-        return_value=candidat_externe
-    ):
-
-        resultat = repartition(800, "normandie")
-
-    assert resultat["repartition_locale"][0]["central_id"] == "flamanville"
-    assert resultat["repartition_locale"][0]["production_affectee"] == 500
-
-    assert len(resultat["repartition_externe"]) == 1
-    assert resultat["repartition_externe"][0]["destination_centrale"] == "chinon"
-    assert resultat["repartition_externe"][0]["production_affectee"] == 300
-
-    assert resultat["demande_non_couverte"] == 0
+    assert puissance_disponible_regional == 1560

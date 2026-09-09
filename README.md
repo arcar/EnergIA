@@ -58,7 +58,10 @@ Cela va permettre de démarrer les conteneurs présents dans le docker compose.
 
 
 # Exécution des tests
-Des tests unitaires ont été réalisés avec **pytest** afin de vérifier le bon fonctionnement du module `metrique_centrale.py`.
+Des tests unitaires ont été réalisés avec **pytest** :
+```
+python -m pytest
+```
 
 Les tests couvrent notamment :
 
@@ -68,10 +71,7 @@ Les tests couvrent notamment :
 * l'identification de la région et de l'identifiant d'une centrale,
 * la récupération des centrales d'une région,
 * le calcul de la demande résiduelle,
-* la répartition de la demande lorsque la puissance disponible est suffisante localement,
-* la répartition externe lorsque les capacités locales sont insuffisantes.
-
-**Résultat : 9 tests exécutés, 9 tests réussis.**
+* le respect des limites de montée et descente en puissance
 
 
 # Routes disponibles

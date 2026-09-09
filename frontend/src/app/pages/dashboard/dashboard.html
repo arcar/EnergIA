@@ -12,25 +12,76 @@
 
 
   <div class="security-margin">
+    <h3>Perturbation de consommation</h3>
 
-    <div class="security-header">
+    <div class="perturbation-form">
 
-      <span>Marge de sécurité</span>
+      <label>
+        Région
+        <select [(ngModel)]="selectedRegion">
+          <option value="normandie">Normandie</option>
+          <option value="grand_est">Grand Est</option>
+          <option value="centre_val_de_loire">Centre-Val de Loire</option>
+          <option value="bourgogne_franche_comte">Bourgogne-Franche-Comté</option>
+          <option value="auvergne_rhone_alpes">Auvergne-Rhône-Alpes</option>
+          <option value="occitanie">Occitanie</option>
+          <option value="nouvelle_aquitaine">Nouvelle-Aquitaine</option>
+          <option value="hauts_de_france">Hauts-de-France</option>
+          <option value="ile_de_france">Île-de-France</option>
+          <option value="bretagne">Bretagne</option>
+          <option value="pays_de_la_loire">Pays de la Loire</option>
+          <option value="provence_alpes_cote_d_azur">Provence-Alpes-Côte d'Azur</option>
+          <option value="corse">Corse</option>
+        </select>
+      </label>
 
-      <strong>{{ securityMargin }} %</strong>
+      <label>
+        Début
+        <input
+          type="time"
+          step="900"
+          [(ngModel)]="startTime">
+      </label>
+
+      <label>
+        Fin
+        <input
+          type="time"
+          step="900"
+          [(ngModel)]="endTime">
+      </label>
+
+      <label>
+        Δ MW
+        <input
+          type="number"
+          [(ngModel)]="deltaMw"
+          placeholder="+300 ou -400">
+      </label>
+
+      <button (click)="appliquerPerturbation()">
+        Appliquer
+      </button>
 
     </div>
 
-    <input
-      type="range"
-      min="0"
-      max="30"
-      step="1"
-      [(ngModel)]="securityMargin"
-    />
-
   </div>
 
+
+  <div class="perturbation-result">
+
+    <h3>Résultat de la perturbation</h3>
+
+    @for (state of perturbationStates; track state.time) {
+
+      <p>
+        <strong>{{ state.time }}</strong>
+        →
+        {{ state.consommation.toLocaleString('fr-FR') }} MW
+      </p>
+
+    }
+  </div>
 
   <div class="stats-grid">
       <app-stat-card

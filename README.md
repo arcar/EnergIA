@@ -14,6 +14,7 @@ Pour ce projet, les outils suivants doivent être installés :
 * FastAPI
 * Git
 * Dijkstra
+* Angular
 
 
 # Installation
@@ -54,50 +55,44 @@ Depuis la racine du projet :
 docker compose up -d
 ```
 
-Cela va permettre de démarrer les conteneurs présents dans le docker compose.
+Cela va permettre de démarrer les conteneurs présents dans le docker compose (node_gateway, python_service, frontend, asssitant, ollama).
+Une fois tous les conteneurs démarrés, le frontend est accessible à l'adresse suivante : http://localhost:4200/
 
+# Schema du projet
+![schecma du projet EnergIA](schema.png)
 
-# Exécution des tests
-Des tests unitaires ont été réalisés avec **pytest** afin de vérifier le bon fonctionnement du module `metrique_centrale.py`.
+# Assistant MCP
+## Ollama
+Un LLM a été intégré au projet afin de traduire les questions ou informations des utilisateurs en réponses unifiées. 
+Pour cela, le modèle qwen2.5:7b a été choisi.
+Un prompt et un protocol sont transmis au LLM afin que ses réponses prennent la forme suivante et puisse être traitées par le MCP :
+```
+    {
+    "action": "ACTION",
+    "parameters": {}
+    }
+```
 
-Les tests couvrent notamment :
-
-* le calcul de la puissance disponible d'une centrale,
-* la vérification de sa disponibilité,
-* le calcul du taux de saturation,
-* l'identification de la région et de l'identifiant d'une centrale,
-* la récupération des centrales d'une région,
-* le calcul de la demande résiduelle,
-* la répartition de la demande lorsque la puissance disponible est suffisante localement,
-* la répartition externe lorsque les capacités locales sont insuffisantes.
-
-**Résultat : 9 tests exécutés, 9 tests réussis.**
+## MCP
+Un MCP a été mis en place pour permettre avec le retour du LLM d'accéder aux différentes routes présentes sur python_service.
+Les outils suivants sont à sa disposition :
+- ```GET_PLANTS``` : Récupère toutes les centrales présentes en France.
+- ```GET_PROD_NATIONALE_HEURE``` : Récupère la repartition de la production nationale à une heure donnée.
+- ```GET_CONSO_REGION_HEURE``` : Récupère la consommation demandée d'une région à une heure donnée.
+- ```GET_PERTURBATION``` : Simule une perturbation pour une région et l'applique sur la repartition de la production nationale (augmentation ou diminution de consommation sur une période donnée).
+- ```UNKNOWN``` : lorsqu'il ne trouve pas d'outils adapté par rapport à la question de l'utilisateur.
 
 
 # Routes disponibles
-
-## Routes appelées par le MCP via Ollama : 
-
+## Routes disponibles depuis la Gateway : http://localhost:3000
+### Questionner l'assistant
 ```
-GET http://localhost:3000/assistant/assistant
+GET /assistant/assistant
 
 Params:
 name : request
 value : question posée en language naturel
-
-La réponse fournie fera appel aux routes:
-
-    - GET_PLANTS : Pour récupèrer toutes les centrales présentes en France.
-    - GET_PROD_NATIONALE_HEURE : Pour récupèrer la repartition de la production nationale à une heure donnée.
-    - GET_CONSO_REGION_HEURE : Pour récupèrer la consommation demandée d'une région à une heure donnée.
-    - UNKNOWN pour renvoyer : "Je n'ai pas les informations à ma disposition pour vous répondre"
 ```
-
-
----
-## Routes disponibles depuis la Gateway : http://localhost:3000
-
-
 
 ### Obtenir toutes les centrales
 
@@ -161,10 +156,11 @@ GET /regions/routes/(region_id)
 
 ---
 
-
 # Format des requêtes
-Les requêtes sont formulées en params pour obtenir les routes pour une région et pour le reste en JSON.
-
+## A partir de la Gateway
+Les requêtes sont formulées (dans postman ou bruno) en params pour obtenir les routes pour une région et pour le reste en JSON.
+## A partir du frontend
+Les requêtes peuvent être adressées directement au chatbot en language naturel. 
 
 # Format des réponses
 Les réponses sont également formulées en JSON.
@@ -172,11 +168,11 @@ Les réponses sont également formulées en JSON.
 
 # Fonctionnement du moteur prescriptif
 Le moteur prescriptif va, dans un premier temps, vérifier si la puissance disponible au sein de la région couvre la demande d'augmentation en électricité. 
-Si celle-ci est suffisante, la puissance demandée est répartie selon les capacités de chaque centrales jusqu'à atteindre un taux de saturation de 95% (comme indiqué dans le fichier JSON fourni : soft_upper_bound_ratio : 0.95).
+Si celle-ci est suffisante, la puissance demandée est répartie selon les capacités de chaque centrales jusqu'à atteindre un taux de saturation de 92%. Un taux de réserve de 8% est appliqué.
 
 Si la puissance disponible au sein de la région n'est pas suffisante, le moteur recherche des centrales dans les régions voisines. 
 Pour cela, le moteur calcule le plus court chemin entre la région demandeuse et les autres centrales à l'aide de l'algorithme de Dijkstra. Puis, il attribue un score à chaque centrale en fonction de la distance qui la sépare de la région, des pertes énergétique, de la puissance disponible et du niveau de saturation. Les centrales sont ensuite classée par ordre de priorité.
-La puissance demandée est alors répartie selon les capacités de chaque centrales jusqu'à atteindre un taux de saturation de 95%.
+La puissance demandée est alors répartie selon les capacités de chaque centrale.
 
 
 # Formule ou règles utilisée(s) pour classer les centrales
@@ -199,12 +195,17 @@ Des coefficients de pondérations sont ainsi appliqués afin de prioriser les ce
 ## Règle 3
 Si la puissance disponible est inférieure à la demande d'augmentation, une répartition est effectuée avec toutes les centrales et un message calculant la part non couverte apparait à la fin de la réponse.
 
-## Règle 4
-Si il est impossible de satisfaire la demande d'augmentation même partiellement, un message "Impossible d'effectuer la simulation" apparait.
-
 
 # Règles de montée et de descente en puissance des centrales
 Les centrales respectent des limites de descente et montée en puissance. Si la puissance demandée est supérieure à ces limites, la centrale augmente ou diminue sa production au maximum de la limite puis une redistribustion l'excédent est réalisée sur les autres centrales.
+
+# Format des données temporelles attendues
+Les données doivent être fournies au format HH:mm. Elles correspondent à des pas de 15min (ex: 12:00, 12:15, 12:30,....).
+
+# Calcul des états successifs
+Pour chaque quart d’heure, le moteur récupère la consommation de chaque région, détermine la production nucléaire nécessaire et 
+répartit cette production entre les centrales en respectant les puissances minimales et maximales de chaque centrale et leurs vitesses de montée et de descente en puissance.
+Puis, il conserve l’état obtenu pour le quart d’heure suivant et relance une répartition.
 
 # Calcul de la demande résiduelle
 La demande résiduelle correspond à la demande de production nucléaire. À chaque pas de temps de 15 minutes, la demande résiduelle est calculée selon la formule : 
@@ -216,6 +217,44 @@ Elle peut être régionale ou nationale.
 # Fonctionnement de la réserve minimale
 Le moteur conserve une réserve minimale de capacité disponible sur le parc nucléaire. Elle permet aux centrales de garder une marge de fonctionnement. Cette marge a été fixée à 8%. Ainsi, une centrale pourra produire au maximum 92% de sa capacité maximum.
 Si ce seuil est atteint la centrale sera identifiée comme étant en situation dégradée.
+
+# Format utilisé pour définir une perturbation de consommation
+Pour définir une perturbation, le format suivant a été défini : 
+```json
+{
+  "regionId": "occitanie",
+  "start": "17:30",
+  "end": "21:00",
+  "deltaMw": 850
+}
+```
+
+# Exécution des tests
+Des tests unitaires ont été réalisés avec **pytest** :
+
+## Test des fonctions présentes dans python_service
+```
+cd python_service
+python -m pytest
+```
+
+Les tests couvrent notamment :
+
+* le calcul de la puissance disponible d'une centrale,
+* la vérification de sa disponibilité,
+* le calcul du taux de saturation,
+* l'identification de la région et de l'identifiant d'une centrale,
+* la récupération des centrales d'une région,
+* le calcul de la demande résiduelle,
+* le respect des limites de montée et descente en puissance
+
+## Test des fonctions présentes dans node_gateway
+```
+cd node_gateway
+node --test test/mcpAssistant.integration.test.js
+```
+Les tests couvrent :
+* le fonctionnement du MCP
 
 # Gestion des validations, logs et erreurs de simulation
 Une amélioration de l'API de simulation a été réalisée afin de rendre les échanges plus fiables et plus compréhensibles.

@@ -1,26 +1,3 @@
-/**
- * Tests d'intégration pour le routeur "MCP" du projet EnergIA
- * (le point d'entrée GET /assistant/assistant du node_gateway, qui normalise une
- * question en langage naturel via l'assistant/Ollama puis exécute l'action
- * correspondante contre python_service).
- *
- * Prérequis : la stack Docker doit être lancée (`docker compose up -d` à la
- * racine du projet) avant de lancer ces tests — ce sont des tests "boîte noire"
- * qui appellent la vraie API sur http://localhost:3000.
- *
- * Lancement :
- *   npm run test:integration
- *   (ou directement : node --test test/mcpAssistant.integration.test.js)
- *
- * L'URL de base peut être surchargée avec la variable d'env MCP_BASE_URL,
- * par exemple pour cibler un autre environnement :
- *   MCP_BASE_URL=http://localhost:4000 npm run test:integration
- *
- * Note : ces requêtes passent par un LLM (Ollama) et un calcul de simulation,
- * donc chaque appel peut prendre plusieurs secondes — les timeouts sont
- * volontairement généreux.
- */
-
 const { test, describe, before } = require("node:test");
 const assert = require("node:assert/strict");
 

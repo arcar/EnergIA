@@ -5,6 +5,7 @@ import { StatCard } from '../../components/stat-card/stat-card';
 import { DashboardService } from '../../services/dashboard';
 import { ChangeDetectorRef } from '@angular/core';
 import { SimulationService } from '../../services/simulation';
+import { SimulationState } from '../../services/simulation-state';
 
 @Component({
   selector: 'app-dashboard',
@@ -20,16 +21,50 @@ export class Dashboard implements OnInit {
   startTime = '08:00';
   endTime = '12:00';
   deltaMw = 0;
+  simulationActive = false;
   constructor(
     private dashboardService: DashboardService,
     private simulationService: SimulationService,
+    private simulationState: SimulationState,
     private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
+
+    this.simulationState.simulation$.subscribe((data)=>{
+    if(!data){
+        return;
+      }
+      this.simulationActive = true;
+      const states=data.states;
+      this.states=states.map((state:any,index:number)=>({
+        index,
+        time:state.time,
+        consommation:state.totalConsumptionMw,
+        nucleaire:state.nuclearProductionMw,
+        reserve:state.availableReserveMw,
+        centralesDisponibles:'18 / 18',
+        solaire:state.solarProductionMw,
+        eolienne:state.windProductionMw,
+        demandeResiduelle:state.totalConsumptionMw-state.solarProductionMw-state.windProductionMw,
+        status:state.status,
+        unmetDemand:state.unmetDemandMw
+      }));
+      const debut=this.timeline.findIndex(state=>state.time===data.parameters.start);
+      const fin=this.timeline.findIndex(state=>state.time===data.parameters.end);
+      if(debut!==-1&&fin!==-1){
+        this.perturbationStates=this.states.slice(debut,fin+1);
+         this.selectedState=debut;
+      }
+      this.cdr.detectChanges();
+    });
+
     this.dashboardService.getDashboard().subscribe({
       next: (data) => {
        
+        if(this.simulationActive){
+          return;
+        }
         this.states = data.map((state, index) => ({
           index,
           time: state.time,

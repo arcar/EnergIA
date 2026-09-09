@@ -122,6 +122,7 @@ async function getRoutes(regionId) {
 }
 
 async function getDashboard(){
+    console.log(" GET DASHBOARD APPELÉ");
     const {data}=await axios.get(
         `${process.env.PYTHON_SERVICE_URL}/dashboard`
     );

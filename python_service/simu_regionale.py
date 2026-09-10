@@ -53,19 +53,19 @@ def perturber_consommation(id_region, start, end, deltaMw):
 
 
 def demande_regionale(id_region=None, start=None, end=None, deltaMw=None):
-    regions = {region["id"]: region for region in data["consommation"]["regions"]}
+    consommation_region = {}
+    for region in data["consommation"]["regions"]:
+        consommation_region[region["id"]] = list(region["consumption_mw"])
 
     if id_region is not None:
         scenario_perturbation = perturber_consommation(id_region, start, end, deltaMw)
 
         for r_id, quarts in scenario_perturbation.items():
             for quart in quarts:
-                index = quart["index"]
-                augmentation = quart["augmentation"]
-                regions[r_id]["consumption_mw"][index] += augmentation
-                print("PERTURBATION:",r_id,quart["heure"],quart["augmentation"],"=>",regions[r_id]["consumption_mw"][index])
+                consommation_region[r_id][quart["index"]] += quart["augmentation"]
+                print("PERTURBATION:",r_id,quart["heure"],quart["augmentation"],"=>",consommation_region[r_id][quart["index"]])
 
-    return data["consommation"]["regions"]
+    return consommation_region
 
 
 def production_non_pilotables_regional():
@@ -92,46 +92,39 @@ def production_non_pilotable_detail_regional():
     return detail
 
 
-def demande_moins_non_pilotable(consommation):
+def demande_moins_non_pilotable(id_region=None, start=None, end=None, deltaMw=None):
+    consommation = demande_regionale(id_region, start, end, deltaMw)
     production_np = production_non_pilotables_regional()
 
     demande_residuelle = {}
     for region in consommation:
-        region_id = region["id"]
-        demande_residuelle[region_id] = [
+        demande_residuelle[region] = [
             valeur_consommation - valeur_production
-            for valeur_consommation, valeur_production in zip(region["consumption_mw"], production_np[region_id])
+            for valeur_consommation, valeur_production in zip(consommation[region], production_np[region])
         ]
     return demande_residuelle
 
 
-def pourcentage_repartition_regionale(demande_residuelle):
+def pourcentage_repartition_regionale(id_region=None, start=None, end=None, deltaMw=None):
     regions = regions_avec_centrales()
-
+    demande_residuelle = demande_moins_non_pilotable(id_region, start, end, deltaMw)
     minimum_reserve_percent = 8.0
     facteur_reserve = 1 - (minimum_reserve_percent / 100)
     pourcentage_regional = {}
 
     for region in regions:
-        region_id = region["region_id"]
-
-        if not region["plants"]:
+        if region["plants"] == None:
             continue
 
-        capacite_max_region = sum( centrale["maximum_power_mw"] for centrale in region["plants"] if centrale is not None)
-
+        capacite_max_region = sum(centrales["maximum_power_mw"] for centrales in region["plants"] if centrales is not None)
         if capacite_max_region == 0:
             continue
+        capacite_dispo_region = capacite_max_region * facteur_reserve
+        demande_residuelle_region = demande_residuelle[region["region_id"]]
 
-        capacite_dispo_region = (capacite_max_region * facteur_reserve)
-
-        demande_residuelle_region = demande_residuelle[region_id]
-
-        pourcentage_regional[region_id] = [
-            valeur_demande / capacite_dispo_region
-            for valeur_demande in demande_residuelle_region
+        pourcentage_regional[region["region_id"]] = [
+            valeur_demande / capacite_dispo_region for valeur_demande in demande_residuelle_region
         ]
-
     return pourcentage_regional, facteur_reserve
 
 def sous_minimum(centrales_heure, heure, productions_sous_minimum):
@@ -479,12 +472,9 @@ def construire_etats_dashboard(resultats):
 
 def equilibrage_local_toutes_regions_nucleaires(id_region=None, start=None, end=None, deltaMw=None):
     regions = regions_avec_centrales()
-    
-    demande_regionale(id_region, start, end, deltaMw)
-    consommation_par_region = {region["id"]: region["consumption_mw"] for region in data["consommation"]["regions"]}
-
-    demande_residuelle_toutes = demande_moins_non_pilotable(data["consommation"]["regions"])
-    pourcentages, facteur_reserve = pourcentage_repartition_regionale(demande_residuelle_toutes)
+    pourcentages, facteur_reserve = pourcentage_repartition_regionale(id_region, start, end, deltaMw)
+    demande_residuelle_toutes = demande_moins_non_pilotable(id_region, start, end, deltaMw)
+    consommation_par_region = demande_regionale(id_region, start, end, deltaMw)
     non_pilotable_detail = production_non_pilotable_detail_regional()
     minimum_reserve_percent = 8.0
 
@@ -593,6 +583,15 @@ def repartition_par_heure(prod_reelle, heure_demandee):
         puissance_max = centrale["maximum_power_mw"]
 
         taux_utilisation = (entree["production"] / puissance_max) * 100 if puissance_max > 0 else 0
+        if taux_utilisation >= 90 :
+            etat_centrale = "Saturée"
+        elif taux_utilisation >= 70 :
+            etat_centrale = "Fonctionnement normal"
+        elif taux_utilisation >= 50 :
+            etat_centrale = "Fonctionnement à charge partielle"
+        else :
+            etat_centrale = "Sous-régime"
+
 
         resultats.append({
             "plant_id": entree["plant_id"],
@@ -603,6 +602,7 @@ def repartition_par_heure(prod_reelle, heure_demandee):
             "puissance_maximum_mw": puissance_max,
             "puissance_minimum_mw": centrale["minimum_operating_power_mw"],
             "taux_utilisation_percent": taux_utilisation,
+            "etat_centrale" : etat_centrale,
             "minimum_autorise_mw": entree["minimum_autorise"],
             "maximum_autorise_mw": entree["maximum_autorise"],
             "variation_mw": entree["variation_mw"],

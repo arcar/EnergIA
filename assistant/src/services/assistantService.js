@@ -35,7 +35,7 @@ async function generateAnswer(question) {
                 let message = `Répartition nationale à ${heure} :\n\n`;
 
                 resultats.forEach((plant) => {
-                    message += `- ${plant.plant_name} : ${plant.production_mw.toFixed(0)} MW - saturation ${plant.taux_utilisation_percent.toFixed(2)}%\n`;
+                    message += `* ${plant.plant_name} : ${plant.production_mw.toFixed(0)} MW - saturation : ${plant.taux_utilisation_percent.toFixed(2)}% - Etat : ${plant.etat_centrale} \n`;
                 });
 
                 return message

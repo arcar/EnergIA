@@ -1,6 +1,7 @@
 import { ChangeDetectorRef, Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AssistantService } from '../../services/assistant';
+import { SimulationState } from '../../services/simulation-state';
 
 @Component({
   imports: [FormsModule],
@@ -25,6 +26,7 @@ export class ChatbotButton {
 
   constructor(
     private assistantService: AssistantService,
+    private simulationState: SimulationState,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -97,6 +99,21 @@ export class ChatbotButton {
             role: 'assistant'
           });
 
+          this.isLoading = false;
+          this.cdr.detectChanges();
+          return;
+        }
+
+        // si on lance la perturbation
+       if ('parameters' in data && 'states' in data) {
+          this.simulationState.setSimulation({
+          states:data.states,
+          parameters:data.parameters
+        });
+          this.messages.push({
+            content: `Perturbation appliquée en ${data.parameters.id_region} de ${data.parameters.start} à ${data.parameters.end} avec une variation de ${data.parameters.deltaMw} MW.`,
+            role: 'assistant'
+          });
           this.isLoading = false;
           this.cdr.detectChanges();
           return;

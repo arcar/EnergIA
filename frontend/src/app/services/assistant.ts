@@ -19,10 +19,22 @@ interface ConsoRegionResponse {
   heure: string;
   consommation: number;
 }
+
+interface PerturbationResponse {
+  parameters: {
+    id_region: string;
+    start: string;
+    end: string;
+    deltaMw: number;
+  };
+  states: unknown[];
+}
+
 type AssistantData =
   | PlantsResponse
   | ProductionNationaleResponse
   | ConsoRegionResponse
+  | PerturbationResponse
   | string;
 
 interface AssistantResponse {

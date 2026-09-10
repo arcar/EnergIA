@@ -10,7 +10,50 @@ def reinitialiser_donnees():
     global data
     data = copy.deepcopy(_data_originale)
 
+_scenarios_actifs = []  
 
+
+def _appliquer_une_perturbation(id_region, start, end, deltaMw):
+    region_trouvee = None
+    for region in data["consommation"]["regions"]:
+        if region["id"] == id_region:
+            region_trouvee = region
+            break
+    if region_trouvee is None:
+        raise ValueError(f"Région inconnue : {id_region}")
+
+    index_start = chercher_index(start)
+    index_end = chercher_index(end)
+
+    perturbation = {id_region: []}
+    for index in range(index_start, index_end + 1):
+        region_trouvee["consumption_mw"][index] += deltaMw
+        perturbation[id_region].append({
+            "index": index,
+            "heure": data["consommation"]["timestamps"][index],
+            "augmentation": deltaMw
+        })
+    return perturbation
+
+
+def appliquer_scenarios():
+    reinitialiser_donnees()
+    for scenario in _scenarios_actifs:
+        _appliquer_une_perturbation(scenario["id_region"], scenario["start"], scenario["end"], scenario["deltaMw"])
+
+
+def perturber_consommation(id_region, start, end, deltaMw):
+    deltaMw = float(deltaMw)
+    _scenarios_actifs.append({"id_region": id_region, "start": start, "end": end, "deltaMw": deltaMw})
+    appliquer_scenarios()
+    return {"scenarios_actifs": list(_scenarios_actifs)}
+
+
+def reinitialiser_scenario():
+    global _scenarios_actifs
+    _scenarios_actifs = []
+    reinitialiser_donnees()
+    return {"status": "reinitialise"}
 
 
 def trouver_centrales(plant_id):
@@ -73,8 +116,6 @@ def perturber_consommation(id_region, start, end, deltaMw):
 def demande_regionale(id_region=None, start=None, end=None, deltaMw=None):
     if id_region is not None:
         perturber_consommation(id_region, start, end, deltaMw)
-    else:
-        reinitialiser_donnees()
 
     return {
         region["id"]: list(region["consumption_mw"])

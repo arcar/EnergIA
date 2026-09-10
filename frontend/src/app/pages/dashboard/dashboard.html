@@ -274,27 +274,29 @@
 
           <div
             class="timeline-point"
-            [class.active]="selectedState === state.index"
+            [class.active]="selectedState===state.index"
             (click)="selectState(state.index)"
+            [matTooltip]="state.time"
+            matTooltipPosition="above"
           >
 
-            <span class="point"></span>
+          <span class="point"></span>
 
-            <span class="time">
+          <span class="time">
 
-              @if (
-                state.index === 0 ||
-                state.index === 24 ||
-                state.index === 48 ||
-                state.index === 72 ||
-                state.index === 95
-              ) {
+          @if(
+          state.index===0||
+          state.index===24||
+          state.index===48||
+          state.index===72||
+          state.index===95
+          ){
 
-                {{ state.time }}
+          {{state.time}}
 
-              }
+          }
 
-            </span>
+          </span>
 
           </div>
 

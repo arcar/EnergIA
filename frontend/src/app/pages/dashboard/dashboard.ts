@@ -7,6 +7,7 @@ import { ChangeDetectorRef } from '@angular/core';
 import { SimulationService } from '../../services/simulation';
 import { SimulationState } from '../../services/simulation-state';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { History } from '../../services/history';
 
 @Component({
   selector: 'app-dashboard',
@@ -28,6 +29,7 @@ export class Dashboard implements OnInit {
     private dashboardService: DashboardService,
     private simulationService: SimulationService,
     private simulationState: SimulationState,
+    private history:History,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -175,6 +177,15 @@ export class Dashboard implements OnInit {
           const debut=this.timeline.findIndex(state=>state.time===this.startTime);
           const fin=this.timeline.findIndex(state=>state.time===this.endTime);
           this.perturbationStates=this.states.slice(debut,fin+1);
+          this.history.addSimulation({
+            date:new Date(),
+            source:'manuel',
+            region:this.selectedRegion,
+            start:this.startTime,
+            end:this.endTime,
+            deltaMw:this.deltaMw,
+            states:this.perturbationStates
+          });
           if(!selectionDansPlage){
             const nouvelIndex=this.timeline.findIndex(state=>state.time===this.startTime);
             if(nouvelIndex!==-1){

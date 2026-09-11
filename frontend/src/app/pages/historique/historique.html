@@ -1,1 +1,13 @@
-<p>historique works!</p>
+<h1>Historique</h1>
+<div class="historique-container">
+  <div class="simulation-card" *ngFor="let simulation of simulations">
+    <div class="simulation-header">
+      <h2>{{ simulation.region }}</h2>
+    </div>
+    <div class="simulation-content">
+      <p><strong>Période :</strong> {{ simulation.start }} → {{ simulation.end }}</p>
+      <p><strong>Variation :</strong> {{ simulation.deltaMw }} MW</p>
+    </div>
+  </div>
+</div>
+

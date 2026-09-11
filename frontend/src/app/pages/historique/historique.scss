@@ -1,0 +1,21 @@
+.historique-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+}
+.simulation-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e5e7eb;
+}
+.simulation-header h2 {
+  margin: 0 0 12px;
+  text-transform: capitalize;
+}
+.simulation-content p {
+  margin: 6px 0;
+}
+

@@ -2,6 +2,7 @@ import { ChangeDetectorRef, Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AssistantService } from '../../services/assistant';
 import { SimulationState } from '../../services/simulation-state';
+import { History } from '../../services/history';
 
 @Component({
   imports: [FormsModule],
@@ -27,6 +28,7 @@ export class ChatbotButton {
   constructor(
     private assistantService: AssistantService,
     private simulationState: SimulationState,
+    private history:History,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -109,6 +111,16 @@ export class ChatbotButton {
           this.simulationState.setSimulation({
           states:data.states,
           parameters:data.parameters
+        });
+
+        this.history.addSimulation({
+          date:new Date(),
+          source:'assistant',
+          region:data.parameters.id_region,
+          start:data.parameters.start,
+          end:data.parameters.end,
+          deltaMw:data.parameters.deltaMw,
+          states:data.states
         });
           this.messages.push({
             content: `Perturbation appliquée en ${data.parameters.id_region} de ${data.parameters.start} à ${data.parameters.end} avec une variation de ${data.parameters.deltaMw} MW.`,

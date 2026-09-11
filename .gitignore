@@ -10,3 +10,6 @@ __pycache__/
 
 # Ollama
 ollama/
+
+base_analytique.duckdb
+etl_analytique/data/

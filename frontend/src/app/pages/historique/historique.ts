@@ -1,10 +1,12 @@
+
+import { CommonModule, DatePipe } from '@angular/common';
 import { Component } from '@angular/core';
 import { History } from '../../services/history';
-import { CommonModule } from '@angular/common';
+
 
 
 @Component({
-  imports: [CommonModule],
+  imports: [CommonModule, DatePipe],
   selector: 'app-historique',
   styleUrl: './historique.scss',
   templateUrl: './historique.html',

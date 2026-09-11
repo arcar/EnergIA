@@ -3,7 +3,9 @@
   <div class="simulation-card" *ngFor="let simulation of simulations">
     <div class="simulation-header">
       <h2>{{ simulation.region }}</h2>
+      <span class="simulation-source">{{ simulation.source }}</span>
     </div>
+    <p class="simulation-date">Simulée le {{ simulation.date | date:'dd/MM/yyyy à HH:mm' }}</p>
     <div class="simulation-content">
       <p><strong>Période :</strong> {{ simulation.start }} → {{ simulation.end }}</p>
       <p><strong>Variation :</strong> {{ simulation.deltaMw }} MW</p>

@@ -11,8 +11,21 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   border: 1px solid #e5e7eb;
 }
+.simulation-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
 .simulation-header h2 {
   margin: 0 0 12px;
+  text-transform: capitalize;
+}
+.simulation-source {
+  padding: 5px 10px;
+  border-radius: 20px;
+  background: #f1f5f9;
+  font-size: 13px;
+  font-weight: 600;
   text-transform: capitalize;
 }
 .simulation-content p {

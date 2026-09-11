@@ -6,7 +6,7 @@ import json
 from fastapi.middleware.cors import CORSMiddleware
 from dijkstra.json_repository import JsonRepository
 from dijkstra.region_service import RegionService
-from simu_regionale import dashboard, conso_heure_region, perturber_consommation, repartition_par_heure, equilibrage_local_toutes_regions_nucleaires
+from simu_regionale import dashboard, conso_heure_region, perturber_consommation, reinitialiser_scenario, repartition_par_heure, equilibrage_local_toutes_regions_nucleaires
 from extraction_json import charger_donnees
 
 class ConsoRegionRequest(BaseModel):
@@ -162,3 +162,7 @@ def perturbation(request:PerturbationRequest):
         return dashboard(request.id_region,request.start,request.end,request.deltaMw)
     except ValueError as e:
         raise HTTPException(status_code=404,detail=str(e))
+    
+@app.post("/reinitialiser_scenario")
+def route_reinitialiser_scenario():
+    return reinitialiser_scenario()

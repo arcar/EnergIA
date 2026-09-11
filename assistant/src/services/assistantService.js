@@ -28,29 +28,21 @@ async function generateAnswer(question) {
         case "GET_PROD_NATIONALE_HEURE":
             try {   
                 const response = await axios.post(`${process.env.PYTHON_SERVICE_URL}/repartition_heure`, result.parameters);      
-                const data = response.data;
-                const heure = data.heure;
-                const resultats = data.resultats;
+                const { heure, resultats } = response.data;
 
                 let message = `Répartition nationale à ${heure} :\n\n`;
 
                 resultats.forEach((plant) => {
-                    message += `- ${plant.plant_name} : ${plant.production_mw.toFixed(0)} MW\n`;
+                    message += `- ${plant.plant_name} : ${plant.production_mw.toFixed(0)} MW - saturation ${plant.taux_utilisation_percent.toFixed(2)}%\n`;
                 });
 
-                return message
-                               
-                } catch (error) {
-            
-                    console.log(error.message);
-            
-                    throw new Error(
-                        "Impossible de contacter l'API Python 2"
-                    );
-            
-                }
-
-            break;
+                return message;   // <-- ICI, après la boucle, dans le scope du try
+                        
+            } catch (error) {
+                console.log(error.message);
+                throw new Error("Impossible de contacter l'API Python 2");
+            }
+        break;
         
         case "GET_CONSO_REGION_HEURE":
             try {
@@ -89,6 +81,15 @@ async function generateAnswer(question) {
                 "Impossible de contacter l'API Python 4"
             );
         }
+        case "RESET_SCENARIO":
+            try {
+                const response = await axios.post(`${process.env.PYTHON_SERVICE_URL}/reinitialiser_scenario`);
+                return "Tous les scénarios ont été réinitialisés, retour aux données d'origine.";
+            } catch (error) {
+                console.log(error.message);
+                throw new Error("Impossible de contacter l'API Python 5");
+            }
+            break;
         case "UNKNOWN":
             try {
             

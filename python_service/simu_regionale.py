@@ -1,8 +1,59 @@
+import copy
 from simu_nationale import (construire_centrales_heure, enregistrer_productions, EPSILON, initialiser_etat, verifier_rampes)
 from metrique_centrale import (router_deficit)
 from extraction_json import charger_donnees
 
-data = charger_donnees()
+_data_originale = charger_donnees() #touche pas !!!!!!!
+data = copy.deepcopy(_data_originale) 
+
+def reinitialiser_donnees():
+    global data
+    data = copy.deepcopy(_data_originale)
+
+_scenarios_actifs = []  
+
+
+def _appliquer_une_perturbation(id_region, start, end, deltaMw):
+    region_trouvee = None
+    for region in data["consommation"]["regions"]:
+        if region["id"] == id_region:
+            region_trouvee = region
+            break
+    if region_trouvee is None:
+        raise ValueError(f"Région inconnue : {id_region}")
+
+    index_start = chercher_index(start)
+    index_end = chercher_index(end)
+
+    perturbation = {id_region: []}
+    for index in range(index_start, index_end + 1):
+        region_trouvee["consumption_mw"][index] += deltaMw
+        perturbation[id_region].append({
+            "index": index,
+            "heure": data["consommation"]["timestamps"][index],
+            "augmentation": deltaMw
+        })
+    return perturbation
+
+
+def appliquer_scenarios():
+    reinitialiser_donnees()
+    for scenario in _scenarios_actifs:
+        _appliquer_une_perturbation(scenario["id_region"], scenario["start"], scenario["end"], scenario["deltaMw"])
+
+
+def perturber_consommation(id_region, start, end, deltaMw):
+    deltaMw = float(deltaMw)
+    _scenarios_actifs.append({"id_region": id_region, "start": start, "end": end, "deltaMw": deltaMw})
+    appliquer_scenarios()
+    return {"scenarios_actifs": list(_scenarios_actifs)}
+
+
+def reinitialiser_scenario():
+    global _scenarios_actifs
+    _scenarios_actifs = []
+    reinitialiser_donnees()
+    return {"status": "reinitialise"}
 
 
 def trouver_centrales(plant_id):
@@ -35,14 +86,24 @@ def chercher_index(heure):
 
 def perturber_consommation(id_region, start, end, deltaMw):
     deltaMw = float(deltaMw)
-    if not any(region["id"] == id_region for region in data["consommation"]["regions"]):
+
+    reinitialiser_donnees() 
+
+    region_trouvee = None
+    for region in data["consommation"]["regions"]:
+        if region["id"] == id_region:
+            region_trouvee = region
+            break
+
+    if region_trouvee is None:
         raise ValueError(f"Région inconnue : {id_region}")
 
     index_start = chercher_index(start)
     index_end = chercher_index(end)
 
     perturbation = {id_region: []}
-    for index in range(index_start, index_end + 1):  # bornes incluses
+    for index in range(index_start, index_end + 1):
+        region_trouvee["consumption_mw"][index] += deltaMw
         perturbation[id_region].append({
             "index": index,
             "heure": data["consommation"]["timestamps"][index],
@@ -53,19 +114,13 @@ def perturber_consommation(id_region, start, end, deltaMw):
 
 
 def demande_regionale(id_region=None, start=None, end=None, deltaMw=None):
-    consommation_region = {}
-    for region in data["consommation"]["regions"]:
-        consommation_region[region["id"]] = list(region["consumption_mw"])
-
     if id_region is not None:
-        scenario_perturbation = perturber_consommation(id_region, start, end, deltaMw)
+        perturber_consommation(id_region, start, end, deltaMw)
 
-        for r_id, quarts in scenario_perturbation.items():
-            for quart in quarts:
-                consommation_region[r_id][quart["index"]] += quart["augmentation"]
-                print("PERTURBATION:",r_id,quart["heure"],quart["augmentation"],"=>",consommation_region[r_id][quart["index"]])
-
-    return consommation_region
+    return {
+        region["id"]: list(region["consumption_mw"])
+        for region in data["consommation"]["regions"]
+    }
 
 
 def production_non_pilotables_regional():
@@ -621,3 +676,4 @@ def conso_heure_region(id_region, heure):
                 "heure": heure,
                 "consommation" : region["consumption_mw"][index]
             }
+

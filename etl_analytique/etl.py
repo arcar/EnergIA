@@ -54,7 +54,7 @@ else :
 df_vacances["date"] = pd.to_datetime(df_vacances["date"], format="mixed", errors="coerce")
 
 df_vacances = df_vacances.dropna(subset = ["date"])
-date_limite = '2020-01-01'
+date_limite = '2021-07-01'
 df_vacances = df_vacances[df_vacances["date"] >= date_limite]
 nb_lignes_apres_date = len(df_vacances)
 
@@ -116,7 +116,7 @@ else :
 df_consommation["Date"] = pd.to_datetime(df_consommation["Date"], format="mixed", errors="coerce")
 
 df_consommation = df_consommation.dropna(subset = ["Date"])
-date_limite = '2020-01-01'
+date_limite = '2021-07-01'
 df_consommation = df_consommation[df_consommation["Date"] >= date_limite]
 nb_lignes_apres_date = len(df_consommation)
 
@@ -177,7 +177,7 @@ else :
 
 
 df_population = df_population.dropna(subset = ["Exercice"])
-date_limite = 2020
+date_limite = 2021
 df_population = df_population[df_population["Exercice"] >= date_limite]
 NOMS_A_SUPPRIMER = ["La Réunion", "Martinique", "Guyane", "Guadeloupe"]
 nb_lignes_apres_date = len(df_population)

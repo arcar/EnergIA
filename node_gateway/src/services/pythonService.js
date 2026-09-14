@@ -129,6 +129,14 @@ async function getDashboard(){
     return data;
 }
 
+async function getPredictionDashboard(){
+    console.log(" Get dashboard prediction appelé ");
+    const {data} = await axios.get(
+        `${process.env.PYTHON_SERVICE_URL}/predict/dashboard`
+    )
+    return data;
+}
+
 module.exports = {
-    getPlants, simulate, getRegions, getRoutes,getDashboard, repartir_heure, getRepartition
+    getPlants, simulate, getRegions, getRoutes,getDashboard, repartir_heure, getRepartition, getPredictionDashboard
 };

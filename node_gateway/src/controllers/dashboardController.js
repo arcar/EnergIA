@@ -12,5 +12,17 @@ async function getDashboard(req,res){
         });
     }
 }
-
-module.exports={getDashboard};
+ 
+async function dashboardPredict(res){
+    try{
+        const resultat=await pythonService.getPredictionDashboard();
+        res.json(resultat);
+    }catch(error){
+        console.log("Erreur dashboard :",error);
+        res.status(500).json({
+            success:false,
+            message:"Impossible de récupérer les données du dashboard prediction"
+        });
+    }
+}
+module.exports={getDashboard, dashboardPredict};

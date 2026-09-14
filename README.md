@@ -15,6 +15,8 @@ Pour ce projet, les outils suivants doivent être installés :
 * Git
 * Dijkstra
 * Angular
+* Duckdb
+* Scikit-learn
 
 
 # Installation
@@ -55,8 +57,8 @@ Depuis la racine du projet :
 docker compose up -d
 ```
 
-Cela va permettre de démarrer les conteneurs présents dans le docker compose (node_gateway, python_service, frontend, asssitant, ollama).
-Une fois tous les conteneurs démarrés, le frontend est accessible à l'adresse suivante : http://localhost:4200/
+Cela va permettre de démarrer tous les conteneurs présents dans le docker compose (node_gateway, python_service, frontend, asssitant, ollama).
+Une fois les conteneurs démarrés, le frontend est accessible à l'adresse suivante : http://localhost:4200/
 
 # Schema du projet
 ![schecma du projet EnergIA](schema.png)
@@ -228,6 +230,20 @@ Pour définir une perturbation, le format suivant a été défini :
   "deltaMw": 850
 }
 ```
+
+# Prédiction des consommations
+## Base de données analytique
+Importer les données suivantes en CSV :
+- Vacances : ```https://www.data.gouv.fr/datasets/vacances-scolaires-par-zones```
+- Consommations : ```https://odre.opendatasoft.com/explore/dataset/eco2mix-regional-cons-def/information/?disjunctive.nature&disjunctive.libelle_region```
+- Populations : ```https://www.data.gouv.fr/datasets/population-municipale-des-regions-france-entiere```
+
+Importer les données DPE par régions via le fichier ```dpe_par_region.py``` qui expose une API.
+
+Puis, créer une base de données analytique via le script ```etl.py```
+
+## Prédiction des consommations
+Lancer le fichier ```run_pipeline.py```. On obtient un fichier csv contenant toutes les prédictions sur 1 an par pas de 30 min pour toutes les régions.
 
 # Exécution des tests
 Des tests unitaires ont été réalisés avec **pytest** :

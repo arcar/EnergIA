@@ -6,16 +6,18 @@ import { DashboardService } from '../../services/dashboard';
 import { ChangeDetectorRef } from '@angular/core';
 import { SimulationService } from '../../services/simulation';
 import { SimulationState } from '../../services/simulation-state';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 @Component({
   selector: 'app-dashboard',
- imports: [StatCard, FormsModule],
+ imports: [StatCard, FormsModule, MatTooltipModule],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss'
 })
 export class Dashboard implements OnInit {
 
   selectedState = 0;
+  hoveredState = -1;
   securityMargin = 15;
   selectedRegion = 'normandie';
   startTime = '08:00';

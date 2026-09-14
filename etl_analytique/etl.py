@@ -54,7 +54,7 @@ else :
 df_vacances["date"] = pd.to_datetime(df_vacances["date"], format="mixed", errors="coerce")
 
 df_vacances = df_vacances.dropna(subset = ["date"])
-date_limite = '2020-01-01'
+date_limite = '2021-07-01'
 df_vacances = df_vacances[df_vacances["date"] >= date_limite]
 nb_lignes_apres_date = len(df_vacances)
 
@@ -116,7 +116,7 @@ else :
 df_consommation["Date"] = pd.to_datetime(df_consommation["Date"], format="mixed", errors="coerce")
 
 df_consommation = df_consommation.dropna(subset = ["Date"])
-date_limite = '2020-01-01'
+date_limite = '2021-07-01'
 df_consommation = df_consommation[df_consommation["Date"] >= date_limite]
 nb_lignes_apres_date = len(df_consommation)
 
@@ -177,7 +177,7 @@ else :
 
 
 df_population = df_population.dropna(subset = ["Exercice"])
-date_limite = 2020
+date_limite = 2021
 df_population = df_population[df_population["Exercice"] >= date_limite]
 NOMS_A_SUPPRIMER = ["La Réunion", "Martinique", "Guyane", "Guadeloupe"]
 nb_lignes_apres_date = len(df_population)
@@ -292,3 +292,86 @@ CROSS JOIN (
 ) h
 ;
 """)
+#Fin creation dim_temps
+
+
+#Creation dim_region
+con.execute("""
+    CREATE OR REPLACE TABLE dim_region AS
+
+    WITH taux AS (
+        SELECT
+            dpe.code_region AS id_region,
+            dpe.region,
+            dpe.annee,
+            ROUND((dpe.chauffage_electrique*100)/dpe.total_dpe, 2) AS tx_chauffage_elec,
+            ROUND((dpe.climatisation*100)/dpe.total_dpe, 2) AS tx_climatisation
+        FROM
+            read_csv_auto('etl_analytique/data/dpe_par_annee.csv', header=true) dpe
+    ),
+
+    taux_pivot AS (
+        SELECT
+            id_region,
+            region,
+            MAX(CASE WHEN annee = 2021 THEN tx_chauffage_elec END) AS tx_chauffage_elec_2021,
+            MAX(CASE WHEN annee = 2022 THEN tx_chauffage_elec END) AS tx_chauffage_elec_2022,
+            MAX(CASE WHEN annee = 2023 THEN tx_chauffage_elec END) AS tx_chauffage_elec_2023,
+            MAX(CASE WHEN annee = 2024 THEN tx_chauffage_elec END) AS tx_chauffage_elec_2024,
+            MAX(CASE WHEN annee = 2025 THEN tx_chauffage_elec END) AS tx_chauffage_elec_2025,
+            MAX(CASE WHEN annee = 2026 THEN tx_chauffage_elec END) AS tx_chauffage_elec_2026,
+
+            MAX(CASE WHEN annee = 2021 THEN tx_climatisation END) AS tx_climatisation_2021,
+            MAX(CASE WHEN annee = 2022 THEN tx_climatisation END) AS tx_climatisation_2022,
+            MAX(CASE WHEN annee = 2023 THEN tx_climatisation END) AS tx_climatisation_2023,
+            MAX(CASE WHEN annee = 2024 THEN tx_climatisation END) AS tx_climatisation_2024,
+            MAX(CASE WHEN annee = 2025 THEN tx_climatisation END) AS tx_climatisation_2025,
+            MAX(CASE WHEN annee = 2026 THEN tx_climatisation END) AS tx_climatisation_2026
+        FROM
+            taux
+        GROUP BY
+            id_region, region
+    ),
+
+    zone AS (
+        SELECT
+            code_insee_region,
+            zone_scolaire
+        FROM
+            read_csv_auto('etl_analytique/data/zone_scolaire_region.csv', header=true)
+    ),
+
+    population AS (
+        SELECT
+            "Code INSEE" AS code_insee_pop,
+            "2021" AS population_2021,
+            "2022" AS population_2022,
+            "2023" AS population_2023,
+            "2024" AS population_2024,
+            "2025" AS population_2025,
+            "2026" AS population_2026
+        FROM
+            read_csv_auto('etl_analytique/data/evolution_population_regions_codes_2021_2026.csv', delim=';', header=true)
+        WHERE
+            "Code INSEE" <> '-'
+    )
+
+    SELECT
+        tp.*,
+        z.zone_scolaire,
+        p.population_2021,
+        p.population_2022,
+        p.population_2023,
+        p.population_2024,
+        p.population_2025,
+        p.population_2026
+    FROM
+        taux_pivot tp
+    LEFT JOIN
+        zone z ON tp.id_region = z.code_insee_region
+    LEFT JOIN
+        population p ON tp.id_region = p.code_insee_pop
+    ORDER BY
+        tp.id_region
+""")
+#Fin creation dim_region

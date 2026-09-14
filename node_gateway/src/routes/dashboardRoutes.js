@@ -7,4 +7,6 @@ router.get(
     dashboardController.getDashboard
 );
 
+router.get("/", dashboardController.dashboardPredict);
+
 module.exports=router;

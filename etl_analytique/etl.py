@@ -375,3 +375,31 @@ con.execute("""
         tp.id_region
 """)
 #Fin creation dim_region
+
+
+#Creation fait_energie
+con.execute("""
+    CREATE OR REPLACE TABLE fait_energie AS
+
+    SELECT
+        ROW_NUMBER() OVER (ORDER BY dt.id_temps, dr.id_region) AS id_energie,
+        dr.id_region,
+        dt.id_temps,
+        c."Consommation (MW)"  AS consommation_mw,
+        c."Nucléaire (MW)"     AS production_nucleaire_mw,
+        c."Eolien (MW)"        AS production_eolienne_mw,
+        c."Solaire (MW)"       AS production_solaire_mw
+    FROM
+        read_csv_auto('etl_analytique/data/consommation_propre.csv', header=true) c
+    JOIN
+        dim_region dr
+        ON c."Code INSEE région" = dr.id_region
+    JOIN
+        dim_temps dt
+        ON CAST(c."Date" AS DATE) = CAST(dt.date AS DATE)
+        AND CAST(c."Heure" AS TIME) = dt.heure
+""")
+
+nb_energie = con.execute("SELECT COUNT(*) FROM fait_energie").fetchone()[0]
+print(f"\n{nb_energie} lignes importées dans fait_energie.")
+#Fin creation fait_energie

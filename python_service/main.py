@@ -8,6 +8,7 @@ from dijkstra.json_repository import JsonRepository
 from dijkstra.region_service import RegionService
 from simu_regionale import dashboard, conso_heure_region, perturber_consommation, reinitialiser_scenario, repartition_par_heure, equilibrage_local_toutes_regions_nucleaires
 from extraction_json import charger_donnees
+from simu_regionale_predict import (dashboard_predict, repartition_par_heure as repartition_par_heure_predict, equilibrage_local_toutes_regions_nucleaires_predict)
 
 class ConsoRegionRequest(BaseModel):
     id_region: str
@@ -28,6 +29,10 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
+
+class RepartitionHeurePredictRequest(BaseModel):
+    date: str
+    heure: str
 
 app = FastAPI()
 router = APIRouter()
@@ -166,3 +171,46 @@ def perturbation(request:PerturbationRequest):
 @app.post("/reinitialiser_scenario")
 def route_reinitialiser_scenario():
     return reinitialiser_scenario()
+
+#================================
+# Predictions
+#================================
+
+@app.get("/predict/dashboard")
+def get_dashboard_predict():
+    return dashboard_predict()
+
+
+@app.post("/predict/repartition_heure")
+def repartition_heure_predict(request: RepartitionHeurePredictRequest):
+
+    label = f"{request.date} {request.heure}"
+    logger.info(f"Demande de répartition horaire (prévisions) - {label}")
+
+    resultat_global = equilibrage_local_toutes_regions_nucleaires_predict()
+    prod_reelle = resultat_global["prod_reelle"]
+
+    repartition = repartition_par_heure_predict(prod_reelle, label)
+
+    if not repartition:
+        logger.warning(f"Aucune donnée de production trouvée pour : {label}")
+        raise HTTPException(
+            status_code=404,
+            detail={
+                "success": False,
+                "message": f"Aucune donnée de production pour '{label}'"
+            }
+        )
+
+    return {
+        "success": True,
+        "date": request.date,
+        "heure": request.heure,
+        "resultats": repartition
+    }
+
+
+@app.get("/predict/repartition")
+def get_repartition_predict():
+    result = equilibrage_local_toutes_regions_nucleaires_predict()
+    return result["prod_reelle"]

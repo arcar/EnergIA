@@ -8,10 +8,11 @@ from extraction_json import charger_donnees
 from simu_nationale import EPSILON, enregistrer_productions, verifier_rampes
 from metrique_centrale import router_deficit
 
-
 BASE_DIR = Path(__file__).resolve().parent.parent
-DB_PATH = BASE_DIR / "base_analytique.duckdb"
-CSV_PATH = BASE_DIR / "predict_service" / "predictions" / "previsions_1an.csv"
+DB_PATH = Path("/app/base_analytique.duckdb")
+CSV_PATH_DOCKER = Path("/app/predictions/previsions_1an.csv")
+CSV_PATH_LOCAL = BASE_DIR / "predict_service" / "predictions" / "previsions_1an.csv"
+CSV_PATH = CSV_PATH_DOCKER if CSV_PATH_DOCKER.exists() else CSV_PATH_LOCAL
 
 data = charger_donnees()
 
@@ -675,4 +676,3 @@ def dashboard_predict():
     return construire_etats_dashboard_predict(resultats)
 
 
-print(dashboard_predict())

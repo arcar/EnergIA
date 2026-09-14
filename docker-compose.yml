@@ -10,11 +10,15 @@ services:
         condition: service_healthy
 
   python_service:
+    build:
+      context: ./python_service
+      dockerfile: Dockerfile
     image: flor3473/energia:python_service
     ports:
       - "8000:8000"
     volumes:
       - ./predict_service/predictions/previsions_1an.csv:/app/predictions/previsions_1an.csv
+      - ./base_analytique.duckdb:/app/base_analytique.duckdb
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
       interval: 10s

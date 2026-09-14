@@ -6,3 +6,4 @@ pydantic
 dijkstra
 requests
 numpy
+duckdb

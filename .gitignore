@@ -13,3 +13,4 @@ ollama/
 
 base_analytique.duckdb
 etl_analytique/data/
+predict_service/predictions/

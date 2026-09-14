@@ -43,6 +43,10 @@ INDICATEURS = {
 # Sous-ensemble des indicateurs que l'on veut aussi ventiler par année
 INDICATEURS_ANNUELS = ["total_dpe", "chauffage_electrique", "climatisation"]
 
+# Indicateurs pour lesquels on calcule en plus un cumul depuis la première année
+# (année N = somme des années 1 à N, par région) — sert au calcul des taux
+INDICATEURS_A_CUMULER = ["total_dpe", "chauffage_electrique", "climatisation"]
+
 
 def fetch_region_counts(qs: str | None, agg_size: int = 30) -> tuple[dict[str, int], int]:
     """Appelle values_agg(field=code_region_ban) avec un filtre qs donné et
@@ -146,6 +150,14 @@ def build_table_region_annee() -> pd.DataFrame:
     df = pd.DataFrame(rows)
     df.insert(1, "region", df["code_region"].map(REGION_NAMES))
     df = df[~df["code_region"].isin(REGIONS_EXCLUES)]
+
+    # Cumul progressif par région : la valeur de l'année N devient la somme
+    # des années 1 à N (ex : 2023 = 2021 + 2022 + 2023). On trie d'abord par
+    # (code_region, annee) croissant pour que cumsum() cumule dans le bon sens.
+    df = df.sort_values(["code_region", "annee"]).reset_index(drop=True)
+    for col in INDICATEURS_A_CUMULER:
+        df[f"{col}_cumule"] = df.groupby("code_region")[col].cumsum()
+
     df = df.sort_values(["annee", "code_region"]).reset_index(drop=True)
     return df
 

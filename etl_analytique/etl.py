@@ -206,98 +206,162 @@ print(f"\nFichier nettoyé : '{OUTPUT_PATH_population}'")
 
 
 
-#Creation base analytique et table dim_vacances
+#Creation base analytique et déclaration des tables (avec clés primaires/étrangères)
 con = duckdb.connect("base_analytique.duckdb")
 
-con.execute("""
-    CREATE OR REPLACE TABLE dim_vacances AS
+# On supprime dans l'ordre inverse des dépendances pour permettre de relancer
+# le script sans violer les contraintes de clé étrangère
+con.execute("DROP TABLE IF EXISTS fait_energie")
+con.execute("DROP TABLE IF EXISTS dim_temps")
+con.execute("DROP TABLE IF EXISTS dim_region")
+con.execute("DROP TABLE IF EXISTS dim_vacances")
 
-SELECT
-    ROW_NUMBER() OVER (ORDER BY date) AS id_vacances,
-    date,
-    vacances_zone_a, 
-    vacances_zone_b,
-    vacances_zone_c    
-FROM
-read_csv_auto(
-        'etl_analytique/data/vacances_propre.csv',
-        header=true
+
+# ---------- dim_vacances ----------
+con.execute("""
+    CREATE TABLE dim_vacances (
+        id_vacances     BIGINT PRIMARY KEY,
+        date            DATE,
+        vacances_zone_a BOOLEAN,
+        vacances_zone_b BOOLEAN,
+        vacances_zone_c BOOLEAN
     )
 """)
 
-nb = con.execute("SELECT COUNT(*) FROM dim_vacances").fetchone()[0]
-print(f"\n{nb} lignes importées lors de la génération de la base analytique.")
+con.execute("""
+    INSERT INTO dim_vacances
+    SELECT
+        CAST(strftime(date, '%Y%m%d') AS BIGINT) AS id_vacances,
+        date,
+        vacances_zone_a,
+        vacances_zone_b,
+        vacances_zone_c
+    FROM
+        read_csv_auto(
+            'etl_analytique/data/vacances_propre.csv',
+            header=true
+        )
+    ORDER BY
+        date
+""")
 # fin creation dim_vacances
 
 
-#Creation dim_temps
+# ---------- dim_temps ----------
 con.execute("""
-    CREATE OR REPLACE TABLE dim_temps AS
+    CREATE TABLE dim_temps (
+        id_temps        BIGINT PRIMARY KEY,
+        id_vacances     BIGINT REFERENCES dim_vacances(id_vacances),
+        date            DATE,
+        heure           TIME,
+        year            BIGINT,
+        trimestre       BIGINT,
+        month           BIGINT,
+        day             BIGINT,
+        week            BIGINT,
+        day_week_number BIGINT,
+        day_name        VARCHAR,
+        month_name      VARCHAR,
+        weekend         BOOLEAN,
+        printemps       BOOLEAN,
+        ete             BOOLEAN,
+        automne         BOOLEAN,
+        hiver           BOOLEAN
+    )
+""")
 
-SELECT
-    ROW_NUMBER() OVER (ORDER BY date) AS id_temps,
-    dv.id_vacances,
-    date,
-    heure,
-    YEAR(date)                      AS year,
-    QUARTER(date)                   AS trimestre,
-    MONTH(date)                     AS month,
-    DAY(date)                       AS day,
-    WEEK(date)                      AS week,
-    DAYOFWEEK(date)                 AS day_week_number,
-    DAYNAME(date)                   AS day_name,
-    MONTHNAME(date)                 AS month_name,
+con.execute("""
+    INSERT INTO dim_temps
+    SELECT
+        CAST(strftime(date + heure, '%Y%m%d%H%M') AS BIGINT) AS id_temps,
+        dv.id_vacances,
+        date,
+        heure,
+        YEAR(date)                      AS year,
+        QUARTER(date)                   AS trimestre,
+        MONTH(date)                     AS month,
+        DAY(date)                       AS day,
+        WEEK(date)                      AS week,
+        DAYOFWEEK(date)                 AS day_week_number,
+        DAYNAME(date)                   AS day_name,
+        MONTHNAME(date)                 AS month_name,
 
-    CASE
-        WHEN DAYOFWEEK(date) IN (0,6)
-        THEN TRUE
-        ELSE FALSE
-    END                                      AS weekend,
+        CASE
+            WHEN DAYOFWEEK(date) IN (0,6)
+            THEN TRUE
+            ELSE FALSE
+        END                                      AS weekend,
 
-    CASE
-        WHEN MONTH(date) = 3 THEN TRUE
-        WHEN MONTH(date) = 4 THEN TRUE
-        WHEN MONTH(date) = 5 THEN TRUE
-        ELSE FALSE
-    END                                      AS printemps,
-    
-    CASE
-        WHEN MONTH(date) = 6 THEN TRUE
-        WHEN MONTH(date) = 7 THEN TRUE
-        WHEN MONTH(date) = 8 THEN TRUE
-        ELSE FALSE
-    END                                      AS ete,
+        CASE
+            WHEN MONTH(date) = 3 THEN TRUE
+            WHEN MONTH(date) = 4 THEN TRUE
+            WHEN MONTH(date) = 5 THEN TRUE
+            ELSE FALSE
+        END                                      AS printemps,
 
-    CASE
-        WHEN MONTH(date) = 9 THEN TRUE
-        WHEN MONTH(date) = 10 THEN TRUE
-        WHEN MONTH(date) = 11 THEN TRUE
-        ELSE FALSE
-    END                                      AS automne,
+        CASE
+            WHEN MONTH(date) = 6 THEN TRUE
+            WHEN MONTH(date) = 7 THEN TRUE
+            WHEN MONTH(date) = 8 THEN TRUE
+            ELSE FALSE
+        END                                      AS ete,
 
-    CASE
-        WHEN MONTH(date) = 12 THEN TRUE
-        WHEN MONTH(date) = 1 THEN TRUE
-        WHEN MONTH(date) = 2 THEN TRUE
-        
-        ELSE FALSE
-    END                                      AS hiver,
+        CASE
+            WHEN MONTH(date) = 9 THEN TRUE
+            WHEN MONTH(date) = 10 THEN TRUE
+            WHEN MONTH(date) = 11 THEN TRUE
+            ELSE FALSE
+        END                                      AS automne,
 
+        CASE
+            WHEN MONTH(date) = 12 THEN TRUE
+            WHEN MONTH(date) = 1 THEN TRUE
+            WHEN MONTH(date) = 2 THEN TRUE
+            ELSE FALSE
+        END                                      AS hiver
 
-FROM dim_vacances dv
+    FROM dim_vacances dv
 
-CROSS JOIN (
-    SELECT CAST(TIMESTAMP '2000-01-01' + INTERVAL '30 minutes' * i AS TIME) AS heure
-    FROM generate_series(0, 47) AS t(i)
-) h
-;
+    CROSS JOIN (
+        SELECT CAST(TIMESTAMP '2000-01-01' + INTERVAL '30 minutes' * i AS TIME) AS heure
+        FROM generate_series(0, 47) AS t(i)
+    ) h
+
+    ORDER BY
+        date, heure
 """)
 #Fin creation dim_temps
 
 
-#Creation dim_region
+# ---------- dim_region ----------
 con.execute("""
-    CREATE OR REPLACE TABLE dim_region AS
+    CREATE TABLE dim_region (
+        id_region              BIGINT PRIMARY KEY,
+        region                 VARCHAR,
+        tx_chauffage_elec_2021 DOUBLE,
+        tx_chauffage_elec_2022 DOUBLE,
+        tx_chauffage_elec_2023 DOUBLE,
+        tx_chauffage_elec_2024 DOUBLE,
+        tx_chauffage_elec_2025 DOUBLE,
+        tx_chauffage_elec_2026 DOUBLE,
+        tx_climatisation_2021  DOUBLE,
+        tx_climatisation_2022  DOUBLE,
+        tx_climatisation_2023  DOUBLE,
+        tx_climatisation_2024  DOUBLE,
+        tx_climatisation_2025  DOUBLE,
+        tx_climatisation_2026  DOUBLE,
+        zone_scolaire          VARCHAR,
+        population_2021        BIGINT,
+        population_2022        BIGINT,
+        population_2023        BIGINT,
+        population_2024        BIGINT,
+        population_2025        BIGINT,
+        population_2026        BIGINT
+    )
+""")
+
+con.execute("""
+    INSERT INTO dim_region
 
     WITH taux AS (
         SELECT
@@ -370,17 +434,28 @@ con.execute("""
     LEFT JOIN
         zone z ON tp.id_region = z.code_insee_region
     LEFT JOIN
-        population p ON tp.id_region = p.code_insee_pop
+        population p ON CAST(tp.id_region AS VARCHAR) = p.code_insee_pop
     ORDER BY
         tp.id_region
 """)
 #Fin creation dim_region
 
 
-#Creation fait_energie
+# ---------- fait_energie ----------
 con.execute("""
-    CREATE OR REPLACE TABLE fait_energie AS
+    CREATE TABLE fait_energie (
+        id_energie             BIGINT PRIMARY KEY,
+        id_region              BIGINT REFERENCES dim_region(id_region),
+        id_temps               BIGINT REFERENCES dim_temps(id_temps),
+        consommation_mw         DOUBLE,
+        production_nucleaire_mw DOUBLE,
+        production_eolienne_mw  DOUBLE,
+        production_solaire_mw   DOUBLE
+    )
+""")
 
+con.execute("""
+    INSERT INTO fait_energie
     SELECT
         ROW_NUMBER() OVER (ORDER BY dt.id_temps, dr.id_region) AS id_energie,
         dr.id_region,

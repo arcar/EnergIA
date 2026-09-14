@@ -364,15 +364,15 @@ con.execute("""
     INSERT INTO dim_region
 
     WITH taux AS (
-        SELECT
-            dpe.code_region AS id_region,
-            dpe.region,
-            dpe.annee,
-            ROUND((dpe.chauffage_electrique*100)/dpe.total_dpe, 2) AS tx_chauffage_elec,
-            ROUND((dpe.climatisation*100)/dpe.total_dpe, 2) AS tx_climatisation
-        FROM
-            read_csv_auto('etl_analytique/data/dpe_par_annee.csv', header=true) dpe
-    ),
+    SELECT
+        dpe.code_region AS id_region,
+        dpe.region,
+        dpe.annee,
+        ROUND((dpe.chauffage_electrique_cumule*100)/dpe.total_dpe_cumule, 2) AS tx_chauffage_elec,
+        ROUND((dpe.climatisation_cumule*100)/dpe.total_dpe_cumule, 2) AS tx_climatisation
+    FROM
+        read_csv_auto('etl_analytique/data/dpe_par_annee.csv', header=true) dpe
+),
 
     taux_pivot AS (
         SELECT

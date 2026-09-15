@@ -242,7 +242,7 @@ Importer les données DPE par régions via le fichier ```dpe_par_region.py``` qu
 
 Puis, créer une base de données analytique via le script ```etl.py```
 
-Une base préremplie a été mise à disposition dans un fichier Zip à la racine du projet. Extraire le fichier (bien le laisser à la racine) afin d'éviter d'importer toutes les données.
+Une base préremplie a été mise à disposition dans un fichier Zip à la racine du projet. Extraire le fichier afin d'éviter d'importer toutes les données et le placer dans ```python_service/predict_service```.
 
 ## Prédiction des consommations
 Lancer le fichier ```run_pipeline.py```. On obtient un fichier csv contenant toutes les prédictions sur 1 an par pas de 30 min pour toutes les régions.

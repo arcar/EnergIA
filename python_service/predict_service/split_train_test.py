@@ -23,9 +23,9 @@ Sorties : etl_analytique/predictions/train.csv
 
 import pandas as pd
 
-INPUT_CSV = "predict_service/predictions/dataset_features.csv"
-OUTPUT_TRAIN = "predict_service/predictions/train.csv"
-OUTPUT_TEST = "predict_service/predictions/test.csv"
+INPUT_CSV = "python_service/predict_service/predictions/dataset_features.csv"
+OUTPUT_TRAIN = "python_service/predict_service/predictions/train.csv"
+OUTPUT_TEST = "python_service/predict_service/predictions/test.csv"
 
 
 def annee_est_complete(df: pd.DataFrame, annee: int) -> bool:

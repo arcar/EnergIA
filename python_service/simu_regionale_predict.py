@@ -9,8 +9,8 @@ from simu_nationale import EPSILON, enregistrer_productions, verifier_rampes
 from metrique_centrale import router_deficit
 
 
-BASE_DIR = Path(__file__).resolve().parent.parent
-DB_PATH = BASE_DIR / "base_analytique.duckdb"
+BASE_DIR = Path(__file__).resolve().parent
+DB_PATH = BASE_DIR / "predict_service" / "base_analytique.duckdb"
 CSV_PATH = BASE_DIR / "predict_service" / "predictions" / "previsions_1an.csv"
 
 data = charger_donnees()

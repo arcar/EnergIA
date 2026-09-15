@@ -10,10 +10,9 @@ const ollamaClient = new Ollama({
 function normalizeHour(hour) {
     let [h, m] = hour.split(":").map(Number);
 
-    if (m <= 7) m = 0;
-    else if (m <= 22) m = 15;
-    else if (m <= 37) m = 30;
-    else if (m <= 52) m = 45;
+    if (m <= 14) m = 0;
+    else if (m <= 30) m = 30;
+    else if (m <= 44) m = 30;
     else {
         m = 0;
         h++;

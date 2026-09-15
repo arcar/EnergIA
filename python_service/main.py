@@ -14,6 +14,10 @@ class ConsoRegionRequest(BaseModel):
     id_region: str
     heure: str
 
+class PredictionConsoRequest(BaseModel):
+    id_region: str
+    date: str
+    heure: str
 
 class RepartitionHeureRequest(BaseModel):
     heure: str

@@ -12,5 +12,6 @@ __pycache__/
 ollama/
 
 base_analytique.duckdb
-etl_analytique/data/
-predict_service/predictions/
+python_service/etl_analytique/data/
+python_service/predict_service/predictions/
+

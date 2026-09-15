@@ -55,10 +55,10 @@ import joblib
 HORIZON = "1an"
 # ---------------------------------------------------------------------
 
-DB_PATH = "base_analytique.duckdb"
-MODEL_PATH = f"predict_service/predictions/modele_random_forest_{HORIZON}.joblib"
-OUTPUT_CSV = f"predict_service/predictions/previsions_{HORIZON}.csv"
-OUTPUT_PNG = f"predict_service/predictions/previsions_{HORIZON}.png"
+DB_PATH = "python_service/predict_service/base_analytique.duckdb"
+MODEL_PATH = f"python_service/predict_service/predictions/modele_random_forest_{HORIZON}.joblib"
+OUTPUT_CSV = f"python_service/predict_service/predictions/previsions_{HORIZON}.csv"
+OUTPUT_PNG = f"python_service/predict_service/predictions/previsions_{HORIZON}.png"
 
 ANNEES_DIM_REGION = list(range(2021, 2027))
 

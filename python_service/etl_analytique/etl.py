@@ -2,12 +2,12 @@ import pandas as pd
 import duckdb
 import requests
 
-CSV_PATH_vacances = "etl_analytique/data/raw/vacances.csv"
-CSV_PATH_consommation = "etl_analytique/data/raw/consommation.csv"
-CSV_PATH_population = "etl_analytique/data/raw/populations-ofgl-regions.csv"
-OUTPUT_PATH_vacances = "etl_analytique/data/vacances_propre.csv"
-OUTPUT_PATH_consommation = "etl_analytique/data/consommation_propre.csv"
-OUTPUT_PATH_population = "etl_analytique/data/population_propre.csv"
+CSV_PATH_vacances = "python_service/etl_analytique/data/raw/vacances.csv"
+CSV_PATH_consommation = "python_service/etl_analytique/data/raw/consommation.csv"
+CSV_PATH_population = "python_service/etl_analytique/data/raw/populations-ofgl-regions.csv"
+OUTPUT_PATH_vacances = "python_service/etl_analytique/data/vacances_propre.csv"
+OUTPUT_PATH_consommation = "python_service/etl_analytique/data/consommation_propre.csv"
+OUTPUT_PATH_population = "python_service/etl_analytique/data/population_propre.csv"
 # url_pop_regional = "https://tabular-api.data.gouv.fr/api/resources/e869d234-8f63-452c-8320-d9fcb377d23b/"
 # url_dpe = "https://data.ademe.fr/data-fair/api/v1/datasets/dpe03existant"
 # #https://github.com/etalab/jours-feries-france <== librairie python des Jours fériés France
@@ -207,7 +207,7 @@ print(f"\nFichier nettoyé : '{OUTPUT_PATH_population}'")
 
 
 #Creation base analytique et déclaration des tables (avec clés primaires/étrangères)
-con = duckdb.connect("base_analytique.duckdb")
+con = duckdb.connect("python_service/predict_service/base_analytique.duckdb")
 
 # On supprime dans l'ordre inverse des dépendances pour permettre de relancer
 # le script sans violer les contraintes de clé étrangère
@@ -238,7 +238,7 @@ con.execute("""
         vacances_zone_c
     FROM
         read_csv_auto(
-            'etl_analytique/data/vacances_propre.csv',
+            'python_service/etl_analytique/data/vacances_propre.csv',
             header=true
         )
     ORDER BY
@@ -371,7 +371,7 @@ con.execute("""
         ROUND((dpe.chauffage_electrique_cumule*100)/dpe.total_dpe_cumule, 2) AS tx_chauffage_elec,
         ROUND((dpe.climatisation_cumule*100)/dpe.total_dpe_cumule, 2) AS tx_climatisation
     FROM
-        read_csv_auto('etl_analytique/data/dpe_par_annee.csv', header=true) dpe
+        read_csv_auto('python_service/etl_analytique/data/dpe_par_annee.csv', header=true) dpe
 ),
 
     taux_pivot AS (
@@ -402,7 +402,7 @@ con.execute("""
             code_insee_region,
             zone_scolaire
         FROM
-            read_csv_auto('etl_analytique/data/zone_scolaire_region.csv', header=true)
+            read_csv_auto('python_service/etl_analytique/data/zone_scolaire_region.csv', header=true)
     ),
 
     population AS (
@@ -415,7 +415,7 @@ con.execute("""
             "2025" AS population_2025,
             "2026" AS population_2026
         FROM
-            read_csv_auto('etl_analytique/data/evolution_population_regions_codes_2021_2026.csv', delim=';', header=true)
+            read_csv_auto('python_service/etl_analytique/data/evolution_population_regions_codes_2021_2026.csv', delim=';', header=true)
         WHERE
             "Code INSEE" <> '-'
     )
@@ -465,7 +465,7 @@ con.execute("""
         c."Eolien (MW)"        AS production_eolienne_mw,
         c."Solaire (MW)"       AS production_solaire_mw
     FROM
-        read_csv_auto('etl_analytique/data/consommation_propre.csv', header=true) c
+        read_csv_auto('python_service/etl_analytique/data/consommation_propre.csv', header=true) c
     JOIN
         dim_region dr
         ON c."Code INSEE région" = dr.id_region

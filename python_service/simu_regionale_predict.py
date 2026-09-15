@@ -8,13 +8,140 @@ from extraction_json import charger_donnees
 from simu_nationale import EPSILON, enregistrer_productions, verifier_rampes
 from metrique_centrale import router_deficit
 
-BASE_DIR = Path(__file__).resolve().parent.parent
+
+BASE_DIR = Path(__file__).resolve().parent
 DB_PATH = Path("/app/base_analytique.duckdb")
 CSV_PATH_DOCKER = Path("/app/predictions/previsions_1an.csv")
-CSV_PATH_LOCAL = BASE_DIR / "predict_service" / "predictions" / "previsions_1an.csv"
-CSV_PATH = CSV_PATH_DOCKER if CSV_PATH_DOCKER.exists() else CSV_PATH_LOCAL
+CSV_PATH_LOCAL = BASE_DIR / "predictions" / "previsions_1an.csv"
+CSV_PATH_OLD = BASE_DIR.parent / "predict_service" / "predictions" / "previsions_1an.csv"
+if CSV_PATH_DOCKER.exists():
+    CSV_PATH = CSV_PATH_DOCKER
+elif CSV_PATH_LOCAL.exists():
+    CSV_PATH = CSV_PATH_LOCAL
+else:
+    CSV_PATH = CSV_PATH_OLD
 
 data = charger_donnees()
+
+# ============================================================
+# GESTION DES PERTURBATIONS DE CONSOMMATION
+# ============================================================
+
+_scenarios_actifs = []
+
+
+def _appliquer_une_perturbation_prevision(previsions_par_region, id_region, date_debut, heure_debut, date_fin, heure_fin, deltaMw ):
+    id_region = normaliser_region(id_region)
+
+    if id_region not in previsions_par_region:
+        raise ValueError(
+            f"Région inconnue dans les prévisions : {id_region}"
+        )
+
+    previsions_region = previsions_par_region[id_region]
+
+    debut = (date_debut, heure_debut)
+    fin = (date_fin, heure_fin)
+
+    if debut > fin:
+        raise ValueError(
+            "La date/heure de début doit être antérieure "
+            "ou égale à la date/heure de fin."
+        )
+
+    points_modifies = []
+
+    for point in previsions_region:
+
+        point_date_heure = (
+            point["date"],
+            point["heure"]
+        )
+
+        if debut <= point_date_heure <= fin:
+
+            ancienne_valeur = point["consommation_mw"]
+
+            point["consommation_mw"] += deltaMw
+
+            points_modifies.append({
+                "date": point["date"],
+                "heure": point["heure"],
+                "ancienne_consommation_mw": ancienne_valeur,
+                "nouvelle_consommation_mw": point["consommation_mw"],
+                "deltaMw": deltaMw
+            })
+
+    if not points_modifies:
+        raise ValueError(
+            f"Aucun point de prévision trouvé entre "
+            f"{date_debut} {heure_debut} et "
+            f"{date_fin} {heure_fin} "
+            f"pour la région {id_region}."
+        )
+
+    return {
+        "region": id_region,
+        "date_debut": date_debut,
+        "heure_debut": heure_debut,
+        "date_fin": date_fin,
+        "heure_fin": heure_fin,
+        "deltaMw": deltaMw,
+        "nombre_points_modifies": len(points_modifies),
+        "points_modifies": points_modifies
+    }
+
+
+def perturber_consommation(id_region, date_debut, heure_debut, date_fin, heure_fin, deltaMw):
+
+    deltaMw = float(deltaMw)
+
+    scenario = {
+        "id_region": normaliser_region(id_region),
+        "date_debut": date_debut,
+        "heure_debut": heure_debut,
+        "date_fin": date_fin,
+        "heure_fin": heure_fin,
+        "deltaMw": deltaMw
+    }
+
+    _scenarios_actifs.append(scenario)
+
+    return {
+        "scenarios_actifs": list(_scenarios_actifs)
+    }
+
+
+def previsions_avec_perturbations():
+    # Recharge les prévisions originales puis applique tous les scénarios actifs.
+
+    previsions = charger_previsions_consommation()
+
+    for scenario in _scenarios_actifs:
+
+        _appliquer_une_perturbation_prevision(
+            previsions,
+            scenario["id_region"],
+            scenario["date_debut"],
+            scenario["heure_debut"],
+            scenario["date_fin"],
+            scenario["heure_fin"],
+            scenario["deltaMw"]
+        )
+
+    return previsions
+
+
+def reinitialiser_scenario():
+    # Supprime toutes les perturbations actives.
+
+    global _scenarios_actifs
+
+    _scenarios_actifs = []
+
+    return {
+        "status": "reinitialise"
+    }
 
 
 def normaliser_region(nom):
@@ -122,8 +249,10 @@ def charger_previsions_consommation():
     return previsions_par_region
 
 
-def demande_moins_non_pilotable_previsions():
-    consommation = charger_previsions_consommation()
+def demande_moins_non_pilotable_previsions(consommation=None):
+    if consommation is None:
+        consommation = previsions_avec_perturbations()
+    
     production_np = production_non_pilotables_regional_duckdb()
 
     demande_residuelle = {}
@@ -164,9 +293,15 @@ def production_non_pilotable_detail_regional():
 
 
 
-def pourcentage_repartition_regionale():
+def pourcentage_repartition_regionale(consommation=None, demande_residuelle=None):
     regions = regions_avec_centrales()
-    demande_residuelle = demande_moins_non_pilotable_previsions()
+
+    if consommation is None:
+        consommation = previsions_avec_perturbations()
+
+    if demande_residuelle is None:
+        demande_residuelle = demande_moins_non_pilotable_previsions(consommation)
+
     minimum_reserve_percent = 8.0
     facteur_reserve = 1 - (minimum_reserve_percent / 100)
     pourcentage_regional = {}
@@ -175,18 +310,22 @@ def pourcentage_repartition_regionale():
         if not region["plants"]:
             continue
 
-        capacite_max_region = sum(c["maximum_power_mw"] for c in region["plants"])
+        capacite_max_region = sum(
+            c["maximum_power_mw"]
+            for c in region["plants"]
+        )
+
         if capacite_max_region == 0:
             continue
+
         capacite_dispo_region = capacite_max_region * facteur_reserve
 
         points_region = demande_residuelle.get(region["region_id"], [])
-        pourcentage_regional[region["region_id"]] = [
-            point["demande_residuelle_mw"] / capacite_dispo_region
-            for point in points_region
-        ]
+
+        pourcentage_regional[region["region_id"]] = [ point["demande_residuelle_mw"] / capacite_dispo_region for point in points_region ]
 
     return pourcentage_regional, facteur_reserve
+
 
 
 def calculer_centrale_heure(centrale, pourcentage, etat_precedent):
@@ -482,9 +621,10 @@ def equilibrer_region_localement(region_id, date, heure, centrales, pourcentage,
 
 def equilibrage_local_toutes_regions_nucleaires_predict():
     regions = regions_avec_centrales()
-    pourcentages, facteur_reserve = pourcentage_repartition_regionale()
-    demande_residuelle_toutes = demande_moins_non_pilotable_previsions()
-    consommation_par_region = charger_previsions_consommation()
+    consommation_par_region = previsions_avec_perturbations()
+    demande_residuelle_toutes = demande_moins_non_pilotable_previsions(consommation_par_region)
+    pourcentages, facteur_reserve = pourcentage_repartition_regionale(consommation=consommation_par_region, demande_residuelle=demande_residuelle_toutes)
+    
     non_pilotable_detail = production_non_pilotable_detail_regional()
     minimum_reserve_percent = 8.0
 
@@ -674,5 +814,3 @@ def construire_etats_dashboard_predict(resultats):
 def dashboard_predict():
     resultats = equilibrage_local_toutes_regions_nucleaires_predict()
     return construire_etats_dashboard_predict(resultats)
-
-

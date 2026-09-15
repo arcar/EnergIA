@@ -2,8 +2,8 @@ import requests
 import pandas as pd
 
 BASE_URL = "https://data.ademe.fr/data-fair/api/v1/datasets/dpe03existant/values_agg"
-OUTPUT_PATH_dpe = "etl_analytique/data/dpe.csv"
-OUTPUT_PATH_dpe_annee = "etl_analytique/data/dpe_par_annee.csv"
+# OUTPUT_PATH_dpe = "etl_analytique/data/dpe.csv"
+OUTPUT_PATH_dpe_annee = "python_service/etl_analytique/data/dpe_par_annee.csv"
 
 # Régions à exclure de l'export (DOM/territoires peu peuplés dans ce jeu de données)
 REGIONS_EXCLUES = ["00", "01", "02", "03", "04", "06"]

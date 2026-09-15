@@ -31,7 +31,7 @@ from pathlib import Path
 # RACINE valait predict_service/ au lieu de la racine EnergIA, et
 # feature_engineering.py cherchait alors base_analytique.duckdb au mauvais
 # endroit (predict_service/base_analytique.duckdb au lieu de la racine).
-MARQUEUR_RACINE = "base_analytique.duckdb"
+MARQUEUR_RACINE = "python_service/predict_service/base_analytique.duckdb"
 
 
 def trouver_racine_projet(depart: Path) -> Path:
@@ -57,16 +57,16 @@ RACINE = trouver_racine_projet(Path(__file__).resolve().parent)
 # Dossier(s) à créer s'ils n'existent pas avant de lancer le pipeline
 # (chemins relatifs à la racine RÉELLE du projet, retrouvée ci-dessus)
 DOSSIERS_A_CREER = [
-    RACINE / "predict_service" / "predictions",
+    RACINE / "python_service" / "predict_service" / "predictions",
 ]
 
 # Scripts à exécuter, dans l'ordre, chemins relatifs à la racine du projet
 SCRIPTS_A_EXECUTER = [
-    "predict_service/feature_engineering.py",
-    "predict_service/correl.py",
-    "predict_service/split_train_test.py",
-    "predict_service/train_random_forest.py",
-    "predict_service/prediction_future.py",
+    "python_service/predict_service/feature_engineering.py",
+    "python_service/predict_service/correl.py",
+    "python_service/predict_service/split_train_test.py",
+    "python_service/predict_service/train_random_forest.py",
+    "python_service/predict_service/prediction_future.py",
 ]
 
 

@@ -7,21 +7,32 @@ const ollamaClient = new Ollama({
 });
 
 
-function normalizeHour(hour) {
+function normalizeDateTime(date, hour) {
     let [h, m] = hour.split(":").map(Number);
 
-    if (m <= 7) m = 0;
-    else if (m <= 22) m = 15;
-    else if (m <= 37) m = 30;
-    else if (m <= 52) m = 45;
-    else {
+    if (m <= 14) {
+        m = 0;
+    } else if (m <= 44) {
+        m = 30;
+    } else {
         m = 0;
         h++;
+
+        if (h === 24) {
+            h = 0;
+
+            // Passage au jour suivant
+            const d = new Date(`${date}T00:00:00`);
+            d.setDate(d.getDate() + 1);
+
+            date = d.toISOString().split("T")[0];
+        }
     }
 
-    if (h === 24) h = 0;
-
-    return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+    return {
+        date,
+        heure: `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`
+    };
 }
 
 
@@ -50,15 +61,19 @@ async function askLLM(prompt) {
 
         const result = JSON.parse(response.message.content);
 
-        if (result.action === "GET_PROD_NATIONALE_HEURE" && result.parameters.heure) {
-            result.parameters.heure = normalizeHour(result.parameters.heure);
+        if (result.action === ("GET_PROD_NATIONALE_HEURE" || "GET_CONSO_REGION_HEURE") && result.parameters.date && result.parameters.heure) {
+            const normalized = normalizeDateTime(result.parameters.date, result.parameters.heure);
+            result.parameters.date = normalized.date;
+            result.parameters.heure = normalized.heure;
         }
-        if (result.action === "GET_CONSO_REGION_HEURE" && result.parameters.heure) {
-            result.parameters.heure = normalizeHour(result.parameters.heure);
-        }
+
+        // if (result.action === "GET_CONSO_REGION_HEURE" && result.parameters.heure) {
+        //     result.parameters.heure = normalizeHour(result.parameters.heure);
+        // }
         if (result.action === "GET_PERTURBATION" && result.parameters.heure){
             result.parameters.heure = normalizeHour(result.parameters.heure);
         }
+        console.log(result)
         return result;
 
 

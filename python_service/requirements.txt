@@ -7,3 +7,5 @@ dijkstra
 requests
 numpy
 duckdb
+scikit-learn
+pandas

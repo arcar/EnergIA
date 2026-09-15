@@ -25,24 +25,39 @@ async function generateAnswer(question) {
             
                 }
             break;
+
         case "GET_PROD_NATIONALE_HEURE":
-            try {   
-                const response = await axios.post(`${process.env.PYTHON_SERVICE_URL}/repartition_heure`, result.parameters);      
+            try {
+                const { date } = result.parameters;
+                const dateComparaison = new Date(date);
+                const dateLimite = new Date("2026-06-30");
+
+                let response;
+
+                if (dateComparaison <= dateLimite) {
+                    // Ancienne API (jusqu'au 30/06/2026 inclus)
+                    response = await axios.post(`${process.env.PYTHON_SERVICE_URL}/repartition_heure`, result.parameters);
+                    
+                } else {
+                    // Nouvelle API (à partir du 01/07/2026) — à compléter manuellement
+                    response = await axios.post(`${process.env.PYTHON_SERVICE_URL}/predict/repartition_heure`, result.parameters);
+                }
+
                 const { heure, resultats } = response.data;
 
-                let message = `Répartition nationale à ${heure} :\n\n`;
+                let message = `Répartition nationale le ${date} à ${heure} :\n\n`;
 
                 resultats.forEach((plant) => {
                     message += `- ${plant.plant_name} : ${plant.production_mw.toFixed(0)} MW - saturation ${plant.taux_utilisation_percent.toFixed(2)}%\n`;
                 });
 
-                return message;   // <-- ICI, après la boucle, dans le scope du try
-                        
+                return message;
+
             } catch (error) {
                 console.log(error.message);
                 throw new Error("Impossible de contacter l'API Python 2");
             }
-        break;
+            break;
         
         case "GET_CONSO_REGION_HEURE":
             try {

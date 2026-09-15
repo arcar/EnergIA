@@ -21,9 +21,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-INPUT_CSV = "predict_service/predictions/dataset_features.csv"
-OUTPUT_CSV = "predict_service/predictions/matrice_correlation.csv"
-OUTPUT_PNG = "predict_service/predictions/correlation_consommation.png"
+INPUT_CSV = "python_service/predict_service/predictions/dataset_features.csv"
+OUTPUT_CSV = "python_service/predict_service/predictions/matrice_correlation.csv"
+OUTPUT_PNG = "python_service/predict_service/predictions/correlation_consommation.png"
 
 # Colonnes à exclure de la matrice : identifiants et texte libre, pas des
 # variables explicatives numériques ou catégorielles à corréler

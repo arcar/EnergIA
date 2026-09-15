@@ -32,8 +32,8 @@ import duckdb
 import numpy as np
 import pandas as pd
 
-DB_PATH = "base_analytique.duckdb"
-OUTPUT_CSV = "predict_service/predictions/dataset_features.csv"
+DB_PATH = "python_service/predict_service/base_analytique.duckdb"
+OUTPUT_CSV = "python_service/predict_service/predictions/dataset_features.csv"
 
 ANNEES_DIM_REGION = range(2021, 2027)
 

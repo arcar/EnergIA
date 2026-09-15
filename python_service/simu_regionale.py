@@ -638,6 +638,15 @@ def repartition_par_heure(prod_reelle, heure_demandee):
         puissance_max = centrale["maximum_power_mw"]
 
         taux_utilisation = (entree["production"] / puissance_max) * 100 if puissance_max > 0 else 0
+        if taux_utilisation >= 90 :
+            etat_centrale = "Saturée"
+        elif taux_utilisation >= 70 :
+            etat_centrale = "Fonctionnement normal"
+        elif taux_utilisation >= 50 :
+            etat_centrale = "Fonctionnement à charge partielle"
+        else :
+            etat_centrale = "Sous-régime"
+
 
         resultats.append({
             "plant_id": entree["plant_id"],
@@ -648,6 +657,7 @@ def repartition_par_heure(prod_reelle, heure_demandee):
             "puissance_maximum_mw": puissance_max,
             "puissance_minimum_mw": centrale["minimum_operating_power_mw"],
             "taux_utilisation_percent": taux_utilisation,
+            "etat_centrale" : etat_centrale,
             "minimum_autorise_mw": entree["minimum_autorise"],
             "maximum_autorise_mw": entree["maximum_autorise"],
             "variation_mw": entree["variation_mw"],
@@ -660,9 +670,6 @@ def repartition_par_heure(prod_reelle, heure_demandee):
 def dashboard(id_region=None, start=None, end=None, deltaMw=None):
     resultats = equilibrage_local_toutes_regions_nucleaires(id_region, start, end, deltaMw)
     return construire_etats_dashboard(resultats)
-
-
-
 
 
 def conso_heure_region(id_region, heure):

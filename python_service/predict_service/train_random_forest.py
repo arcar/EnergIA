@@ -43,8 +43,8 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 HORIZON = "1an"
 # ---------------------------------------------------------------------
 
-TRAIN_CSV = "predict_service/predictions/train.csv"
-TEST_CSV = "predict_service/predictions/test.csv"
+TRAIN_CSV = "python_service/predict_service/predictions/train.csv"
+TEST_CSV = "python_service/predict_service/predictions/test.csv"
 
 CIBLE = "consommation_mw"
 
@@ -110,9 +110,9 @@ def main():
     print(f"Lags exclus des features (trop courts pour cet horizon) : {lags_a_exclure or 'aucun'}")
     print(f"Baseline de comparaison : {lag_baseline}")
 
-    model_path = f"predict_service/predictions/modele_random_forest_{HORIZON}.joblib"
-    importances_csv = f"predict_service/predictions/feature_importances_{HORIZON}.csv"
-    plot_path = f"predict_service/predictions/predictions_vs_reel_{HORIZON}.png"
+    model_path = f"python_service/predict_service/predictions/modele_random_forest_{HORIZON}.joblib"
+    importances_csv = f"python_service/predict_service/predictions/feature_importances_{HORIZON}.csv"
+    plot_path = f"python_service/predict_service/predictions/predictions_vs_reel_{HORIZON}.png"
 
     print("\nChargement train/test...")
     train = pd.read_csv(TRAIN_CSV)

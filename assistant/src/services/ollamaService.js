@@ -61,7 +61,7 @@ async function askLLM(prompt) {
 
         const result = JSON.parse(response.message.content);
 
-        if (result.action === ("GET_PROD_NATIONALE_HEURE" || "GET_CONSO_REGION_HEURE") && result.parameters.date && result.parameters.heure) {
+        if ((result.action === "GET_PROD_NATIONALE_HEURE" || result.action === "GET_CONSO_REGION_HEURE") && result.parameters.date && result.parameters.heure) {
             const normalized = normalizeDateTime(result.parameters.date, result.parameters.heure);
             result.parameters.date = normalized.date;
             result.parameters.heure = normalized.heure;
@@ -70,9 +70,18 @@ async function askLLM(prompt) {
         // if (result.action === "GET_CONSO_REGION_HEURE" && result.parameters.heure) {
         //     result.parameters.heure = normalizeHour(result.parameters.heure);
         // }
-        if (result.action === "GET_PERTURBATION" && result.parameters.heure){
-            result.parameters.heure = normalizeHour(result.parameters.heure);
+        if (result.action === "GET_PERTURBATION" && result.parameters.date_debut && result.parameters.heure_debut){
+            const normalized = normalizeDateTime(result.parameters.date_debut, result.parameters.heure_debut);
+            result.parameters.date_debut = normalized.date;
+            result.parameters.heure_debut = normalized.heure;
         }
+
+        if (result.action === "GET_PERTURBATION" && result.parameters.date_fin && result.parameters.heure_fin){
+            const normalized = normalizeDateTime(result.parameters.date_fin, result.parameters.heure_fin);
+            result.parameters.date_fin = normalized.date;
+            result.parameters.heure_fin = normalized.heure;
+        }
+
         console.log(result)
         return result;
 

@@ -152,8 +152,10 @@ ACTIONS :
     La perturbation correspond à une augmentation ou une diminution de consommation sur une période donnée.
     Parameters :
       - id_region
-      - start
-      - end
+      - date_debut
+      - heure_debut
+      - date_fin
+      - heure_fin   
       - deltaMw
 
 RÈGLES DE NORMALISATION :
@@ -191,17 +193,17 @@ EXEMPLES :
     Utilisateur : "Donne moi la consommation de la Bretagne à 11h00, le 05 avril 2026"
     Réponse : {"action":"GET_CONSO_REGION_HEURE","parameters":{"id_region":"bretagne","date":"2026-04-05","heure":"11:00"}}
 
-    Utilisateur : "Fais une perturbation dans la région Normandie entre 12h et 15h avec une augmentation de 400 MW"
-    Réponse : {"action":"GET_PERTURBATION","parameters":{"id_region":"normandie","start":"12:00","end":"15:00","deltaMw":400}}
+    Utilisateur : "Fais une perturbation dans la région Normandie pour le 20 juillet 2026 entre 12h et 15h avec une augmentation de 400 MW"
+    Réponse : {"action":"GET_PERTURBATION","parameters":{"id_region":"normandie","date_debut":"2026-07-20","heure_debut":"12:00","date_fin":"2026-07-20","heure_fin":"15:00","deltaMw":400}}
 
-    Utilisateur : "Diminue la consommation de 750 MW en Normandie entre 12h et 15h"
-    Réponse : {"action":"GET_PERTURBATION","parameters":{"id_region":"normandie","start":"12:00","end":"15:00","deltaMw":-750}}
+    Utilisateur : "Diminue la consommation de 750 MW en Normandie entre 12h et 15h le 15/08/2026"
+    Réponse : {"action":"GET_PERTURBATION","parameters":{"id_region":"normandie","date_debut":"2026-08-15","heure_debut":"12:00","date_fin":"2026-08-15","heure_fin":"15:00","deltaMw":-750}}
 
-    Utilisateur : "Augmente la consommation de 347.5 MW en Occitanie de 10h15 à 14h30"
-    Réponse : {"action":"GET_PERTURBATION","parameters":{"id_region":"occitanie","start":"10:15","end":"14:30","deltaMw":347.5}}
+    Utilisateur : "Augmente la consommation de 347.5 MW en Occitanie entre le 15 aout 2026 10h15 et le 20 aout 2026 à 14h30"
+    Réponse : {"action":"GET_PERTURBATION","parameters":{"id_region":"occitanie","date_debut":"2026-08-15","heure_debut":"10:15","date_fin":"2026-08-20","heure_fin":"14:30","deltaMw":347.5}}
 
-    Utilisateur : "Il y a une diminution de 123.5 MW en Bretagne entre 8h30 et 11h45"
-    Réponse : {"action":"GET_PERTURBATION","parameters":{"id_region":"bretagne","start":"08:30","end":"11:45","deltaMw":-123.5}}
+    Utilisateur : "Le 20 juillet 2026, il y aura une diminution de 123.5 MW en Bretagne entre 8h30 et 11h45"
+    Réponse : {"action":"GET_PERTURBATION","parameters":{"id_region":"bretagne","date_debut":"2026-07-20","heure_debut":"08:30","date_fin":"2026-07-20","heure_fin":"11:45","deltaMw":-123.5}}
 `;
 module.exports=SYSTEM_PROMPT;
 

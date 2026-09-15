@@ -82,20 +82,23 @@ async function generateAnswer(question) {
 
       case "GET_PERTURBATION":
         try {
-            const response=await axios.post(`${process.env.PYTHON_SERVICE_URL}/perturber_consommation`,result.parameters);
+            const response=await axios.post(`${process.env.PYTHON_SERVICE_URL}/predict/perturber_consommation`,result.parameters);
+            console.log(response)
+                
             return {
-                parameters:result.parameters,
-                states:response.data
+                    parameters:result.parameters,
+                    states:response.data
             };
         } catch(error) {
-            console.log(error.message);
-            console.log("STATUS:",error.response?.status);
-            console.log("DATA:",error.response?.data);
-            console.log("PARAMS ENVOYÉS:",result.parameters);
-            throw new Error(
-                "Impossible de contacter l'API Python 4"
-            );
-        }
+                console.log(error.message);
+                console.log("STATUS:",error.response?.status);
+                console.log("DATA:",error.response?.data);
+                console.log("PARAMS ENVOYÉS:",result.parameters);
+                throw new Error(
+                    "Impossible de contacter l'API Python 4"
+                );
+            }
+            break;
         case "RESET_SCENARIO":
             try {
                 const response = await axios.post(`${process.env.PYTHON_SERVICE_URL}/reinitialiser_scenario`);

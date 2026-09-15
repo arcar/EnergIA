@@ -4,13 +4,14 @@ import re
 import unicodedata
 import duckdb
 
+from datetime import datetime
 from extraction_json import charger_donnees
 from simu_nationale import EPSILON, enregistrer_productions, verifier_rampes
 from metrique_centrale import router_deficit
 
 
 BASE_DIR = Path(__file__).resolve().parent
-DB_PATH = BASE_DIR / "base_analytique.duckdb"
+DB_PATH = BASE_DIR / "predict_service" / "base_analytique.duckdb"
 CSV_PATH = BASE_DIR / "predict_service" / "predictions" / "previsions_1an.csv"
 
 data = charger_donnees()
@@ -84,7 +85,7 @@ def _appliquer_une_perturbation_prevision(previsions_par_region, id_region, date
     }
 
 
-def perturber_consommation(id_region, date_debut, heure_debut, date_fin, heure_fin, deltaMw):
+def perturber_consommation_predict(id_region, date_debut, heure_debut, date_fin, heure_fin, deltaMw):
 
     deltaMw = float(deltaMw)
 
@@ -611,12 +612,25 @@ def equilibrer_region_localement(region_id, date, heure, centrales, pourcentage,
 
 
 
-def equilibrage_local_toutes_regions_nucleaires_predict():
+def equilibrage_local_toutes_regions_nucleaires_predict(
+    date_debut=None,
+    heure_debut=None,
+    date_fin=None,
+    heure_fin=None
+):
     regions = regions_avec_centrales()
+
     consommation_par_region = previsions_avec_perturbations()
-    demande_residuelle_toutes = demande_moins_non_pilotable_previsions(consommation_par_region)
-    pourcentages, facteur_reserve = pourcentage_repartition_regionale(consommation=consommation_par_region, demande_residuelle=demande_residuelle_toutes)
-    
+
+    demande_residuelle_toutes = demande_moins_non_pilotable_previsions(
+        consommation_par_region
+    )
+
+    pourcentages, facteur_reserve = pourcentage_repartition_regionale(
+        consommation=consommation_par_region,
+        demande_residuelle=demande_residuelle_toutes
+    )
+
     non_pilotable_detail = production_non_pilotable_detail_regional()
     minimum_reserve_percent = 8.0
 
@@ -633,23 +647,74 @@ def equilibrage_local_toutes_regions_nucleaires_predict():
     situations_degradees = []
     details_regionaux = []
 
-    regions_avec_nucleaire = [r for r in regions if r["region_id"] in pourcentages]
-    regions_sans_nucleaire = [r for r in regions if r["region_id"] not in pourcentages]
-    regions_deconnectees = [r for r in data["parc_nucleaire"]["regions"] if not r["connected_to_continental_grid"]]
-    ids_deconnectees = {normaliser_region(r["id"]) for r in regions_deconnectees}
+    regions_avec_nucleaire = [
+        r for r in regions
+        if r["region_id"] in pourcentages
+    ]
+
+    regions_sans_nucleaire = [
+        r for r in regions
+        if r["region_id"] not in pourcentages
+    ]
+
+    regions_deconnectees = [
+        r for r in data["parc_nucleaire"]["regions"]
+        if not r["connected_to_continental_grid"]
+    ]
+
+    ids_deconnectees = {
+        normaliser_region(r["id"])
+        for r in regions_deconnectees
+    }
 
     mapping = plant_id_vers_region(regions_avec_nucleaire)
-    capacite_max_region_dict = capacite_max_par_region(regions_avec_nucleaire)
+    capacite_max_region_dict = capacite_max_par_region(
+        regions_avec_nucleaire
+    )
 
-    production_regionale_precedente = production_regionale_initiale(regions)
+    production_regionale_precedente = production_regionale_initiale(
+        regions
+    )
 
-    if regions_avec_nucleaire and regions_avec_nucleaire[0]["region_id"] in demande_residuelle_toutes:
+    if (
+        regions_avec_nucleaire
+        and regions_avec_nucleaire[0]["region_id"]
+        in demande_residuelle_toutes
+    ):
         region_reference = regions_avec_nucleaire[0]["region_id"]
     else:
         region_reference = next(iter(demande_residuelle_toutes))
-    timeline = [(p["date"], p["heure"]) for p in demande_residuelle_toutes[region_reference]]
+
+    # Timeline complète
+    timeline = [
+        (p["date"], p["heure"])
+        for p in demande_residuelle_toutes[region_reference]
+    ]
+
+    # Si une période est demandée, on réduit la timeline
+    if all([date_debut, heure_debut, date_fin, heure_fin]):
+
+        debut = datetime.strptime(
+            f"{date_debut} {heure_debut}",
+            "%Y-%m-%d %H:%M"
+        )
+
+        fin = datetime.strptime(
+            f"{date_fin} {heure_fin}",
+            "%Y-%m-%d %H:%M"
+        )
+
+        timeline = [
+            (date, heure)
+            for date, heure in timeline
+            if debut <= datetime.strptime(
+                f"{date} {heure}",
+                "%Y-%m-%d %H:%M"
+            ) <= fin
+        ]
 
     for index, (date, heure) in enumerate(timeline):
+
         production_debut_heure = dict(etat_precedent)
         resultats_heure = []
 

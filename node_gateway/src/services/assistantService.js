@@ -9,7 +9,8 @@ async function askReply(request) {
         },
         body: JSON.stringify({
             prompt: request
-        })
+        }),
+        signal: AbortSignal.timeout(120000)
     }
     );
 

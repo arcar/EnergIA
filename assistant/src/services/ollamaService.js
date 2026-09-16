@@ -61,7 +61,13 @@ async function askLLM(prompt) {
 
         const result = JSON.parse(response.message.content);
 
-        if (result.action === ("GET_PROD_NATIONALE_HEURE" || "GET_CONSO_REGION_HEURE") && result.parameters.date && result.parameters.heure) {
+        if (
+            (result.action === "GET_PROD_NATIONALE_HEURE" ||
+            result.action === "GET_CONSO_REGION_HEURE" ||
+            result.action === "GET_PREDICTION_CONSO") &&
+            result.parameters.date &&
+            result.parameters.heure
+        ) {
             const normalized = normalizeDateTime(result.parameters.date, result.parameters.heure);
             result.parameters.date = normalized.date;
             result.parameters.heure = normalized.heure;

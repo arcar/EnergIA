@@ -248,6 +248,27 @@ def charger_previsions_consommation():
 
     return previsions_par_region
 
+def obtenir_prediction_consommation(id_region, date, heure):
+    id_region = normaliser_region(id_region)
+    heure = heure[:5]
+
+    previsions = charger_previsions_consommation()
+
+    if id_region not in previsions:
+        raise ValueError(f"Région inconnue dans les prévisions : {id_region}")
+
+    for point in previsions[id_region]:
+        if point["date"] == date and point["heure"] == heure:
+            return {
+                "id_region": id_region,
+                "date": point["date"],
+                "heure": point["heure"],
+                "consommation_predite": point["consommation_mw"]
+            }
+
+    raise ValueError(
+        f"Aucune prévision trouvée pour {id_region} le {date} à {heure}."
+    )
 
 def demande_moins_non_pilotable_previsions(consommation=None):
     if consommation is None:

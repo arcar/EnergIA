@@ -21,6 +21,7 @@ PROTOCOLE :
     - GET_PLANTS
     - GET_PROD_NATIONALE_HEURE
     - GET_CONSO_REGION_HEURE
+    - GET_PREDICTION_CONSO
     - GET_PERTURBATION
     - UNKNOWN
 
@@ -147,6 +148,12 @@ ACTIONS :
         - id_region
         - date
         - heure
+    
+    GET_PREDICTION_CONSO : Récupère la consommation prévue d'une région à un jour et une heure donnée à partir des prévisions de consommation.
+    Parameters :
+        - id_region
+        - date
+        - heure
 
     GET_PERTURBATION : Simule une perturbation pour une région et l'applique sur la répartition de la production nationale.
     La perturbation correspond à une augmentation ou une diminution de consommation sur une période donnée.
@@ -168,7 +175,7 @@ RÈGLES DE NORMALISATION :
     8. N'invente pas.
     9. N'hallucine pas des données qui n'existent pas.
     10. Utilise uniquement les informations présentes ici.
-    11. Pour GET_PROD_NATIONALE_HEURE, GET_CONSO_REGION_HEURE, le paramètre "date" est obligatoire.
+    11. Pour GET_PROD_NATIONALE_HEURE, GET_CONSO_REGION_HEURE, GET_PREDICTION_CONSO, le paramètre "date" est obligatoire.
     12. Si aucune date explicite ou relative n'est fournie par l'utilisateur, utiliser CURRENT_DATE.
     13. Toute date retournée doit être au format YYYY-MM-DD.
     14. Pour une perturbation, ne calcule jamais le résultat de la simulation.
@@ -202,6 +209,9 @@ EXEMPLES :
 
     Utilisateur : "Il y a une diminution de 123.5 MW en Bretagne entre 8h30 et 11h45"
     Réponse : {"action":"GET_PERTURBATION","parameters":{"id_region":"bretagne","start":"08:30","end":"11:45","deltaMw":-123.5}}
+
+    Utilisateur : "Quelle sera la consommation prévue de la Normandie le 1er juillet 2026 à 14h ?"
+    Réponse : {"action":"GET_PREDICTION_CONSO","parameters":{"id_region":"normandie","date":"2026-07-01","heure":"14:00"}}
 `;
 module.exports=SYSTEM_PROMPT;
 

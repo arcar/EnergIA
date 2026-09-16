@@ -79,6 +79,24 @@ async function generateAnswer(question) {
         
             }
             break;
+        case "GET_PREDICTION_CONSO":
+            try {
+                const response = await axios.post(
+                    `${process.env.PYTHON_SERVICE_URL}/predict/conso_regionale`,
+                    result.parameters
+                );
+
+                return `Le ${response.data.date.split("-").reverse().join("/")} à ${response.data.heure}, la consommation prévue de la région ${response.data.id_region.charAt(0).toUpperCase() + response.data.id_region.slice(1).replaceAll("_", " ")} est de ${response.data.consommation_predite.toFixed(2)} MW.`;
+            } catch (error) {
+                console.log(error.message);
+                console.log("STATUS:", error.response?.status);
+                console.log("DATA:", error.response?.data);
+                console.log("PARAMS ENVOYÉS:", result.parameters);
+                throw new Error(
+                    "Impossible de récupérer la prédiction de consommation"
+                );
+            }
+            break;
 
       case "GET_PERTURBATION":
         try {

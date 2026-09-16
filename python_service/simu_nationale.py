@@ -129,7 +129,7 @@ def calculer_limites_globales(centrales_heure):
 # ENREGISTREMENT
 # ============================================================
 
-def enregistrer_productions(centrales, heure, prod_reelle, etat_precedent):
+def enregistrer_productions(centrales, heure, prod_reelle):
 
     for centrale in centrales:
 
@@ -139,16 +139,25 @@ def enregistrer_productions(centrales, heure, prod_reelle, etat_precedent):
             "production": centrale["production"],
             "production_demandee": centrale["production_demandee"],
             "production_precedente": centrale["production_precedente"],
-            "variation_mw": (centrale["production"] - centrale["production_precedente"]),
+            "variation_mw": (
+                centrale["production"]
+                - centrale["production_precedente"]
+            ),
             "minimum_autorise": centrale["minimum"],
             "maximum_autorise": centrale["maximum"],
-            "production_minimum_technique": (centrale["minimum_technique"]),
-            "production_maximum_technique": (centrale["maximum_technique"]),
-            "rampe_montee_maximale": (centrale["rampe_montee"]),
-            "rampe_descente_maximale": (centrale["rampe_descente"])
+            "production_minimum_technique": (
+                centrale["minimum_technique"]
+            ),
+            "production_maximum_technique": (
+                centrale["maximum_technique"]
+            ),
+            "rampe_montee_maximale": (
+                centrale["rampe_montee"]
+            ),
+            "rampe_descente_maximale": (
+                centrale["rampe_descente"]
+            )
         })
-
-        etat_precedent[centrale["plant_id"]] = centrale["production"]
 
 
 # ============================================================

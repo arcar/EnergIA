@@ -22,6 +22,8 @@ data = charger_donnees()
 
 _scenarios_actifs = []
 
+def indexer_points_par_date_heure(points):
+    return {(point["date"], point["heure"]): point for point in points}
 
 def _appliquer_une_perturbation_prevision(previsions_par_region, id_region, date_debut, heure_debut, date_fin, heure_fin, deltaMw ):
     id_region = normaliser_region(id_region)
@@ -154,8 +156,6 @@ def donnees_centrales_30_min():
             "plant_name": centrale.get("plant_name", centrale["plant_id"]),
             "rampe_up_ajustee_30_min": centrale["max_ramp_up_mw_per_15_min"] * 2,
             "rampe_down_ajustee_30_min": centrale["max_ramp_down_mw_per_15_min"] * 2,
-            "max_ramp_up_mw_per_15_min": centrale["max_ramp_up_mw_per_15_min"] * 2,
-            "max_ramp_down_mw_per_15_min": centrale["max_ramp_down_mw_per_15_min"] * 2,
             "initial_output_mw_at_23_45_previous_day": centrale["initial_output_mw_at_23_45_previous_day"],
             "minimum_operating_power_mw": centrale["minimum_operating_power_mw"],
             "maximum_power_mw": centrale["maximum_power_mw"],
@@ -286,20 +286,35 @@ def production_non_pilotable_detail_regional():
 
 
 
-def pourcentage_repartition_regionale(consommation=None, demande_residuelle=None):
+def pourcentage_repartition_regionale(
+    consommation=None,
+    demande_residuelle=None
+):
     regions = regions_avec_centrales()
 
     if consommation is None:
         consommation = previsions_avec_perturbations()
 
     if demande_residuelle is None:
-        demande_residuelle = demande_moins_non_pilotable_previsions(consommation)
+        demande_residuelle = demande_moins_non_pilotable_previsions(
+            consommation
+        )
 
     minimum_reserve_percent = 8.0
     facteur_reserve = 1 - (minimum_reserve_percent / 100)
+
     pourcentage_regional = {}
 
+    # Transformation des demandes en dictionnaires
+    demande_residuelle_indexee = {
+        region_id: indexer_points_par_date_heure(points)
+        for region_id, points in demande_residuelle.items()
+    }
+
     for region in regions:
+
+        region_id = region["region_id"]
+
         if not region["plants"]:
             continue
 
@@ -311,14 +326,24 @@ def pourcentage_repartition_regionale(consommation=None, demande_residuelle=None
         if capacite_max_region == 0:
             continue
 
-        capacite_dispo_region = capacite_max_region * facteur_reserve
+        capacite_dispo_region = (capacite_max_region * facteur_reserve)
 
-        points_region = demande_residuelle.get(region["region_id"], [])
+        points_region = demande_residuelle_indexee.get(
+            region_id,
+            {}
+        )
 
-        pourcentage_regional[region["region_id"]] = [ point["demande_residuelle_mw"] / capacite_dispo_region for point in points_region ]
+        pourcentage_regional[region_id] = {}
+
+        for cle, point in points_region.items():
+
+            demande = point["demande_residuelle_mw"]
+
+            pourcentage_regional[region_id][cle] = (
+                demande / capacite_dispo_region
+            )
 
     return pourcentage_regional, facteur_reserve
-
 
 
 def calculer_centrale_heure(centrale, pourcentage, etat_precedent):
@@ -472,18 +497,25 @@ def repartir_surplus_vers_deficits(resultats_heure):
     return echanges
 
 
-def resultats_regions_sans_nucleaire(regions_sans_nucleaire, demande_residuelle_toutes, index, ids_deconnectees):
+def resultats_regions_sans_nucleaire(regions_sans_nucleaire, demande_residuelle_indexee, date, heure, ids_deconnectees):
     resultats = []
+    cle = (date, heure)
+    
     for region in regions_sans_nucleaire:
         region_id = region["region_id"]
+
         if region_id in ids_deconnectees:
             continue
 
-        points = demande_residuelle_toutes.get(region_id, [])
-        if index >= len(points):
+        points = demande_residuelle_indexee.get(region_id, {})
+
+        point = points.get(cle)
+
+        if point is None:
             continue
 
-        valeur_demande = points[index]["demande_residuelle_mw"]
+        valeur_demande = point["demande_residuelle_mw"]
+
         deficit = max(valeur_demande, 0)
 
         resultats.append({
@@ -494,6 +526,7 @@ def resultats_regions_sans_nucleaire(regions_sans_nucleaire, demande_residuelle_
             "surplus_residuel": 0,
             "deficit_residuel": deficit
         })
+
     return resultats
 
 
@@ -522,8 +555,9 @@ def detecter_situation_degradee(region_id, heure, production_mw, maximum_regiona
     }
 
 
-def construire_detail_regional(region_id, date, heure, index, production_mw, production_precedente_mw, consommation_par_region, non_pilotable_detail, demande_residuelle_toutes):
+def construire_detail_regional(region_id, date, heure, production_mw, production_precedente_mw, consommation_indexee, non_pilotable_detail, demande_residuelle_indexee):
     variation_mw = production_mw - production_precedente_mw
+
     if variation_mw > EPSILON:
         sens_variation = "hausse"
     elif variation_mw < -EPSILON:
@@ -531,21 +565,59 @@ def construire_detail_regional(region_id, date, heure, index, production_mw, pro
     else:
         sens_variation = "stable"
 
-    mois_jour = date[5:]
-    cle = (mois_jour, heure)
-    detail_np = non_pilotable_detail.get(region_id, {}).get(cle, {"solar_mw": 0, "wind_mw": 0})
+    cle = (date, heure)
+
+    # Consommation
+    point_consommation = consommation_indexee.get(
+        region_id, {}
+    ).get(cle)
+
+    if point_consommation is None:
+        raise ValueError(
+            f"Aucune consommation trouvée pour "
+            f"{region_id} à {date} {heure}"
+        )
+
+
+    # Production non pilotable
+    detail_np = non_pilotable_detail.get(
+        region_id, {}
+    ).get(
+        cle,
+        {
+            "solar_mw": 0,
+            "wind_mw": 0
+        }
+    )
+
+    # Demande résiduelle
+    point_demande = demande_residuelle_indexee.get(
+        region_id, {}
+    ).get(cle)
+
+    if point_demande is None:
+        raise ValueError(
+            f"Aucune demande résiduelle trouvée pour "
+            f"{region_id} à {date} {heure}"
+        )
 
     return {
         "region_id": region_id,
         "date": date,
         "heure": heure,
-        "consommation_mw": consommation_par_region[region_id][index]["consommation_mw"],
+
+        "consommation_mw": point_consommation["consommation_mw"],
+
         "solar_mw": detail_np["solar_mw"],
         "wind_mw": detail_np["wind_mw"],
-        "non_pilotable_total_mw": detail_np["solar_mw"] + detail_np["wind_mw"],
-        "demande_residuelle_mw": demande_residuelle_toutes[region_id][index]["demande_residuelle_mw"],
+
+        "non_pilotable_total_mw": (detail_np["solar_mw"] + detail_np["wind_mw"]),
+
+        "demande_residuelle_mw": (point_demande["demande_residuelle_mw"]),
+
         "production_nucleaire_mw": production_mw,
         "production_nucleaire_precedente_mw": production_precedente_mw,
+
         "variation_mw": variation_mw,
         "sens_variation": sens_variation,
     }
@@ -558,58 +630,174 @@ def production_regionale_initiale(regions):
     }
 
 
-def equilibrer_region_localement(region_id, date, heure, centrales, pourcentage, etat_precedent, prod_reelle, productions_sous_minimum, productions_sur_maximum):
-    centrales_heure = construire_centrales_heure(centrales, pourcentage, etat_precedent)
-    demande_heure = calculer_demande_heure(centrales_heure)
-    minimum_regional, maximum_regional = limites_globales(centrales_heure)
+def equilibrer_region_localement(
+    region_id,
+    date,
+    heure,
+    centrales,
+    pourcentage,
+    etat_precedent,
+    prod_reelle,
+    productions_sous_minimum,
+    productions_sur_maximum
+):
+    # --------------------------------------------------------
+    # 1. Construction des centrales pour ce pas
+    # --------------------------------------------------------
+
+    centrales_heure = construire_centrales_heure(
+        centrales,
+        pourcentage,
+        etat_precedent
+    )
+
+    # --------------------------------------------------------
+    # 2. Demande théorique de la région
+    # --------------------------------------------------------
+
+    demande_heure = calculer_demande_heure(
+        centrales_heure
+    )
+
+    # --------------------------------------------------------
+    # 3. Limites réellement accessibles ce pas
+    # --------------------------------------------------------
+
+    minimum_regional, maximum_regional = limites_globales(
+        centrales_heure
+    )
 
     label_heure = f"{date} {heure}"
 
-    if demande_heure < minimum_regional:
-        surplus_residuel = minimum_regional - demande_heure
-        for centrale in centrales_heure:
-            centrale["production"] = centrale["minimum"]
-        enregistrer_productions(centrales_heure, label_heure, prod_reelle, etat_precedent)
-        return {
-            "region_id": region_id, 
-            "demande_mw": demande_heure, 
-            "production_mw": minimum_regional,
-            "maximum_regional_mw": maximum_regional, 
-            "surplus_residuel": surplus_residuel, 
-            "deficit_residuel": 0
-        }
+    # --------------------------------------------------------
+    # 4. CAS : demande supérieure à ce que la région
+    #          peut produire actuellement
+    # --------------------------------------------------------
 
-    if demande_heure > maximum_regional:
-        deficit_residuel = demande_heure - maximum_regional
+    if demande_heure > maximum_regional + EPSILON:
+
+        deficit_residuel = (
+            demande_heure
+            - maximum_regional
+        )
+
         for centrale in centrales_heure:
             centrale["production"] = centrale["maximum"]
-        enregistrer_productions(centrales_heure, label_heure, prod_reelle, etat_precedent)
+
+        enregistrer_productions(
+            centrales_heure,
+            label_heure,
+            prod_reelle
+        )
+
         return {
-            "region_id": region_id, 
-            "demande_mw": demande_heure, 
+            "region_id": region_id,
+            "demande_mw": demande_heure,
             "production_mw": maximum_regional,
-            "maximum_regional_mw": maximum_regional, 
-            "surplus_residuel": 0, 
-            "deficit_residuel": deficit_residuel
+            "maximum_regional_mw": maximum_regional,
+            "surplus_residuel": 0,
+            "deficit_residuel": deficit_residuel,
+            "centrales": centrales_heure
         }
 
-    surplus_a_retirer = sous_minimum(centrales_heure, label_heure, productions_sous_minimum)
-    deficit_a_repartir = sur_maximum(centrales_heure, label_heure, productions_sur_maximum)
+    # --------------------------------------------------------
+    # 5. CAS : demande inférieure au minimum régional
+    # --------------------------------------------------------
 
-    surplus_restant = redistribuer_surplus(centrales_heure, surplus_a_retirer)
-    deficit_restant = redistribuer_deficit(centrales_heure, deficit_a_repartir)
+    if demande_heure < minimum_regional - EPSILON:
 
-    enregistrer_productions(centrales_heure, label_heure, prod_reelle, etat_precedent)
+        surplus_residuel = (
+            minimum_regional
+            - demande_heure
+        )
+
+        for centrale in centrales_heure:
+            centrale["production"] = centrale["minimum"]
+
+        enregistrer_productions(
+            centrales_heure,
+            label_heure,
+            prod_reelle
+        )
+
+        return {
+            "region_id": region_id,
+            "demande_mw": demande_heure,
+            "production_mw": minimum_regional,
+            "maximum_regional_mw": maximum_regional,
+            "surplus_residuel": surplus_residuel,
+            "deficit_residuel": 0,
+            "centrales": centrales_heure
+        }
+
+    # --------------------------------------------------------
+    # 6. CAS NORMAL
+    # --------------------------------------------------------
+
+    surplus_a_retirer = sous_minimum(
+        centrales_heure,
+        label_heure,
+        productions_sous_minimum
+    )
+
+    deficit_a_repartir = sur_maximum(
+        centrales_heure,
+        label_heure,
+        productions_sur_maximum
+    )
+
+    # --------------------------------------------------------
+    # 7. Réduction des centrales qui ont été forcées
+    #    au-dessus de leur minimum
+    # --------------------------------------------------------
+
+    surplus_restant = redistribuer_surplus(
+        centrales_heure,
+        surplus_a_retirer
+    )
+
+    # --------------------------------------------------------
+    # 8. Augmentation des centrales qui ont été limitées
+    #    par leur maximum
+    # --------------------------------------------------------
+
+    deficit_restant = redistribuer_deficit(
+        centrales_heure,
+        deficit_a_repartir
+    )
+
+    # --------------------------------------------------------
+    # 9. Production finale
+    # --------------------------------------------------------
+
+    production_finale = sum(
+        centrale["production"]
+        for centrale in centrales_heure
+    )
+
+    # --------------------------------------------------------
+    # 10. Enregistrement
+    # --------------------------------------------------------
+
+    enregistrer_productions(
+        centrales_heure,
+        label_heure,
+        prod_reelle
+    )
+
+    # --------------------------------------------------------
+    # 11. Résultat régional
+    # --------------------------------------------------------
 
     return {
-        "region_id": region_id, 
+        "region_id": region_id,
         "demande_mw": demande_heure,
-        "production_mw": sum(c["production"] for c in centrales_heure),
+        "production_mw": production_finale,
         "maximum_regional_mw": maximum_regional,
-        "surplus_residuel": surplus_restant, 
-        "deficit_residuel": deficit_restant
+        "surplus_residuel": surplus_restant,
+        "deficit_residuel": deficit_restant,
+        "centrales": centrales_heure
     }
-
 
 
 def equilibrage_local_toutes_regions_nucleaires_predict(
@@ -618,47 +806,103 @@ def equilibrage_local_toutes_regions_nucleaires_predict(
     date_fin=None,
     heure_fin=None
 ):
+    # ========================================================
+    # 1. DONNÉES DE BASE
+    # ========================================================
+
     regions = regions_avec_centrales()
 
+    # Les prévisions contiennent déjà les perturbations actives.
     consommation_par_region = previsions_avec_perturbations()
 
-    demande_residuelle_toutes = demande_moins_non_pilotable_previsions(
-        consommation_par_region
+    demande_residuelle_toutes = (
+        demande_moins_non_pilotable_previsions(
+            consommation_par_region
+        )
     )
 
-    pourcentages, facteur_reserve = pourcentage_repartition_regionale(
-        consommation=consommation_par_region,
-        demande_residuelle=demande_residuelle_toutes
+    pourcentages, facteur_reserve = (
+        pourcentage_repartition_regionale(
+            consommation=consommation_par_region,
+            demande_residuelle=demande_residuelle_toutes
+        )
     )
 
-    non_pilotable_detail = production_non_pilotable_detail_regional()
+    non_pilotable_detail = (
+        production_non_pilotable_detail_regional()
+    )
+
     minimum_reserve_percent = 8.0
 
+    # ========================================================
+    # 2. INDEXATION TEMPORELLE
+    # ========================================================
+    #
+    # Toutes les données sont maintenant accessibles avec :
+    #
+    #     (date, heure)
+    #
+    # et non plus avec un index numérique.
+    #
+    # ========================================================
+
+    consommation_indexee = {
+        region_id: indexer_points_par_date_heure(points)
+        for region_id, points in consommation_par_region.items()
+    }
+
+    demande_residuelle_indexee = {
+        region_id: indexer_points_par_date_heure(points)
+        for region_id, points in demande_residuelle_toutes.items()
+    }
+
+    # ========================================================
+    # 3. ÉTAT INITIAL DES CENTRALES
+    # ========================================================
+
     etat_precedent = initialiser_etat()
+
+    # ========================================================
+    # 4. STRUCTURES DE RÉSULTATS
+    # ========================================================
 
     prod_reelle = []
     productions_sous_minimum = []
     productions_sur_maximum = []
+
     resultats_toutes_regions = []
     resultats_routage = []
+
     echanges_surplus_deficit = []
+
     energie_non_fournie = []
     energie_a_revendre = []
     situations_degradees = []
     details_regionaux = []
 
+    # ========================================================
+    # 5. RÉPARTITION DES RÉGIONS
+    # ========================================================
+
     regions_avec_nucleaire = [
-        r for r in regions
+        r
+        for r in regions
         if r["region_id"] in pourcentages
     ]
 
     regions_sans_nucleaire = [
-        r for r in regions
+        r
+        for r in regions
         if r["region_id"] not in pourcentages
     ]
 
+    # ========================================================
+    # 6. RÉGIONS DÉCONNECTÉES
+    # ========================================================
+
     regions_deconnectees = [
-        r for r in data["parc_nucleaire"]["regions"]
+        r
+        for r in data["parc_nucleaire"]["regions"]
         if not r["connected_to_continental_grid"]
     ]
 
@@ -667,32 +911,59 @@ def equilibrage_local_toutes_regions_nucleaires_predict(
         for r in regions_deconnectees
     }
 
-    mapping = plant_id_vers_region(regions_avec_nucleaire)
-    capacite_max_region_dict = capacite_max_par_region(
+    # ========================================================
+    # 7. MAPPING CENTRALE -> RÉGION
+    # ========================================================
+
+    mapping = plant_id_vers_region(
         regions_avec_nucleaire
     )
 
-    production_regionale_precedente = production_regionale_initiale(
-        regions
+    capacite_max_region_dict = (
+        capacite_max_par_region(
+            regions_avec_nucleaire
+        )
     )
 
-    if (
-        regions_avec_nucleaire
-        and regions_avec_nucleaire[0]["region_id"]
-        in demande_residuelle_toutes
-    ):
-        region_reference = regions_avec_nucleaire[0]["region_id"]
-    else:
-        region_reference = next(iter(demande_residuelle_toutes))
+    # ========================================================
+    # 8. PRODUCTION RÉGIONALE PRÉCÉDENTE
+    # ========================================================
 
-    # Timeline complète
-    timeline = [
-        (p["date"], p["heure"])
-        for p in demande_residuelle_toutes[region_reference]
-    ]
+    production_regionale_precedente = (
+        production_regionale_initiale(regions)
+    )
 
-    # Si une période est demandée, on réduit la timeline
-    if all([date_debut, heure_debut, date_fin, heure_fin]):
+    # ========================================================
+    # 9. CONSTRUCTION DE LA TIMELINE
+    # ========================================================
+    #
+    # On récupère toutes les clés temporelles disponibles.
+    #
+    # Exemple :
+    #
+    # ("2025-07-01", "00:00")
+    # ("2025-07-01", "00:30")
+    # ("2025-07-01", "01:00")
+    #
+    # ========================================================
+
+    toutes_les_cles = set()
+
+    for points in demande_residuelle_indexee.values():
+        toutes_les_cles.update(points.keys())
+
+    timeline = sorted(toutes_les_cles)
+
+    # ========================================================
+    # 10. FILTRAGE DE LA PÉRIODE DEMANDÉE
+    # ========================================================
+
+    if all([
+        date_debut,
+        heure_debut,
+        date_fin,
+        heure_fin
+    ]):
 
         debut = datetime.strptime(
             f"{date_debut} {heure_debut}",
@@ -704,6 +975,12 @@ def equilibrage_local_toutes_regions_nucleaires_predict(
             "%Y-%m-%d %H:%M"
         )
 
+        if debut > fin:
+            raise ValueError(
+                "La date/heure de début doit être "
+                "antérieure ou égale à la date/heure de fin."
+            )
+
         timeline = [
             (date, heure)
             for date, heure in timeline
@@ -713,64 +990,221 @@ def equilibrage_local_toutes_regions_nucleaires_predict(
             ) <= fin
         ]
 
-    for index, (date, heure) in enumerate(timeline):
+    # ========================================================
+    # 11. SIMULATION TEMPORELLE
+    # ========================================================
 
-        production_debut_heure = dict(etat_precedent)
+    for date, heure in timeline:
+
+        # ----------------------------------------------------
+        # État des centrales au début de cette demi-heure
+        # ----------------------------------------------------
+
+        production_debut_heure = dict(
+            etat_precedent
+        )
+
+        production_courante = dict(
+            etat_precedent
+        )
+
         resultats_heure = []
 
+        # ----------------------------------------------------
+        # RÉGIONS AVEC NUCLÉAIRE
+        # ----------------------------------------------------
+
         for region in regions_avec_nucleaire:
-            pourcentage_liste = pourcentages[region["region_id"]]
-            if index >= len(pourcentage_liste):
+
+            region_id = region["region_id"]
+
+            cle = (date, heure)
+
+            # Récupération du pourcentage par date/heure
+            pourcentage = (
+                pourcentages
+                .get(region_id, {})
+                .get(cle)
+            )
+
+            if pourcentage is None:
+                # Aucun point à cette date/heure
                 continue
 
             resultat = equilibrer_region_localement(
-                region["region_id"], date, heure, region["plants"], pourcentage_liste[index],
-                etat_precedent, prod_reelle, productions_sous_minimum, productions_sur_maximum
+                region_id,
+                date,
+                heure,
+                region["plants"],
+                pourcentage,
+                etat_precedent,
+                prod_reelle,
+                productions_sous_minimum,
+                productions_sur_maximum
             )
+
+            for centrale in resultat["centrales"]:
+                production_courante[
+                    centrale["plant_id"]
+                ] = centrale["production"]
+
             resultats_heure.append(resultat)
 
+            # ------------------------------------------------
+            # Situation dégradée
+            # ------------------------------------------------
+
             situation = detecter_situation_degradee(
-                resultat["region_id"], f"{date} {heure}", resultat["production_mw"],
-                resultat["maximum_regional_mw"], capacite_max_region_dict[resultat["region_id"]],
+                resultat["region_id"],
+                f"{date} {heure}",
+                resultat["production_mw"],
+                resultat["maximum_regional_mw"],
+                capacite_max_region_dict[
+                    resultat["region_id"]
+                ],
                 minimum_reserve_percent
             )
-            situations_degradees.append(situation)
 
-        resultats_heure.extend(resultats_regions_sans_nucleaire(regions_sans_nucleaire, demande_residuelle_toutes, index, ids_deconnectees))
+            situations_degradees.append(
+                situation
+            )
 
-        echanges = repartir_surplus_vers_deficits(resultats_heure)
-        echanges_surplus_deficit.extend(echanges)
+        # ----------------------------------------------------
+        # RÉGIONS SANS NUCLÉAIRE
+        # ----------------------------------------------------
+
+        resultats_sans_nucleaire = (
+            resultats_regions_sans_nucleaire(
+                regions_sans_nucleaire,
+                demande_residuelle_indexee,
+                date,
+                heure,
+                ids_deconnectees
+            )
+        )
+
+        resultats_heure.extend(
+            resultats_sans_nucleaire
+        )
+
+        # ----------------------------------------------------
+        # ÉCHANGES SURPLUS / DÉFICIT
+        # ----------------------------------------------------
+
+        echanges = repartir_surplus_vers_deficits(
+            resultats_heure
+        )
+
+        echanges_surplus_deficit.extend(
+            echanges
+        )
+
+        # ----------------------------------------------------
+        # ROUTAGE DES DÉFICITS / SURPLUS
+        # ----------------------------------------------------
 
         for resultat in resultats_heure:
+
             region_id = resultat["region_id"]
 
-            if resultat["deficit_residuel"] > EPSILON:
-                gerer_deficit = router_deficit(region_id, resultat["deficit_residuel"], etat_precedent, facteur_reserve, donnees_centrales_30_min(), mapping, production_debut_heure)
-                resultats_routage.append(gerer_deficit)
+            # =================================================
+            # DÉFICIT
+            # =================================================
 
-                if gerer_deficit["demande_non_couverte"] > EPSILON:
+            if resultat["deficit_residuel"] > EPSILON:
+
+                gerer_deficit = router_deficit(
+                    region_id,
+                    resultat["deficit_residuel"],
+                    production_courante,
+                    facteur_reserve,
+                    donnees_centrales_30_min(),
+                    mapping,
+                    production_debut_heure
+                )
+
+                resultats_routage.append(
+                    gerer_deficit
+                )
+
+                if (
+                    gerer_deficit["demande_non_couverte"]
+                    > EPSILON
+                ):
+
                     energie_non_fournie.append({
-                        "region_id": region_id, "date": date, "heure": heure,
-                        "energie_non_fournie_mw": gerer_deficit["demande_non_couverte"]
+                        "region_id": region_id,
+                        "date": date,
+                        "heure": heure,
+                        "energie_non_fournie_mw":
+                            gerer_deficit[
+                                "demande_non_couverte"
+                            ]
                     })
 
+            # =================================================
+            # SURPLUS
+            # =================================================
+
             if resultat["surplus_residuel"] > EPSILON:
+
                 energie_a_revendre.append({
-                    "region_id": region_id, "date": date, "heure": heure,
-                    "energie_a_revendre_mw": resultat["surplus_residuel"]
+                    "region_id": region_id,
+                    "date": date,
+                    "heure": heure,
+                    "energie_a_revendre_mw":
+                        resultat["surplus_residuel"]
                 })
 
+            # =================================================
+            # DÉTAIL RÉGIONAL
+            # =================================================
+
             detail = construire_detail_regional(
-                region_id, date, heure, index, resultat["production_mw"],
-                production_regionale_precedente[region_id], consommation_par_region,
-                non_pilotable_detail, demande_residuelle_toutes)
-            details_regionaux.append(detail)
+                region_id,
+                date,
+                heure,
+                resultat["production_mw"],
+                production_regionale_precedente[
+                    region_id
+                ],
+                consommation_indexee,
+                non_pilotable_detail,
+                demande_residuelle_indexee
+            )
 
-            production_regionale_precedente[region_id] = resultat["production_mw"]
+            details_regionaux.append(
+                detail
+            )
 
+            # Mise à jour de la production précédente
+            production_regionale_precedente[
+                region_id
+            ] = resultat["production_mw"]
+
+        # ----------------------------------------------------
+        # FIN DU PAS DE TEMPS
+        # ----------------------------------------------------
+
+        etat_precedent = dict(production_courante)
+
+        # ----------------------------------------------------
+        # AJOUT DES RÉSULTATS DE CETTE DEMI-HEURE
+        # ----------------------------------------------------
+        
         resultats_toutes_regions.extend(resultats_heure)
 
-    erreurs_rampes = verifier_rampes(prod_reelle)
+    # ========================================================
+    # 12. VÉRIFICATION DES RAMPES
+    # ========================================================
+
+    erreurs_rampes = verifier_rampes(
+        prod_reelle
+    )
+
+    # ========================================================
+    # 13. RETOUR
+    # ========================================================
 
     return {
         "resultats_toutes_regions": resultats_toutes_regions,

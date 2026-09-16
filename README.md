@@ -314,3 +314,5 @@ Nous avons identifié plusieurs limites :
 * Les coefficients de pondération (distance_weight, loss_weight, saturation_weight, etc.) ont été définis pour le prototype afin de prioriser les centrales. Ils n'ont pas été déterminés à partir de données réelles ni validés sur un réseau électrique
 
 
+# TO DO :
+- Prédire les données non pilotables (éoliens et solaires). Actuellement les données utilisées pour les prédictions correspondent aux données passées.

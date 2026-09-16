@@ -376,7 +376,7 @@ def repartition_initiale_minuit():
                 candidats.append(resultat)
                 
 
-def router_deficit(region_id, deficit_residuel, etat_precedent, facteur_reserve, toutes_les_centrales, plant_id_region, production_debut_heure):
+def router_deficit(region_id, deficit_residuel, production_courante, facteur_reserve, toutes_les_centrales, plant_id_region, production_debut_heure):
     result = region_service.compute_routes(region_id)
     source_plant = result["source_plant"]
     routes = result["routes"]
@@ -398,7 +398,7 @@ def router_deficit(region_id, deficit_residuel, etat_precedent, facteur_reserve,
         total_loss_percent = route_info["total_loss_percent"]
         max_transfer_mw = route_info["max_transfer_mw"]
 
-        resultat = calcul_scores(source_plant, destination, distance_km, total_loss_percent, max_transfer_mw, deficit_residuel, etat_precedent, facteur_reserve, centrale, centrale_reacteurs, production_debut_heure)
+        resultat = calcul_scores(source_plant, destination, distance_km, total_loss_percent, max_transfer_mw, deficit_residuel, production_courante, facteur_reserve, centrale, centrale_reacteurs, production_debut_heure)
         if resultat is not None:
             candidats.append(resultat)
 
@@ -416,7 +416,7 @@ def router_deficit(region_id, deficit_residuel, etat_precedent, facteur_reserve,
         demande_restante -= production_affectee
         index += 1
         candidat["production_restante"] = (candidat["puissance_disponible"] - production_affectee)
-        etat_precedent[candidat["destination_centrale"]] += production_affectee
+        production_courante[candidat["destination_centrale"]] += production_affectee
 
     return {
         "region_id": region_id,

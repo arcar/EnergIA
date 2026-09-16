@@ -28,12 +28,13 @@ def technical_penalty(centrale):
 
 
 
-def donnees_scores(source_plant, destination, distance_km, total_loss_percent, centrale, demande_residuelle, max_transfer_mw, etat_precedent, facteur_reserve, centrale_reacteurs, production_debut_heure):
-    production_actuelle = etat_precedent[centrale["plant_id"]]
+def donnees_scores(source_plant, destination, distance_km, total_loss_percent, centrale, demande_residuelle, max_transfer_mw, production_courante, facteur_reserve, centrale_reacteurs, production_debut_heure):
+    production_actuelle = production_courante[centrale["plant_id"]]
     soft_upper_bound = centrale["maximum_power_mw"] * facteur_reserve
+    rampe_max_30min = (centrale["rampe_up_ajustee_30_min"])
 
     rampe_deja_utilisee = production_actuelle - production_debut_heure[centrale["plant_id"]]
-    marge_rampe_restante = centrale["max_ramp_up_mw_per_15_min"] - rampe_deja_utilisee
+    marge_rampe_restante = rampe_max_30min - rampe_deja_utilisee
 
     marge_technique = soft_upper_bound - production_actuelle
     puissance_disponible = min(marge_technique, marge_rampe_restante)
@@ -49,7 +50,7 @@ def donnees_scores(source_plant, destination, distance_km, total_loss_percent, c
         "puissance_disponible": puissance_disponible,
     }
 
-def calcul_scores(source_plant, destination, distance_km, total_loss_percent, max_transfer_mw, demande_residuelle, etat_precedent, facteur_reserve, centrale, centrale_reacteurs, production_debut_heure):
+def calcul_scores(source_plant, destination, distance_km, total_loss_percent, max_transfer_mw, demande_residuelle, production_courante, facteur_reserve, centrale, centrale_reacteurs, production_debut_heure):
     if centrale is None:
         print("Centrale introuvable :", destination)
         return None
@@ -58,7 +59,7 @@ def calcul_scores(source_plant, destination, distance_km, total_loss_percent, ma
     loss_weight = 45.0
     saturation_weight = 900.0
     technical_penalty_weight = 200.0
-    resultats = donnees_scores(source_plant, destination, distance_km, total_loss_percent, centrale, demande_residuelle, max_transfer_mw, etat_precedent, facteur_reserve, centrale_reacteurs, production_debut_heure)
+    resultats = donnees_scores(source_plant, destination, distance_km, total_loss_percent, centrale, demande_residuelle, max_transfer_mw, production_courante, facteur_reserve, centrale_reacteurs, production_debut_heure)
 
     resultats["score_candidat"] = (resultats["distance_km"] * distance_weight + resultats["loss_percent"] * loss_weight + pow(resultats["final_load_ratio"], 4) * saturation_weight + resultats["technical_penalty"] * technical_penalty_weight)
 

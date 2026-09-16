@@ -10,19 +10,19 @@ async function generateAnswer(question) {
     switch (result.action){
         case "GET_PLANTS":
             try {
-            
+
                     const response = await axios.get(`${process.env.PYTHON_SERVICE_URL}/plants`);
-            
+
                     return response.data;
-            
+
                 } catch (error) {
-            
+
                     console.log(error.message);
-            
+
                     throw new Error(
                         "Impossible de contacter l'API Python 1"
                     );
-            
+
                 }
             break;
 
@@ -37,7 +37,7 @@ async function generateAnswer(question) {
                 if (dateComparaison <= dateLimite) {
                     // Ancienne API (jusqu'au 30/06/2026 inclus)
                     response = await axios.post(`${process.env.PYTHON_SERVICE_URL}/repartition_heure`, result.parameters);
-                    
+
                 } else {
                     // Nouvelle API (à partir du 01/07/2026) — à compléter manuellement
                     response = await axios.post(`${process.env.PYTHON_SERVICE_URL}/predict/repartition_heure`, result.parameters);
@@ -58,25 +58,25 @@ async function generateAnswer(question) {
                 throw new Error("Impossible de contacter l'API Python 2");
             }
             break;
-        
+
         case "GET_CONSO_REGION_HEURE":
             try {
-        
+
                 const response = await axios.post(`${process.env.PYTHON_SERVICE_URL}/conso_regionale_horaire`, result.parameters);
-        
+
                 return `À ${response.data.heure}, la consommation de la région ${response.data.region} est de ${response.data.consommation} MW.`;
-        
+
             } catch (error) {
-        
+
                 console.log(error.message);
                 console.log("STATUS:", error.response?.status);
                 console.log("DATA:", error.response?.data);
                 console.log("PARAMS ENVOYÉS:", result.parameters);
-        
+
                 throw new Error(
                     "Impossible de contacter l'API Python 3"
                 );
-        
+
             }
             break;
         case "GET_PREDICTION_CONSO":
@@ -100,20 +100,23 @@ async function generateAnswer(question) {
 
       case "GET_PERTURBATION":
         try {
-            const response=await axios.post(`${process.env.PYTHON_SERVICE_URL}/perturber_consommation`,result.parameters);
+            const response=await axios.post(`${process.env.PYTHON_SERVICE_URL}/predict/perturber_consommation`,result.parameters);
+            console.log(response)
+
             return {
-                parameters:result.parameters,
-                states:response.data
+                    parameters:result.parameters,
+                    states:response.data
             };
         } catch(error) {
-            console.log(error.message);
-            console.log("STATUS:",error.response?.status);
-            console.log("DATA:",error.response?.data);
-            console.log("PARAMS ENVOYÉS:",result.parameters);
-            throw new Error(
-                "Impossible de contacter l'API Python 4"
-            );
-        }
+                console.log(error.message);
+                console.log("STATUS:",error.response?.status);
+                console.log("DATA:",error.response?.data);
+                console.log("PARAMS ENVOYÉS:",result.parameters);
+                throw new Error(
+                    "Impossible de contacter l'API Python 4"
+                );
+            }
+            break;
         case "RESET_SCENARIO":
             try {
                 const response = await axios.post(`${process.env.PYTHON_SERVICE_URL}/reinitialiser_scenario`);
@@ -125,23 +128,23 @@ async function generateAnswer(question) {
             break;
         case "UNKNOWN":
             try {
-            
+
                     const response = "Je n'ai pas les informations à ma disposition pour vous répondre";
-            
+
                     return response;
-            
+
                 } catch (error) {
-            
+
                     console.log(error.message);
-            
+
                     throw new Error(
                         "Impossible de contacter l'API Python!!!!!!!!!!!!!!!!!!"
                     );
-            
+
                 }
 
             }
-    
+
 
     console.log("Réponse Ollama reçue");
 }

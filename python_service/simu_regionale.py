@@ -248,7 +248,7 @@ def equilibrer_region_localement(region_id, heure, centrales, pourcentage, etat_
         for centrale in centrales_heure:   
             centrale["production"] = centrale["minimum"]
 
-        enregistrer_productions(centrales_heure, heure, prod_reelle, etat_precedent)
+        enregistrer_productions(centrales_heure, heure, prod_reelle)
         return {
             "region_id" : region_id,
             "demande_mw" : demande_heure,
@@ -263,7 +263,7 @@ def equilibrer_region_localement(region_id, heure, centrales, pourcentage, etat_
         for centrale in centrales_heure:
             centrale["production"] = centrale["maximum"]
 
-        enregistrer_productions(centrales_heure, heure, prod_reelle, etat_precedent)
+        enregistrer_productions(centrales_heure, heure, prod_reelle)
 
         return {
             "region_id" : region_id,
@@ -280,7 +280,7 @@ def equilibrer_region_localement(region_id, heure, centrales, pourcentage, etat_
     surplus_restant = redistribuer_surplus(centrales_heure, surplus_a_retirer)
     deficit_restant = redistribuer_deficit(centrales_heure, deficit_a_repartir)
 
-    enregistrer_productions(centrales_heure, heure, prod_reelle, etat_precedent)
+    enregistrer_productions(centrales_heure, heure, prod_reelle)
 
     return {
         "region_id" : region_id,
@@ -533,6 +533,13 @@ def equilibrage_local_toutes_regions_nucleaires(id_region=None, start=None, end=
     non_pilotable_detail = production_non_pilotable_detail_regional()
     minimum_reserve_percent = 8.0
 
+    centrales_pour_scores = []
+    for centrale in data["params_temporels"]["plants"]:
+        centrale_score = copy.deepcopy(centrale)
+        centrale_score["rampe_up_ajustee_30_min"] = centrale["max_ramp_up_mw_per_15_min"] * 2
+        centrale_score["rampe_down_ajustee_30_min"] = centrale["max_ramp_down_mw_per_15_min"] * 2
+        centrales_pour_scores.append(centrale_score)
+
     etat_precedent = initialiser_etat(data["params_temporels"])
 
     prod_reelle = []
@@ -583,7 +590,7 @@ def equilibrage_local_toutes_regions_nucleaires(id_region=None, start=None, end=
             region_id = resultat["region_id"]
 
             if resultat["deficit_residuel"] > EPSILON:
-                gerer_deficit = router_deficit(region_id, resultat["deficit_residuel"], etat_precedent, facteur_reserve, data["params_temporels"]["plants"], mapping, production_debut_heure)
+                gerer_deficit = router_deficit(region_id, resultat["deficit_residuel"], etat_precedent, facteur_reserve,centrales_pour_scores, mapping, production_debut_heure)
                 resultats_routage.append(gerer_deficit)
 
                 if gerer_deficit["demande_non_couverte"] > EPSILON:

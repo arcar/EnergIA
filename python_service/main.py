@@ -8,7 +8,7 @@ from dijkstra.json_repository import JsonRepository
 from dijkstra.region_service import RegionService
 from simu_regionale import dashboard, conso_heure_region, perturber_consommation, reinitialiser_scenario, repartition_par_heure, equilibrage_local_toutes_regions_nucleaires
 from extraction_json import charger_donnees
-from simu_regionale_predict import (dashboard_predict, perturber_consommation_predict, repartition_par_heure as repartition_par_heure_predict, equilibrage_local_toutes_regions_nucleaires_predict, obtenir_prediction_consommation)
+from simu_regionale_predict import (dashboard_predict, perturber_consommation_predict, repartition_par_heure as repartition_par_heure_predict, equilibrage_local_toutes_regions_nucleaires_predict, obtenir_prediction_consommation, construire_etats_dashboard_predict)
 class ConsoRegionRequest(BaseModel):
     id_region: str
     heure: str
@@ -254,7 +254,7 @@ def perturbation_predict(request: PerturbationRequest):
         )
 
         return {
-            "scenarios_actifs": scenario["scenarios_actifs"],
+             "scenarios_actifs": scenario["scenarios_actifs"],
             "perturbation": {
                 "region": request.id_region,
                 "date_debut": request.date_debut,
@@ -263,7 +263,7 @@ def perturbation_predict(request: PerturbationRequest):
                 "heure_fin": request.heure_fin,
                 "deltaMw": request.deltaMw
             },
-            "resultats": result
+            "resultats": construire_etats_dashboard_predict(result)
         }
 
     except ValueError as e:

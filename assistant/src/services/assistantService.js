@@ -105,7 +105,7 @@ async function generateAnswer(question) {
 
             return {
                     parameters:result.parameters,
-                    states:response.data
+                    states:response.data.resultats
             };
         } catch(error) {
                 console.log(error.message);

@@ -54,11 +54,14 @@ export class Dashboard implements OnInit {
         status:state.status,
         unmetDemand:state.unmetDemandMw
       }));
-      const debut=this.timeline.findIndex(state=>state.time===data.parameters.start);
-      const fin=this.timeline.findIndex(state=>state.time===data.parameters.end);
+      console.log('PARAMETRES SIMULATION:', data.parameters);
+      console.log('TIMELINE START/END:', data.parameters.start, data.parameters.end);
+      console.log('TIMELINE:', this.timeline);
+      const debut=this.states.findIndex(state=>state.time===data.parameters.start);
+      const fin=this.states.findIndex(state=>state.time===data.parameters.end);
       if(debut!==-1&&fin!==-1){
         this.perturbationStates=this.states.slice(debut,fin+1);
-         this.selectedState=debut;
+        this.selectedState=debut;
       }
       this.cdr.detectChanges();
     });

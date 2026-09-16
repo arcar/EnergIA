@@ -54,9 +54,10 @@ export class ChatbotButton {
 
     this.assistantService.sendMessage(prompt).subscribe({
       next: (response) => {
-        console.log('Réponse reçue par Angular :', response);
-
         const data = response.response;
+        console.log('Réponse reçue par Angular :', JSON.stringify(data, null, 2));
+
+        
 
         // Si l'assistant renvoie directement une phrase
         if (typeof data === 'string') {
@@ -109,21 +110,26 @@ export class ChatbotButton {
         // si on lance la perturbation
        if ('parameters' in data && 'states' in data) {
           this.simulationState.setSimulation({
-          states:data.states,
-          parameters:data.parameters
-        });
+            states: data.states,
+            parameters: {
+              id_region: data.parameters.id_region,
+              start: data.parameters.heure_debut,
+              end: data.parameters.heure_fin,
+              deltaMw: data.parameters.deltaMw
+            }
+          });
 
         this.history.addSimulation({
           date:new Date(),
           source:'assistant',
           region:data.parameters.id_region,
-          start:data.parameters.start,
-          end:data.parameters.end,
+          start:data.parameters.heure_debut,
+          end:data.parameters.heure_fin,
           deltaMw:data.parameters.deltaMw,
           states:data.states
         });
           this.messages.push({
-            content: `Perturbation appliquée en ${data.parameters.id_region} de ${data.parameters.start} à ${data.parameters.end} avec une variation de ${data.parameters.deltaMw} MW.`,
+            content: `Perturbation appliquée en ${data.parameters.id_region} de ${data.parameters.heure_debut} à ${data.parameters.heure_fin} avec une variation de ${data.parameters.deltaMw} MW.`,
             role: 'assistant'
           });
           this.isLoading = false;

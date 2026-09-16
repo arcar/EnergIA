@@ -23,8 +23,10 @@ interface ConsoRegionResponse {
 interface PerturbationResponse {
   parameters: {
     id_region: string;
-    start: string;
-    end: string;
+    date_debut: string;
+    heure_debut: string;
+    date_fin: string;
+    heure_fin: string;
     deltaMw: number;
   };
   states: unknown[];
